@@ -1,0 +1,84 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a05f7c97fe68a4843b94f7e58995c5ac, type: 3}
+  m_Name: New Volumetric Light Profile
+  m_EditorClassIdentifier: 
+  blendMode: 0
+  raymarchPreset: 0
+  raymarchQuality: 4
+  raymarchMinStep: 0.2
+  raymarchMaxSteps: 16
+  jittering: 1
+  dithering: 2
+  useBlueNoise: 1
+  animatedBlueNoise: 1
+  renderQueue: 3101
+  sortingLayerID: 0
+  sortingOrder: 0
+  flipDepthTexture: 0
+  alwaysOn: 1
+  castDirectLight: 1
+  directLightMultiplier: 16
+  directLightSmoothSamples: 4
+  directLightSmoothRadius: 8
+  directLightBlendMode: 1
+  autoToggle: 0
+  distanceStartDimming: 70
+  distanceDeactivation: 100
+  autoToggleCheckInterval: 1
+  useNoise: 1
+  noiseTexture: {fileID: 11700000, guid: 5b3147e9423af4f2cb0f6911a7a9b205, type: 2}
+  noiseStrength: 1.25
+  noiseScale: 4
+  noiseFinalMultiplier: 0.666
+  density: 0.666
+  mediumAlbedo: {r: 0, g: 1, b: 0.7999966, a: 1}
+  brightness: 0.666
+  attenuationMode: 1
+  attenCoefConstant: 2
+  attenCoefLinear: 512
+  attenCoefQuadratic: 1024
+  rangeFallOff: 4
+  diffusionIntensity: 32
+  penumbra: 1
+  tipRadius: 0
+  cookieTexture: {fileID: 0}
+  cookieScale: {x: 1, y: 1}
+  cookieOffset: {x: 0, y: 0}
+  cookieSpeed: {x: 0, y: 0}
+  frustumAngle: 0
+  windDirection: {x: 0, y: 0, z: 0.01}
+  enableDustParticles: 1
+  dustBrightness: 4
+  dustMinSize: 0.01
+  dustMaxSize: 0.09
+  dustWindSpeed: 1
+  dustDistanceAttenuation: 2
+  dustAutoToggle: 0
+  dustDistanceDeactivation: 70
+  dustPrewarm: 1
+  enableShadows: 1
+  shadowIntensity: 0.75
+  shadowTranslucency: 0
+  shadowTranslucencyIntensity: 128
+  shadowTranslucencyBlend: 1
+  shadowResolution: 1024
+  shadowCullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  shadowBakeInterval: 1
+  shadowNearDistance: 0.15
+  shadowAutoToggle: 0
+  shadowDistanceDeactivation: 250
+  shadowBakeMode: 2
+  shadowOrientation: 0
+  shadowDirection: {x: 0, y: -1, z: 0}

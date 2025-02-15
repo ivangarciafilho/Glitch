@@ -12,51 +12,68 @@ Shader "Hidden/VolumetricLights/DepthOnly"
 
         Pass
         {
-            CGPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
+            Name "Volumetric Lights DepthOnly Pass"
+            HLSLPROGRAM
+            #pragma target 4.5
+            #pragma vertex UnlitPassVertex
+            #pragma fragment UnlitPassFragment
             #pragma multi_compile_local _ DEPTH_PREPASS_ALPHA_TEST
+            #pragma multi_compile _ DOTS_INSTANCING_ON
+            #pragma multi_compile_instancing
 
-            #include "UnityCG.cginc"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
-            half _AlphaCutOff;
-            sampler2D _MainTex;
+            TEXTURE2D(_BaseMap);
+            SAMPLER(sampler_BaseMap);
 
-            struct appdata
-            {
-                float4 vertex : POSITION;
-                #if DEPTH_PREPASS_ALPHA_TEST
-                    float2 uv : TEXCOORD0;
+            #if DEPTH_PREPASS_ALPHA_TEST
+                CBUFFER_START(UnityPerMaterial)
+                half _AlphaCutOff;
+                float4 _BaseMap_ST;
+                CBUFFER_END
+
+                #ifdef UNITY_DOTS_INSTANCING_ENABLED
+                    UNITY_DOTS_INSTANCING_START(MaterialPropertyMetadata)
+                        UNITY_DOTS_INSTANCED_PROP(float, _AlphaCutOff)
+                        UNITY_DOTS_INSTANCED_PROP(float4, _BaseMap_ST)
+                    UNITY_DOTS_INSTANCING_END(MaterialPropertyMetadata)
+                    #define _AlphaCutOff UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float, _AlphaCutOff)
+                    #define _BaseMap_ST UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float4, _BaseMap_ST)
                 #endif
-            };
+            #endif
 
-            struct v2f
-            {
-                float4 vertex : SV_POSITION;
-                #if DEPTH_PREPASS_ALPHA_TEST
-                    float2 uv : TEXCOORD0;
-                #endif
-            };
+            #include "DepthOnly_Include.hlsl"
 
-            v2f vert (appdata v)
-            {
-                v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
-                #if DEPTH_PREPASS_ALPHA_TEST
-                    o.uv = v.uv;
-                #endif
-                return o;
-            }
-
-            half4 frag (v2f i) : SV_Target
-            {
-                #if DEPTH_PREPASS_ALPHA_TEST
-                    half4 color = tex2D(_MainTex, i.uv);
-                    clip(color.a - _AlphaCutOff);
-                #endif
-                return 0;
-            }
-            ENDCG
+            ENDHLSL
         }
+
+
+  Pass
+        {
+            Name "Volumetric Lights DepthOnly Pass"  // for older GPUs with no DOTs instancing
+            HLSLPROGRAM
+            #pragma target 2.0
+            #pragma vertex UnlitPassVertex
+            #pragma fragment UnlitPassFragment
+            #pragma multi_compile_local _ DEPTH_PREPASS_ALPHA_TEST
+            #pragma multi_compile_instancing
+
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+
+            TEXTURE2D(_BaseMap);
+            SAMPLER(sampler_BaseMap);
+
+            #if DEPTH_PREPASS_ALPHA_TEST
+                CBUFFER_START(UnityPerMaterial)
+                half _AlphaCutOff;
+                float4 _BaseMap_ST;
+                CBUFFER_END
+            #endif
+
+            #include "DepthOnly_Include.hlsl"
+
+            ENDHLSL
+        }
+
     }
 }

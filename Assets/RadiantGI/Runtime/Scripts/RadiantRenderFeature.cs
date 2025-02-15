@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+#if UNITY_2023_3_OR_NEWER
+using UnityEngine.Rendering.RenderGraphModule;
+#endif
 using UnityEngine.Rendering.Universal;
 using DebugView = RadiantGI.Universal.RadiantGlobalIllumination.DebugView;
 using DeferredLights = UnityEngine.Rendering.Universal.Internal.DeferredLights;
@@ -15,7 +18,6 @@ namespace RadiantGI.Universal {
             Deferred,
             Both
         }
-
 
         enum Pass {
             CopyExact,
@@ -66,6 +68,13 @@ namespace RadiantGI.Universal {
             public static int Probe2Cube = Shader.PropertyToID("_Probe2Cube");
             public static int NFO_RT = Shader.PropertyToID("_NFO_RT");
             public static int NFOBlurRT = Shader.PropertyToID("_NFOBlurRT");
+
+            // RG supplemental ids
+            public static int CameraDepthTexture = Shader.PropertyToID("_CameraDepthTexture");
+            public static int CameraNormalsTexture = Shader.PropertyToID("_CameraNormalsTexture");
+            public static int MotionVectorTexture = Shader.PropertyToID("_MotionVectorTexture");
+            public static int CameraGBuffer0 = Shader.PropertyToID("_GBuffer0");
+            public static int CameraGBuffer1 = Shader.PropertyToID("_GBuffer1");
 
             // uniforms
             public static int IndirectData = Shader.PropertyToID("_IndirectData");
@@ -144,8 +153,6 @@ namespace RadiantGI.Universal {
 
         class RadiantPass : ScriptableRenderPass {
 
-            public int computedGIRT;
-
             const string RGI_CBUF_NAME = "RadiantGI";
             const float GOLDEN_RATIO = 0.618033989f;
             const int MAX_EMITTERS = 32;
@@ -163,24 +170,26 @@ namespace RadiantGI.Universal {
             }
 
             ScriptableRenderer renderer;
-            RadiantRenderFeature settings;
-            RenderTextureDescriptor sourceDesc, cameraTargetDesc;
-            readonly Dictionary<Camera, PerCameraData> prevs = new Dictionary<Camera, PerCameraData>();
+            static RadiantRenderFeature settings;
+            static RenderTextureDescriptor sourceDesc, cameraTargetDesc;
+            static readonly Dictionary<Camera, PerCameraData> prevs = new Dictionary<Camera, PerCameraData>();
 
             [NonSerialized]
-            public RadiantGlobalIllumination radiant;
-            float goldenRatioAcum;
-            bool usesReprojection, usesCompareMode;
-            Vector3 camPos;
-            Volume[] volumes;
-            Material mat;
+            static public RadiantGlobalIllumination radiant;
+            static float goldenRatioAcum;
+            static bool usesReprojection, usesCompareMode;
+            static readonly Func<RadiantVirtualEmitter, RadiantVirtualEmitter, int> emittersSortFunction = EmittersDistanceComparer;
+            static Vector3 camPos;
+            static Volume[] volumes;
+            static Material mat;
             static readonly Vector4 unlimitedBounds = new Vector4(-1e8f, -1e8f, 1e8f, 1e8f);
-            Vector4[] emittersBoxMin, emittersBoxMax, emittersColors, emittersPositions;
-            readonly Plane[] cameraPlanes = new Plane[6];
+            static Vector4[] emittersBoxMin, emittersBoxMax, emittersColors, emittersPositions;
+            static readonly Plane[] cameraPlanes = new Plane[6];
+            static public int computedGIRT;
 
-            public bool Setup(RadiantGlobalIllumination radiant, ScriptableRenderer renderer, RadiantRenderFeature settings, bool isSceneView) {
+            public bool Setup (RadiantGlobalIllumination radiant, ScriptableRenderer renderer, RadiantRenderFeature settings, bool isSceneView) {
                 if (radiant == null || !radiant.IsActive()) return false;
-                this.radiant = radiant;
+                RadiantPass.radiant = radiant;
 
 #if UNITY_EDITOR
                 if (isSceneView && !radiant.showInSceneView.value) return false;
@@ -189,9 +198,20 @@ namespace RadiantGI.Universal {
 
                 usesReprojection = radiant.temporalReprojection.value && (!isSceneView || Application.isPlaying);
                 usesCompareMode = radiant.compareMode.value && !isSceneView;
-                renderPassEvent = settings.renderPassEvent;
+                renderPassEvent = RenderPassEvent.AfterRenderingSkybox + 2; // just after depth texture and motion vectors
+
+#if UNITY_2022_1_OR_NEWER && !UNITY_2022_3_OR_NEWER
+                if (radiant.temporalReprojection.value) {
+                    // when using motion vectors in RG, it needs to execute after motion vector pass which happens BeforeRenderingPostProcessing so we force Radiant to run just before post processing
+                    // in Unity 2022.3 it was fixed, so motion vectors just follow the depth texture mode pass so we can keep Radiant run before transparent
+                    int minRenderPassEvent = (int)RenderPassEvent.BeforeRenderingPostProcessing;
+                    if ((int)renderPassEvent < minRenderPassEvent) {
+                        renderPassEvent = (RenderPassEvent)minRenderPassEvent;
+                    }
+                }
+#endif
                 this.renderer = renderer;
-                this.settings = settings;
+                RadiantPass.settings = settings;
                 if (mat == null) {
                     mat = CoreUtils.CreateEngineMaterial(Shader.Find("Hidden/Kronnect/RadiantGI_URP"));
                     mat.SetTexture(ShaderParams.NoiseTex, Resources.Load<Texture>("RadiantGI/blueNoiseGI128RGB"));
@@ -202,7 +222,14 @@ namespace RadiantGI.Universal {
                 return true;
             }
 
-            public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor) {
+#if UNITY_2023_3_OR_NEWER
+            [Obsolete]
+#endif
+            public override void Configure (CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor) {
+                ConfigureInput(GetRequiredInputs());
+            }
+
+            ScriptableRenderPassInput GetRequiredInputs () {
                 ScriptableRenderPassInput input = ScriptableRenderPassInput.Color;
                 if (settings.renderingPath == RenderingPath.Forward) {
                     input |= ScriptableRenderPassInput.Normal | ScriptableRenderPassInput.Depth;
@@ -210,10 +237,15 @@ namespace RadiantGI.Universal {
                 if (usesReprojection) {
                     input |= ScriptableRenderPassInput.Motion;
                 }
-                ConfigureInput(input);
+                return input;
             }
 
-            public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData) {
+            readonly PassData passData = new PassData();
+
+#if UNITY_2023_3_OR_NEWER
+            [Obsolete]
+#endif
+            public override void Execute (ScriptableRenderContext context, ref RenderingData renderingData) {
 
                 sourceDesc = renderingData.cameraData.cameraTargetDescriptor;
                 sourceDesc.colorFormat = RenderTextureFormat.ARGBHalf;
@@ -232,20 +264,124 @@ namespace RadiantGI.Universal {
                 CommandBuffer cmd = CommandBufferPool.Get(RGI_CBUF_NAME);
                 cmd.Clear();
 
-                RenderGI(cmd, cam);
+#if UNITY_2022_2_OR_NEWER
+                passData.source = renderer.cameraColorTargetHandle;
+#else
+                passData.source = renderer.cameraColorTarget;
+#endif
+
+                passData.cmd = cmd;
+                passData.cam = cam;
+                RenderGI(passData);
 
                 context.ExecuteCommandBuffer(cmd);
-
                 CommandBufferPool.Release(cmd);
             }
 
-            void RenderGI(CommandBuffer cmd, Camera cam) {
+            class PassData {
+                public CommandBuffer cmd;
+                public Camera cam;
+#if UNITY_2022_2_OR_NEWER
+                public RTHandle source;
+#else
+                public RenderTargetIdentifier source;
+#endif
+#if UNITY_2023_3_OR_NEWER
+                public TextureHandle colorTexture, depthTexture, cameraNormalsTexture, motionVectorTexture, gBuffer0, gBuffer1;
+#endif
+            }
+
+#if UNITY_2023_3_OR_NEWER
+            public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData) {
+
+                using (var builder = renderGraph.AddUnsafePass<PassData>("Radiant GI RG Pass", out var passData)) {
+
+                    builder.AllowPassCulling(false);
+
+                    ConfigureInput(GetRequiredInputs());
+
+                    UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
+                    passData.cam = cameraData.camera;
+                    sourceDesc = cameraData.cameraTargetDescriptor;
+                    sourceDesc.colorFormat = RenderTextureFormat.ARGBHalf;
+                    sourceDesc.useMipMap = false;
+                    sourceDesc.msaaSamples = 1;
+                    sourceDesc.depthBufferBits = 0;
+                    cameraTargetDesc = sourceDesc;
+
+                    float downsampling = radiant.downsampling.value;
+                    sourceDesc.width = (int)(sourceDesc.width / downsampling);
+                    sourceDesc.height = (int)(sourceDesc.height / downsampling);
+
+                    camPos = passData.cam.transform.position;
+
+                    UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
+
+                    passData.colorTexture = resourceData.activeColorTexture;
+                    builder.UseTexture(resourceData.activeColorTexture, AccessFlags.ReadWrite);
+
+                    builder.UseTexture(resourceData.cameraNormalsTexture);
+                    passData.cameraNormalsTexture = resourceData.cameraNormalsTexture;
+
+                    if (settings.renderingPath == RenderingPath.Forward) {
+                        builder.UseTexture(resourceData.cameraDepthTexture);
+                        passData.depthTexture = resourceData.cameraDepthTexture;
+                    } else if (settings.renderingPath == RenderingPath.Deferred) {
+                        if (resourceData.gBuffer[0].IsValid()) {
+                        builder.UseTexture(resourceData.gBuffer[0]);
+                        passData.gBuffer0 = resourceData.gBuffer[0];
+                        }
+                        if (resourceData.gBuffer[1].IsValid()) {
+                        builder.UseTexture(resourceData.gBuffer[1]);
+                        passData.gBuffer1 = resourceData.gBuffer[1];
+                        }
+                    }
+                    if (usesReprojection) {
+                        builder.UseTexture(resourceData.motionVectorColor);
+                        passData.motionVectorTexture = resourceData.motionVectorColor;
+                    }
+
+                    builder.SetRenderFunc((PassData passData, UnsafeGraphContext context) => {
+
+                        CommandBuffer cmd = CommandBufferHelpers.GetNativeCommandBuffer(context.cmd);
+
+                        if (passData.depthTexture.IsValid()) {
+                            cmd.SetGlobalTexture(ShaderParams.CameraDepthTexture, passData.depthTexture);
+                        }
+                        if (passData.cameraNormalsTexture.IsValid()) {
+                            cmd.SetGlobalTexture(ShaderParams.CameraNormalsTexture, passData.cameraNormalsTexture);
+                        }
+                        if (usesReprojection && passData.motionVectorTexture.IsValid()) {
+                            cmd.SetGlobalTexture(ShaderParams.MotionVectorTexture, passData.motionVectorTexture);
+                        }
+                        if (settings.renderingPath == RenderingPath.Deferred) {
+                            if (passData.gBuffer0.IsValid()) {
+                                cmd.SetGlobalTexture(ShaderParams.CameraGBuffer0, passData.gBuffer0);
+                            }
+                            if (passData.gBuffer1.IsValid()) {
+                                cmd.SetGlobalTexture(ShaderParams.CameraGBuffer1, passData.gBuffer1);
+                            }
+                        }
+
+                        passData.source = passData.colorTexture;
+                        passData.cmd = cmd;
+                        RenderGI(passData);
+
+                    });
+                }
+            }
+#endif
+
+            static void RenderGI (PassData passData) {
 
 #if UNITY_2022_2_OR_NEWER
-                RTHandle source = renderer.cameraColorTargetHandle;
+                RTHandle source = passData.source;
 #else
-                RenderTargetIdentifier source = renderer.cameraColorTarget;
+                RenderTargetIdentifier source = passData.source;
 #endif
+
+                CommandBuffer cmd = passData.cmd;
+                Camera cam = passData.cam;
 
                 int smoothing = radiant.smoothing.value;
                 DebugView debugView = radiant.debugView.value;
@@ -271,36 +407,41 @@ namespace RadiantGI.Universal {
                 if (usesForward) {
                     if (settings.renderingPath == RenderingPath.Both) {
                         mat.EnableKeyword(ShaderParams.SKW_FORWARD_AND_DEFERRED);
-                    } else {
+                    }
+                    else {
                         mat.EnableKeyword(ShaderParams.SKW_FORWARD);
                     }
                 }
 
                 if (radiant.rayBinarySearch.value) {
                     mat.EnableKeyword(ShaderParams.SKW_USES_BINARY_SEARCH);
-                } else {
+                }
+                else {
                     mat.DisableKeyword(ShaderParams.SKW_USES_BINARY_SEARCH);
                 }
 
                 if (radiant.rayCount.value > 1) {
                     mat.EnableKeyword(ShaderParams.SKW_USES_MULTIPLE_RAYS);
-                } else {
+                }
+                else {
                     mat.DisableKeyword(ShaderParams.SKW_USES_MULTIPLE_RAYS);
                 }
 
                 float nearFieldObscurance = radiant.nearFieldObscurance.value;
                 bool useNFO = nearFieldObscurance > 0;
                 if (useNFO) {
-	                cmd.SetGlobalVector(ShaderParams.ExtraData4, new Vector4(radiant.nearFieldObscuranceMaxCameraDistance.value, (1f - radiant.nearFieldObscuranceOccluderDistance.value) * 10f, 0, 0));
+                    cmd.SetGlobalVector(ShaderParams.ExtraData4, new Vector4(radiant.nearFieldObscuranceMaxCameraDistance.value, (1f - radiant.nearFieldObscuranceOccluderDistance.value) * 10f, 0, 0));
                     cmd.SetGlobalColor(ShaderParams.NFOTint, radiant.nearFieldObscuranceTintColor.value);
                     mat.EnableKeyword(ShaderParams.SKW_USES_NEAR_FIELD_OBSCURANCE);
-                } else {
+                }
+                else {
                     mat.DisableKeyword(ShaderParams.SKW_USES_NEAR_FIELD_OBSCURANCE);
                 }
 
                 if (cam.orthographic) {
                     mat.EnableKeyword(ShaderParams.SKW_ORTHO_SUPPORT);
-                } else {
+                }
+                else {
                     mat.DisableKeyword(ShaderParams.SKW_ORTHO_SUPPORT);
                 }
                 cmd.SetGlobalVector(ShaderParams.ExtraData3, new Vector4(radiant.aoInfluence.value, radiant.nearFieldObscuranceSpread.value * 0.5f, 1f / (radiant.nearCameraAttenuation.value + 0.0001f), nearFieldObscurance));  // global because these params are needed by the compare pass
@@ -339,7 +480,7 @@ namespace RadiantGI.Universal {
                 rtDownDepth.colorFormat = RenderTextureFormat.RHalf;
 #endif
                 rtDownDepth.sRGB = false;
-                cmd.GetTemporaryRT(ShaderParams.DownscaledDepthRT, rtDownDepth, FilterMode.Point);
+                GetTemporaryRT(cmd, ShaderParams.DownscaledDepthRT, ref rtDownDepth, FilterMode.Point);
                 FullScreenBlit(cmd, ShaderParams.DownscaledDepthRT, Pass.CopyDepth);
 
                 // early debug views
@@ -376,12 +517,14 @@ namespace RadiantGI.Universal {
                         bounceRT.Create();
                         frameAcumData.rtBounce = bounceRT;
                         frameAcumData.rtBounceCreationFrame = currentFrame;
-                    } else {
+                    }
+                    else {
                         if (currentFrame - frameAcumData.rtBounceCreationFrame > 2) {
                             raycastInput = bounceRT; // only uses bounce rt a few frames after it's created
                         }
                     }
-                } else if (bounceRT != null) {
+                }
+                else if (bounceRT != null) {
                     bounceRT.Release();
                     DestroyImmediate(bounceRT);
                 }
@@ -398,7 +541,7 @@ namespace RadiantGI.Universal {
                     if (now - frameAcumData.emittersSortTime > 5 || (frameAcumData.emittersLastCameraPosition - camPos).sqrMagnitude > 25) {
                         frameAcumData.emittersSortTime = now;
                         frameAcumData.emittersLastCameraPosition = camPos;
-                        SortEmitters(cam);
+                        SortEmitters();
                         frameAcumData.emittersSorted.Clear();
                         frameAcumData.emittersSorted.AddRange(emitters);
                     }
@@ -406,7 +549,8 @@ namespace RadiantGI.Universal {
                 }
                 if (usesEmitters) {
                     mat.EnableKeyword(ShaderParams.SKW_VIRTUAL_EMITTERS);
-                } else {
+                }
+                else {
                     mat.DisableKeyword(ShaderParams.SKW_VIRTUAL_EMITTERS);
                 }
 
@@ -432,20 +576,20 @@ namespace RadiantGI.Universal {
 
                 // raycast & resolve
                 RenderTextureDescriptor downscaledColorAndDepthDesc = sourceDesc;
-                cmd.GetTemporaryRT(ShaderParams.DownscaledColorAndDepthRT, downscaledColorAndDepthDesc, FilterMode.Bilinear);
+                GetTemporaryRT(cmd, ShaderParams.DownscaledColorAndDepthRT, ref downscaledColorAndDepthDesc, FilterMode.Bilinear);
 
-                cmd.GetTemporaryRT(ShaderParams.ResolveRT, sourceDesc, FilterMode.Bilinear);
+                GetTemporaryRT(cmd, ShaderParams.ResolveRT, ref sourceDesc, FilterMode.Bilinear);
                 FullScreenBlit(cmd, raycastInput, ShaderParams.ResolveRT, Pass.Raycast);
 
-                cmd.GetTemporaryRT(ShaderParams.Downscaled1RT, downDesc, FilterMode.Bilinear);
-                cmd.GetTemporaryRT(ShaderParams.Downscaled1RTA, downDesc, FilterMode.Bilinear);
+                GetTemporaryRT(cmd, ShaderParams.Downscaled1RT, ref downDesc, FilterMode.Bilinear);
+                GetTemporaryRT(cmd, ShaderParams.Downscaled1RTA, ref downDesc, FilterMode.Bilinear);
 
                 // Prepare NFO
                 if (useNFO) {
                     RenderTextureDescriptor nfoDesc = downDesc;
                     nfoDesc.colorFormat = RenderTextureFormat.RHalf;
-                    cmd.GetTemporaryRT(ShaderParams.NFO_RT, nfoDesc, FilterMode.Bilinear);
-                    cmd.GetTemporaryRT(ShaderParams.NFOBlurRT, nfoDesc, FilterMode.Bilinear);
+                    GetTemporaryRT(cmd, ShaderParams.NFO_RT, ref nfoDesc, FilterMode.Bilinear);
+                    GetTemporaryRT(cmd, ShaderParams.NFOBlurRT, ref nfoDesc, FilterMode.Bilinear);
                     FullScreenBlit(cmd, ShaderParams.NFOBlurRT, Pass.NFO);
                     FullScreenBlit(cmd, ShaderParams.NFOBlurRT, ShaderParams.NFO_RT, Pass.NFOBlur);
                 }
@@ -453,7 +597,7 @@ namespace RadiantGI.Universal {
                 // downscale & blur
                 downDesc.width /= 2;
                 downDesc.height /= 2;
-                cmd.GetTemporaryRT(ShaderParams.Downscaled2RT, downDesc, FilterMode.Bilinear);
+                GetTemporaryRT(cmd, ShaderParams.Downscaled2RT, ref downDesc, FilterMode.Bilinear);
                 int downscaledQuarterRT = ShaderParams.Downscaled2RT;
 
                 switch (smoothing) {
@@ -461,7 +605,8 @@ namespace RadiantGI.Universal {
                         if (downsampling <= 1f) {
                             FullScreenBlit(cmd, ShaderParams.ResolveRT, ShaderParams.Downscaled1RT, Pass.Copy);
                             FullScreenBlit(cmd, ShaderParams.Downscaled1RT, ShaderParams.Downscaled2RT, Pass.WideFilter);
-                        } else {
+                        }
+                        else {
                             cmd.SetGlobalVector(ShaderParams.ExtraData, new Vector4(radiant.rayJitter.value, 1.5f, normalMapInfluence, lumaInfluence));
                             FullScreenBlit(cmd, ShaderParams.ResolveRT, ShaderParams.Downscaled2RT, Pass.WideFilter);
                         }
@@ -470,11 +615,12 @@ namespace RadiantGI.Universal {
                         }
                         break;
                     case 1:
-                        cmd.GetTemporaryRT(ShaderParams.Downscaled2RTA, downDesc, FilterMode.Bilinear);
+                        GetTemporaryRT(cmd, ShaderParams.Downscaled2RTA, ref downDesc, FilterMode.Bilinear);
                         if (downsampling <= 1f) {
                             FullScreenBlit(cmd, ShaderParams.ResolveRT, ShaderParams.Downscaled1RT, Pass.Copy);
                             FullScreenBlit(cmd, ShaderParams.Downscaled1RT, ShaderParams.Downscaled2RTA, Pass.Copy);
-                        } else {
+                        }
+                        else {
                             FullScreenBlit(cmd, ShaderParams.ResolveRT, ShaderParams.Downscaled2RTA, Pass.CopyMultiTaps);
                         }
                         if (usesRSM) {
@@ -483,7 +629,7 @@ namespace RadiantGI.Universal {
                         FullScreenBlit(cmd, ShaderParams.Downscaled2RTA, ShaderParams.Downscaled2RT, Pass.WideFilter);
                         break;
                     case 2:
-                        cmd.GetTemporaryRT(ShaderParams.Downscaled2RTA, downDesc, FilterMode.Bilinear);
+                        GetTemporaryRT(cmd, ShaderParams.Downscaled2RTA, ref downDesc, FilterMode.Bilinear);
                         if (downsampling <= 1f) {
                             FullScreenBlit(cmd, ShaderParams.ResolveRT, ShaderParams.Downscaled1RT, Pass.Copy);
                             FullScreenBlit(cmd, ShaderParams.Downscaled1RT, ShaderParams.Downscaled2RT, Pass.BlurHorizontal);
@@ -492,7 +638,8 @@ namespace RadiantGI.Universal {
                                 FullScreenBlit(cmd, ShaderParams.Downscaled2RTA, Pass.RSM);
                             }
                             FullScreenBlit(cmd, ShaderParams.Downscaled2RTA, ShaderParams.Downscaled2RT, Pass.WideFilter);
-                        } else {
+                        }
+                        else {
                             FullScreenBlit(cmd, ShaderParams.ResolveRT, ShaderParams.Downscaled2RT, Pass.BlurHorizontal);
                             FullScreenBlit(cmd, ShaderParams.Downscaled2RT, ShaderParams.Downscaled2RTA, Pass.BlurVertical);
                             if (usesRSM) {
@@ -502,7 +649,7 @@ namespace RadiantGI.Universal {
                         }
                         break;
                     case 4:
-                        cmd.GetTemporaryRT(ShaderParams.Downscaled2RTA, downDesc, FilterMode.Bilinear);
+                        GetTemporaryRT(cmd, ShaderParams.Downscaled2RTA, ref downDesc, FilterMode.Bilinear);
                         FullScreenBlit(cmd, ShaderParams.ResolveRT, ShaderParams.Downscaled1RTA, Pass.BlurHorizontal);
                         FullScreenBlit(cmd, ShaderParams.Downscaled1RTA, ShaderParams.Downscaled1RT, Pass.BlurVertical);
                         FullScreenBlit(cmd, ShaderParams.Downscaled1RT, ShaderParams.Downscaled2RT, Pass.BlurHorizontal);
@@ -516,7 +663,7 @@ namespace RadiantGI.Universal {
                         downscaledQuarterRT = ShaderParams.Downscaled2RTA;
                         break;
                     default:
-                        cmd.GetTemporaryRT(ShaderParams.Downscaled2RTA, downDesc, FilterMode.Bilinear);
+                        GetTemporaryRT(cmd, ShaderParams.Downscaled2RTA, ref downDesc, FilterMode.Bilinear);
                         FullScreenBlit(cmd, ShaderParams.ResolveRT, ShaderParams.Downscaled1RTA, Pass.BlurHorizontal);
                         FullScreenBlit(cmd, ShaderParams.Downscaled1RTA, ShaderParams.Downscaled1RT, Pass.BlurVertical);
                         FullScreenBlit(cmd, ShaderParams.Downscaled1RT, ShaderParams.Downscaled2RT, Pass.BlurHorizontal);
@@ -557,7 +704,8 @@ namespace RadiantGI.Universal {
                         frameAcumData.lastCameraPosition = camPos;
                         frameAcumData.rtAcumCreationFrame = currentFrame;
                         acumPass = Pass.Copy;
-                    } else {
+                    }
+                    else {
                         float camTranslationDelta = Vector3.Distance(camPos, frameAcumData.lastCameraPosition);
                         frameAcumData.lastCameraPosition = camPos;
                         responseSpeed += camTranslationDelta * radiant.temporalCameraTranslationResponse.value;
@@ -567,32 +715,34 @@ namespace RadiantGI.Universal {
 
                     RenderTargetIdentifier prevRT = new RenderTargetIdentifier(prev, 0, CubemapFace.Unknown, -1);
                     cmd.SetGlobalTexture(ShaderParams.PrevResolve, prevRT);
-                    cmd.GetTemporaryRT(ShaderParams.TempAcum, acumDesc, FilterMode.Bilinear);
+                    GetTemporaryRT(cmd, ShaderParams.TempAcum, ref acumDesc, FilterMode.Bilinear);
                     FullScreenBlit(cmd, computedGIRT, ShaderParams.TempAcum, acumPass);
                     FullScreenBlit(cmd, ShaderParams.TempAcum, prevRT, Pass.CopyExact);
                     computedGIRT = ShaderParams.TempAcum;
-                } else if (prev != null) {
+                }
+                else if (prev != null) {
                     prev.Release();
                     DestroyImmediate(prev);
                 }
 
                 // prepare output blending
-                cmd.GetTemporaryRT(ShaderParams.InputRT, cameraTargetDesc, FilterMode.Point);
+                GetTemporaryRT(cmd, ShaderParams.InputRT, ref cameraTargetDesc, FilterMode.Point);
                 FullScreenBlit(cmd, source, ShaderParams.InputRT, Pass.CopyExact);
 
                 if (usesCompareMode) {
-                    cmd.GetTemporaryRT(ShaderParams.CompareTex, cameraTargetDesc, FilterMode.Point); // needed by the compare pass
+                    GetTemporaryRT(cmd, ShaderParams.CompareTex, ref cameraTargetDesc, FilterMode.Point); // needed by the compare pass
                     if (usesBounce) {
                         FullScreenBlit(cmd, computedGIRT, ShaderParams.CompareTex, Pass.Compose);
                         FullScreenBlit(cmd, ShaderParams.CompareTex, bounceRT, Pass.CopyExact);
                     }
-                } else if (usesBounce) {
-                        FullScreenBlit(cmd, computedGIRT, bounceRT, Pass.Compose);
-                        FullScreenBlitToCamera(cmd, bounceRT, Pass.CopyExact);
-                    } else {
-                        FullScreenBlitToCamera(cmd, computedGIRT, Pass.Compose);
-                    }
-                
+                }
+                else if (usesBounce) {
+                    FullScreenBlit(cmd, computedGIRT, bounceRT, Pass.Compose);
+                    FullScreenBlit(cmd, bounceRT, passData.source, Pass.CopyExact);
+                }
+                else {
+                    FullScreenBlit(cmd, computedGIRT, passData.source, Pass.Compose);
+                }
 
                 switch (debugView) {
                     case DebugView.DownscaledHalf:
@@ -621,41 +771,34 @@ namespace RadiantGI.Universal {
                         FullScreenBlit(cmd, computedGIRT, source, Pass.FinalGIDebug);
                         return;
                 }
-
             }
 
 
-            void FullScreenBlit(CommandBuffer cmd, RenderTargetIdentifier destination, Pass pass) {
+            static void GetTemporaryRT (CommandBuffer cmd, int nameID, ref RenderTextureDescriptor desc, FilterMode filterMode) {
+                if (desc.width < 0) desc.width = 1;
+                if (desc.height < 0) desc.height = 1;
+                cmd.GetTemporaryRT(nameID, desc, filterMode);
+                cmd.SetGlobalTexture(nameID, nameID);
+            }
+
+            static void FullScreenBlit (CommandBuffer cmd, RenderTargetIdentifier destination, Pass pass) {
                 cmd.SetRenderTarget(destination, 0, CubemapFace.Unknown, -1);
                 cmd.DrawMesh(fullscreenMesh, Matrix4x4.identity, mat, 0, (int)pass);
             }
 
-            void FullScreenBlit(CommandBuffer cmd, RenderTargetIdentifier source, RenderTargetIdentifier destination, Pass pass) {
-                cmd.SetRenderTarget(destination, 0, CubemapFace.Unknown, -1);
-                cmd.SetGlobalTexture(ShaderParams.MainTex, source);
-                cmd.DrawMesh(fullscreenMesh, Matrix4x4.identity, mat, 0, (int)pass);
-            }
-
-            void FullScreenBlitToCamera(CommandBuffer cmd, RenderTargetIdentifier source, Pass pass) {
-#if UNITY_2022_2_OR_NEWER
-                RTHandle destination = renderer.cameraColorTargetHandle;
-#else
-                RenderTargetIdentifier destination = renderer.cameraColorTarget;
-#endif
-
+            static void FullScreenBlit (CommandBuffer cmd, RenderTargetIdentifier source, RenderTargetIdentifier destination, Pass pass) {
                 cmd.SetRenderTarget(destination, 0, CubemapFace.Unknown, -1);
                 cmd.SetGlobalTexture(ShaderParams.MainTex, source);
                 cmd.DrawMesh(fullscreenMesh, Matrix4x4.identity, mat, 0, (int)pass);
             }
 
-
-            float CalculateProbeWeight(Vector3 wpos, Vector3 probeBoxMin, Vector3 probeBoxMax, float blendDistance) {
+            static float CalculateProbeWeight (Vector3 wpos, Vector3 probeBoxMin, Vector3 probeBoxMax, float blendDistance) {
                 Vector3 weightDir = Vector3.Min(wpos - probeBoxMin, probeBoxMax - wpos) / blendDistance;
                 return Mathf.Clamp01(Mathf.Min(weightDir.x, Mathf.Min(weightDir.y, weightDir.z)));
             }
 
 
-            bool SetupProbes(CommandBuffer cmd, out int numProbes) {
+            static bool SetupProbes (CommandBuffer cmd, out int numProbes) {
 
                 numProbes = PickNearProbes(out ReflectionProbe probe1, out ReflectionProbe probe2);
                 if (numProbes == 0) return false;
@@ -681,7 +824,7 @@ namespace RadiantGI.Universal {
                 return true;
             }
 
-            int PickNearProbes(out ReflectionProbe probe1, out ReflectionProbe probe2) {
+            static int PickNearProbes (out ReflectionProbe probe1, out ReflectionProbe probe2) {
                 int probesCount = probes.Count;
                 probe1 = probe2 = null;
                 if (probesCount == 0) {
@@ -715,14 +858,14 @@ namespace RadiantGI.Universal {
 
             }
 
-            float ComputeProbeValue(Vector3 camPos, ReflectionProbe probe) {
+            static float ComputeProbeValue (Vector3 camPos, ReflectionProbe probe) {
                 Vector3 probePos = probe.transform.position;
                 float d = (probePos - camPos).sqrMagnitude * (probe.importance + 1) * 1000;
                 if (!probe.bounds.Contains(camPos)) d += 100000;
                 return d;
             }
 
-            void SetupVolumeBounds(CommandBuffer cmd) {
+            static void SetupVolumeBounds (CommandBuffer cmd) {
                 if (!radiant.limitToVolumeBounds.value) {
                     cmd.SetGlobalVector(ShaderParams.BoundsXZ, unlimitedBounds);
                     return;
@@ -749,7 +892,7 @@ namespace RadiantGI.Universal {
                 }
             }
 
-            bool SetupEmitters(Camera cam, List<RadiantVirtualEmitter> emitters) {
+            static bool SetupEmitters (Camera cam, List<RadiantVirtualEmitter> emitters) {
                 // copy emitters data
                 if (emittersBoxMax == null || emittersBoxMax.Length != MAX_EMITTERS) {
                     emittersBoxMax = new Vector4[MAX_EMITTERS];
@@ -775,13 +918,19 @@ namespace RadiantGI.Universal {
                     // emitter with no intensity or range?
                     if (emitter.intensity <= 0 || emitter.range <= 0) continue;
 
-                    // emitter with black color (nothing to inject)?
-                    Vector4 colorAndRange = emitter.GetGIColorAndRange();
-                    if (colorAndRange.x == 0 && colorAndRange.y == 0 && colorAndRange.z == 0) continue;
-
-                    // emitter bounds out of camera frustum
+                    // emitter bounds out of camera frustum?
                     Bounds emitterBounds = emitter.GetBounds();
                     if (!GeometryUtility.TestPlanesAABB(cameraPlanes, emitterBounds)) continue;
+
+                    // emitter with black color (nothing to inject)?
+                    Vector4 colorAndRange = emitter.GetGIColorAndRange();
+                    if (emitter.fadeDistance > 0) {
+                        float fade = ComputeVolumeFade(emitterBounds, emitter.fadeDistance);
+                        colorAndRange.x *= fade;
+                        colorAndRange.y *= fade;
+                        colorAndRange.z *= fade;
+                    }
+                    if (colorAndRange.x == 0 && colorAndRange.y == 0 && colorAndRange.z == 0) continue;
 
                     // add emitter
                     Vector3 emitterPosition = emitter.transform.position;
@@ -821,11 +970,11 @@ namespace RadiantGI.Universal {
                 return true;
             }
 
-            void SortEmitters(Camera cam) {
-                emitters.Sort(EmittersDistanceComparer);
+            static void SortEmitters () {
+                emitters.Sort((p1, p2) => emittersSortFunction(p1, p2));
             }
 
-            int EmittersDistanceComparer(RadiantVirtualEmitter p1, RadiantVirtualEmitter p2) {
+            static int EmittersDistanceComparer (RadiantVirtualEmitter p1, RadiantVirtualEmitter p2) {
                 Vector3 p1Pos = p1.transform.position;
                 Vector3 p2Pos = p2.transform.position;
                 float d1 = (p1Pos - camPos).sqrMagnitude;
@@ -838,7 +987,22 @@ namespace RadiantGI.Universal {
                 return 0;
             }
 
-            public void Cleanup() {
+            static float ComputeVolumeFade (Bounds emitterBounds, float fadeDistance) {
+                Vector3 diff = emitterBounds.center - camPos;
+                diff.x = diff.x < 0 ? -diff.x : diff.x;
+                diff.y = diff.y < 0 ? -diff.y : diff.y;
+                diff.z = diff.z < 0 ? -diff.z : diff.z;
+                Vector3 extents = emitterBounds.extents;
+                Vector3 gap = diff - extents;
+                float maxDiff = gap.x > gap.y ? gap.x : gap.y;
+                maxDiff = maxDiff > gap.z ? maxDiff : gap.z;
+                fadeDistance += 0.0001f;
+                float t = 1f - Mathf.Clamp01(maxDiff / fadeDistance);
+                return t;
+            }
+
+
+            public void Cleanup () {
                 CoreUtils.Destroy(mat);
                 if (prevs != null) {
                     foreach (PerCameraData fad in prevs.Values) {
@@ -861,13 +1025,26 @@ namespace RadiantGI.Universal {
         class RadiantComparePass : ScriptableRenderPass {
 
             const string RGI_CBUF_NAME = "RadiantGICompare";
-            Material mat;
-            RadiantGlobalIllumination radiant;
+            static Material mat;
+            static RadiantGlobalIllumination radiant;
             ScriptableRenderer renderer;
-            RadiantPass radiantPass;
-            RadiantRenderFeature settings;
+            static RadiantRenderFeature settings;
 
-            public bool Setup(ScriptableRenderer renderer, RadiantRenderFeature settings, RadiantPass radiantPass) {
+            class PassData {
+                public CommandBuffer cmd;
+#if UNITY_2022_2_OR_NEWER
+                public RTHandle source, sourceDepth;
+#else
+                public RenderTargetIdentifier source, sourceDepth;
+#endif
+#if UNITY_2023_3_OR_NEWER
+                public TextureHandle colorTexture, depthTexture;
+#endif
+            }
+
+            readonly PassData passData = new PassData();
+
+            public bool Setup (ScriptableRenderer renderer, RenderPassEvent passEvent, RadiantRenderFeature settings) {
 
                 radiant = VolumeManager.instance.stack.GetComponent<RadiantGlobalIllumination>();
                 if (radiant == null || !radiant.IsActive() || radiant.debugView.value != DebugView.None) return false;
@@ -878,40 +1055,90 @@ namespace RadiantGI.Universal {
 
                 if (!radiant.compareMode.value) return false;
 
-                renderPassEvent = RenderPassEvent.AfterRenderingTransparents;
-                this.settings = settings;
+                renderPassEvent = passEvent;
+                RadiantComparePass.settings = settings;
                 this.renderer = renderer;
-                this.radiantPass = radiantPass;
                 if (mat == null) {
                     mat = CoreUtils.CreateEngineMaterial(Shader.Find("Hidden/Kronnect/RadiantGI_URP"));
                 }
                 return true;
             }
 
-
-            public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData) {
+#if UNITY_2023_3_OR_NEWER
+            [Obsolete]
+#endif
+            public override void Execute (ScriptableRenderContext context, ref RenderingData renderingData) {
 
                 CommandBuffer cmd = CommandBufferPool.Get(RGI_CBUF_NAME);
                 cmd.Clear();
+
+#if UNITY_2022_2_OR_NEWER
+                passData.source = renderer.cameraColorTargetHandle;
+                passData.sourceDepth = renderer.cameraDepthTargetHandle;
+#else
+                passData.source = renderer.cameraColorTarget;
+                passData.sourceDepth = renderer.cameraDepthTarget;
+#endif
+
+                passData.cmd = cmd;
+
+                ExecutePass(passData);
+
+                context.ExecuteCommandBuffer(cmd);
+                CommandBufferPool.Release(cmd);
+            }
+
+#if UNITY_2023_3_OR_NEWER
+            public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData) {
+
+                using (var builder = renderGraph.AddUnsafePass<PassData>("Radiant GI Compare RG Pass", out var passData)) {
+
+                    builder.AllowPassCulling(false);
+
+                    UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
+                    passData.colorTexture = resourceData.activeColorTexture;
+                    passData.depthTexture = resourceData.activeDepthTexture;
+
+                    builder.UseTexture(resourceData.activeColorTexture, AccessFlags.ReadWrite);
+                    builder.UseTexture(resourceData.activeDepthTexture, AccessFlags.ReadWrite);
+
+                    builder.SetRenderFunc((PassData passData, UnsafeGraphContext context) => {
+
+                        CommandBuffer cmd = CommandBufferHelpers.GetNativeCommandBuffer(context.cmd);
+                        passData.cmd = cmd;
+                        passData.source = passData.colorTexture;
+                        passData.sourceDepth = passData.depthTexture;
+                        ExecutePass(passData);
+                    });
+                }
+            }
+
+
+#endif
+
+            static void ExecutePass (PassData passData) {
 
                 mat.DisableKeyword(ShaderParams.SKW_FORWARD_AND_DEFERRED);
                 mat.DisableKeyword(ShaderParams.SKW_FORWARD);
                 if (settings.renderingPath == RenderingPath.Both) {
                     mat.EnableKeyword(ShaderParams.SKW_FORWARD_AND_DEFERRED);
-                } else if (settings.renderingPath == RenderingPath.Forward) {
+                }
+                else if (settings.renderingPath == RenderingPath.Forward) {
                     mat.EnableKeyword(ShaderParams.SKW_FORWARD);
                 }
 
                 if (radiant.virtualEmitters.value) {
                     mat.EnableKeyword(ShaderParams.SKW_VIRTUAL_EMITTERS);
-                } else {
+                }
+                else {
                     mat.DisableKeyword(ShaderParams.SKW_VIRTUAL_EMITTERS);
                 }
 
                 float nearFieldObscurance = radiant.nearFieldObscurance.value;
                 if (nearFieldObscurance > 0) {
                     mat.EnableKeyword(ShaderParams.SKW_USES_NEAR_FIELD_OBSCURANCE);
-                } else {
+                }
+                else {
                     mat.DisableKeyword(ShaderParams.SKW_USES_NEAR_FIELD_OBSCURANCE);
                 }
 
@@ -920,43 +1147,19 @@ namespace RadiantGI.Universal {
                 mat.SetInt(ShaderParams.StencilValue, radiant.stencilValue.value);
                 mat.SetInt(ShaderParams.StencilCompareFunction, radiant.stencilCheck.value ? (int)radiant.stencilCompareFunction.value : (int)CompareFunction.Always);
 
-#if UNITY_2022_2_OR_NEWER
-                RTHandle source = renderer.cameraColorTargetHandle;
-#else
-                RenderTargetIdentifier source = renderer.cameraColorTarget;
-#endif
-                FullScreenBlit(cmd, source, ShaderParams.InputRT, Pass.CopyExact); // include transparent objects in the original compare texture
-                FullScreenBlit(cmd, radiantPass.computedGIRT, ShaderParams.CompareTex, Pass.Compose); // add gi
-                FullScreenBlitToCamera(cmd, ShaderParams.InputRT, Pass.Compare);    // render the split
-
-                context.ExecuteCommandBuffer(cmd);
-
-                CommandBufferPool.Release(cmd);
+                CommandBuffer cmd = passData.cmd;
+                FullScreenBlit(cmd, passData.source, ShaderParams.InputRT, Pass.CopyExact); // include transparent objects in the original compare texture
+                FullScreenBlit(cmd, RadiantPass.computedGIRT, ShaderParams.CompareTex, Pass.Compose); // add gi
+                FullScreenBlit(cmd, ShaderParams.InputRT, passData.source, Pass.Compare);    // render the split
             }
 
-            void FullScreenBlit(CommandBuffer cmd, RenderTargetIdentifier source, RenderTargetIdentifier destination, Pass pass) {
+            static void FullScreenBlit (CommandBuffer cmd, RenderTargetIdentifier source, RenderTargetIdentifier destination, Pass pass) {
                 cmd.SetRenderTarget(destination, 0, CubemapFace.Unknown, -1);
                 cmd.SetGlobalTexture(ShaderParams.MainTex, source);
                 cmd.DrawMesh(fullscreenMesh, Matrix4x4.identity, mat, 0, (int)pass);
             }
 
-
-
-            void FullScreenBlitToCamera(CommandBuffer cmd, RenderTargetIdentifier source, Pass pass) {
-#if UNITY_2022_2_OR_NEWER
-                RTHandle destination = renderer.cameraColorTargetHandle;
-                RTHandle destinationDepth = renderer.cameraDepthTargetHandle;
-#else
-                RenderTargetIdentifier destination = renderer.cameraColorTarget;
-                RenderTargetIdentifier destinationDepth = renderer.cameraDepthTarget;
-#endif
-
-                cmd.SetRenderTarget(destination, destinationDepth, 0, CubemapFace.Unknown, -1);
-                cmd.SetGlobalTexture(ShaderParams.MainTex, source);
-                cmd.DrawMesh(fullscreenMesh, Matrix4x4.identity, mat, 0, (int)pass);
-            }
-
-            public void Cleanup() {
+            public void Cleanup () {
                 CoreUtils.Destroy(mat);
             }
         }
@@ -969,13 +1172,15 @@ namespace RadiantGI.Universal {
                 OrganicLight = 0
             }
 
-            Material mat;
+            const string m_strProfilerTag = "Radiant GI Organic Light";
+
+            static Material mat;
             DeferredLights m_DeferredLights;
 
             Texture2D noiseTex;
             Vector3 offset;
 
-            public bool Setup(RadiantGlobalIllumination radiant, ScriptableRenderer renderer, bool isSceneView) {
+            public bool Setup (RadiantGlobalIllumination radiant, ScriptableRenderer renderer, bool isSceneView) {
 
                 if (radiant == null || radiant.organicLight.value <= 0) return false;
 
@@ -983,7 +1188,6 @@ namespace RadiantGI.Universal {
                 if (isSceneView && !radiant.showInSceneView.value) return false;
                 if (!Application.isPlaying && !radiant.showInEditMode.value) return false;
 #endif
-
 
                 DeferredLights deferredLights = ((UniversalRenderer)renderer).deferredLights;
                 if (deferredLights == null) return false;
@@ -1010,7 +1214,8 @@ namespace RadiantGI.Universal {
 
                 if (radiant.organicLightDistanceScaling.value) {
                     mat.EnableKeyword(ShaderParams.SKW_DISTANCE_BLENDING);
-                } else {
+                }
+                else {
                     mat.DisableKeyword(ShaderParams.SKW_DISTANCE_BLENDING);
                 }
                 return true;
@@ -1023,12 +1228,15 @@ namespace RadiantGI.Universal {
                 return m_DeferredLights.GbufferAttachments[m_DeferredLights.GBufferAlbedoIndex];
             }
 #else
-            RenderTargetIdentifier GetAlbedoFromGbuffer() {
+            RenderTargetIdentifier GetAlbedoFromGbuffer () {
                 return m_DeferredLights.GbufferAttachmentIdentifiers[m_DeferredLights.GBufferAlbedoIndex];
             }
 #endif
 
-            public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor) {
+#if UNITY_2023_3_OR_NEWER
+            [Obsolete]
+#endif
+            public override void Configure (CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor) {
 #if UNITY_2022_1_OR_NEWER
                 RTHandle m_GbufferAttachmentsHandle = GetAlbedoFromGbuffer();
                 ConfigureTarget(m_GbufferAttachmentsHandle, m_DeferredLights.DepthAttachmentHandle);
@@ -1040,34 +1248,59 @@ namespace RadiantGI.Universal {
             }
 
 
-            public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData) {
+#if UNITY_2023_3_OR_NEWER
+            [Obsolete]
+#endif
+            public override void Execute (ScriptableRenderContext context, ref RenderingData renderingData) {
 
-                CommandBuffer cmd = CommandBufferPool.Get("Radiant GI Organic Light");
+                CommandBuffer cmd = CommandBufferPool.Get(m_strProfilerTag);
                 cmd.DrawMesh(fullscreenMesh, Matrix4x4.identity, mat, 0, (int)Pass.OrganicLight);
                 context.ExecuteCommandBuffer(cmd);
                 CommandBufferPool.Release(cmd);
             }
 
-            public void Cleanup() {
+#if UNITY_2023_3_OR_NEWER
+
+            class PassData {
+            }
+
+            public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData) {
+                using (var builder = renderGraph.AddRasterRenderPass<PassData>(m_strProfilerTag, out var passData)) {
+
+                    UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
+
+                    builder.SetRenderAttachment(resourceData.gBuffer[0], 1, AccessFlags.Write);
+
+                    builder.SetRenderFunc((PassData passData, RasterGraphContext context) => {
+                        context.cmd.DrawMesh(fullscreenMesh, Matrix4x4.identity, mat, 0, (int)Pass.OrganicLight);
+                    });
+                }
+            }
+
+#endif
+
+            public void Cleanup () {
                 CoreUtils.Destroy(mat);
             }
         }
 
-
-
-        public RenderPassEvent renderPassEvent = RenderPassEvent.BeforeRenderingTransparents;
-
-        [Tooltip("Select the rendering mode according to the URP asset.")]
+        [Tooltip("Select the rendering mode according to the URP asset")]
         public RenderingPath renderingPath = RenderingPath.Deferred;
 
-        [Tooltip("Allows Radiant to be executed even if camera has Post Processing option disabled.")]
+        [Tooltip("Allows Radiant to be executed even if camera has Post Processing option disabled")]
         public bool ignorePostProcessingOption = true;
+
+        [Tooltip("Enable this option to skip rendering GI on overlay cameras")]
+        public bool ignoreOverlayCameras = true;
+
+        [Tooltip("Which cameras can use Radiant Global Illumination")]
+        public LayerMask camerasLayerMask = -1;
 
         RadiantPass radiantPass;
         RadiantComparePass comparePass;
         RadiantOrganicLightPass organicLightPass;
 
-        void OnDisable() {
+        void OnDisable () {
             if (radiantPass != null) {
                 radiantPass.Cleanup();
             }
@@ -1079,7 +1312,7 @@ namespace RadiantGI.Universal {
             }
         }
 
-        public override void Create() {
+        public override void Create () {
             radiantPass = new RadiantPass();
             comparePass = new RadiantComparePass();
             organicLightPass = new RadiantOrganicLightPass();
@@ -1089,16 +1322,20 @@ namespace RadiantGI.Universal {
         public static bool needRTRefresh;
         public static bool isRenderingInDeferred;
 
-        public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData) {
+        public override void AddRenderPasses (ScriptableRenderer renderer, ref RenderingData renderingData) {
 #if UNITY_EDITOR
-            isRenderingInDeferred = renderingPath != RenderingPath.Forward; 
+            isRenderingInDeferred = renderingPath != RenderingPath.Forward;
 #endif
             if (!renderingData.cameraData.postProcessEnabled && !ignorePostProcessingOption) return;
 
             Camera cam = renderingData.cameraData.camera;
             bool isSceneView = cam.cameraType == CameraType.SceneView;
             if (cam.cameraType != CameraType.Game && !isSceneView) return;
-            if (renderingData.cameraData.renderType != CameraRenderType.Base) return;
+
+            CameraRenderType renderType = renderingData.cameraData.renderType;
+            if (ignoreOverlayCameras && renderType == CameraRenderType.Overlay) return;
+
+            if ((camerasLayerMask & (1 << cam.gameObject.layer)) == 0) return;
 
 #if UNITY_EDITOR
             if (UnityEditor.ShaderUtil.anythingCompiling) {
@@ -1119,28 +1356,28 @@ namespace RadiantGI.Universal {
             if (radiantPass.Setup(radiant, renderer, this, isSceneView)) {
                 renderer.EnqueuePass(radiantPass);
                 if (!isSceneView) {
-                    if (comparePass.Setup(renderer, this, radiantPass)) {
+                    if (comparePass.Setup(renderer, radiantPass.renderPassEvent, this)) {
                         renderer.EnqueuePass(comparePass);
                     }
                 }
             }
         }
 
-        public static void RegisterReflectionProbe(ReflectionProbe probe) {
+        public static void RegisterReflectionProbe (ReflectionProbe probe) {
             if (probe == null) return;
             if (!probes.Contains(probe)) {
                 probes.Add(probe);
             }
         }
 
-        public static void UnregisterReflectionProbe(ReflectionProbe probe) {
+        public static void UnregisterReflectionProbe (ReflectionProbe probe) {
             if (probe == null) return;
             if (probes.Contains(probe)) {
                 probes.Remove(probe);
             }
         }
 
-        public static void RegisterVirtualEmitter(RadiantVirtualEmitter emitter) {
+        public static void RegisterVirtualEmitter (RadiantVirtualEmitter emitter) {
             if (emitter == null) return;
             if (!emitters.Contains(emitter)) {
                 emitters.Add(emitter);
@@ -1148,7 +1385,7 @@ namespace RadiantGI.Universal {
             }
         }
 
-        public static void UnregisterVirtualEmitter(RadiantVirtualEmitter emitter) {
+        public static void UnregisterVirtualEmitter (RadiantVirtualEmitter emitter) {
             if (emitter == null) return;
             if (emitters.Contains(emitter)) {
                 emitters.Remove(emitter);

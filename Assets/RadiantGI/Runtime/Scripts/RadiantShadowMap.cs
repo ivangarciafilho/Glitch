@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace RadiantGI.Universal {
 
@@ -49,7 +50,7 @@ namespace RadiantGI.Universal {
 
         bool needShoot;
 
-        void OnEnable() {
+        void OnEnable () {
             thisLight = GetComponent<Light>();
             if (thisLight == null || thisLight.type != LightType.Directional) {
                 Debug.LogError("Radiant Shadow Map script must be added to a directional light!");
@@ -63,15 +64,15 @@ namespace RadiantGI.Universal {
             installed = true;
         }
 
-        private void OnValidate() {
+        private void OnValidate () {
             targetCaptureSize = Mathf.Max(targetCaptureSize, 5);
         }
 
-        private void OnDestroy() {
+        private void OnDestroy () {
             Remove();
         }
 
-        private void Remove() {
+        private void Remove () {
             installed = false;
             if (captureCamera != null && RADIANT_GO_NAME.Equals(captureCamera.name)) {
                 DestroyImmediate(captureCamera.gameObject);
@@ -84,7 +85,7 @@ namespace RadiantGI.Universal {
             DestroyRT(rtNormals);
         }
 
-        void SetupCamera() {
+        void SetupCamera () {
             if (captureCamera == null) {
                 captureCamera = GetComponentInChildren<Camera>();
             }
@@ -96,14 +97,14 @@ namespace RadiantGI.Universal {
             captureCamera = camGO.GetComponent<Camera>();
         }
 
-        private void LateUpdate() {
+        private void LateUpdate () {
             if (thisLight == null) {
                 Remove();
                 return;
             }
 
             if (target == null) {
-                target = Camera.main.transform;
+                target = FindTarget();
                 if (target == null) return;
             }
 
@@ -141,12 +142,25 @@ namespace RadiantGI.Universal {
             }
 
             if (needShoot) {
-                needShoot = false;
                 CaptureScene();
             }
         }
 
-        void CaptureScene() {
+        void CaptureScene () {
+
+            // Make sure indirect light intensity > 0
+            VolumeStack volume = VolumeManager.instance.stack;
+            RadiantGlobalIllumination radiant = volume.GetComponent<RadiantGlobalIllumination>();
+            if (radiant == null || radiant.indirectIntensity.value <= 0) return;
+
+            // Make sure the directional light is illuminating the scene
+            if (thisLight.intensity <= 0 || thisLight.transform.forward.y > 0) {
+                Shader.SetGlobalTexture(ShaderParams.RadiantShadowMapColors, Texture2D.blackTexture);
+                return;
+            }
+
+            needShoot = false;
+
             lastRotation = transform.rotation;
             lastTargetPos = target.position;
             lastCaptureSize = targetCaptureSize;
@@ -171,7 +185,13 @@ namespace RadiantGI.Universal {
             Shader.SetGlobalMatrix(ShaderParams.RadiantWorldToShadowMap, captureCamera.projectionMatrix * captureCamera.worldToCameraMatrix);
         }
 
-        void DestroyRT(RenderTexture rt) {
+        Transform FindTarget () {
+            Camera cam = Camera.main;
+            if (cam != null) return cam.transform;
+            return null;
+        }
+
+        void DestroyRT (RenderTexture rt) {
             if (rt == null) return;
             rt.Release();
             DestroyImmediate(rt);

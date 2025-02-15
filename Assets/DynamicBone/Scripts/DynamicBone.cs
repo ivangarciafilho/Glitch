@@ -1,4 +1,4 @@
-﻿#if UNITY_WEBGL
+﻿#if UNITY_WEBGL || (UNITY_2022_1_OR_NEWER && ENABLE_IL2CPP)
 // No multithread
 #else
 #define ENABLE_MULTITHREAD

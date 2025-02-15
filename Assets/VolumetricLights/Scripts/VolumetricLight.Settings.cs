@@ -116,6 +116,7 @@ namespace VolumetricLights {
         public float penumbra = 0.5f;
 
         [Tooltip("Radius of the tip of the cone. Only applies to spot lights.")] public float tipRadius;
+        public float nearClipDistance;
         [Tooltip("Custom cookie texture (RGB).")] public Texture2D cookieTexture;
 
         public Vector2 cookieScale = Vector2.one;
@@ -146,6 +147,7 @@ namespace VolumetricLights {
         [Header("Shadow Occlusion")]
         public bool enableShadows;
         public float shadowIntensity = 0.7f;
+        public Color shadowColor = new Color(0, 0, 0, 1);
         [Tooltip("Enable translucent shadow map")]
         public bool shadowTranslucency;
         [Tooltip("Customizable intensity for the translucent map sampling")]
@@ -155,6 +157,8 @@ namespace VolumetricLights {
         public ShadowResolution shadowResolution = ShadowResolution._256;
         public LayerMask shadowCullingMask = ~2;
         public ShadowBakeInterval shadowBakeInterval = ShadowBakeInterval.OnStart;
+        [Tooltip("When enabled, baked shadows won't be updated when light rotates, only when position changes. This produces that baked shadows can also rotate when the light does, improving performance. This option only works in play mode.")]
+        public bool shadowBakeIgnoreRotationChange;
         public float shadowNearDistance = 0.1f;
         [Tooltip("Fully enable/disable shadows when far from main camera in order to optimize performance")]
         public bool shadowAutoToggle;
@@ -226,6 +230,7 @@ namespace VolumetricLights {
             if (shadowDirection == Vector3.zero) shadowDirection = Vector3.down; else shadowDirection.Normalize();
             shadowTranslucencyIntensity = Mathf.Max(0, shadowTranslucencyIntensity);
             directLightMultiplier = Mathf.Max(0, directLightMultiplier);
+            nearClipDistance = Mathf.Max(0, nearClipDistance);
 
             #endregion
 

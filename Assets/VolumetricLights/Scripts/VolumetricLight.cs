@@ -7,8 +7,7 @@ using System;
 using UnityEngine;
 using System.Collections.Generic;
 #if UNITY_EDITOR
-using UnityEditor;
-using UnityEditor.Experimental.SceneManagement;
+using UnityEditor.SceneManagement;
 #endif
 
 namespace VolumetricLights {
@@ -47,6 +46,7 @@ namespace VolumetricLights {
         [NonSerialized]
         public MeshRenderer meshRenderer;
         Material fogMat, fogMatLight, fogMatInvisible;
+        Shader fogMatShader, fogMatInvisibleShader;
         Vector4 windDirectionAcum;
         bool requireUpdateMaterial;
         List<string> keywords;
@@ -56,39 +56,35 @@ namespace VolumetricLights {
         [NonSerialized]
         public static Transform mainCamera;
         float lastDistanceCheckTime;
-        bool wasInRange;
+
+        enum Tribool {
+            Unknown = 0,
+            True = 1,
+            False = -1
+        }
+        Tribool wasInRange = Tribool.Unknown;
 
 
         public static List<VolumetricLight> volumetricLights = new List<VolumetricLight>();
 
-        /// <summary>
-        /// This property will return an instanced copy of the profile and use it for this volumetric light from now on. Works similarly to Unity's material vs sharedMaterial.
-        /// </summary>
-        [Obsolete("Settings property is now deprecated. Settings are now part of the Volumetric Light component itself, for example: VolumetricLight.density instead of VolumetricLight.settings.density.")]
-        public VolumetricLightProfile settings {
-            get {
-                return profile;
-            }
-            set {
-                Debug.Log("Changing values through settings is deprecated. If you want to get or set the profile for this light, use the profile property. Or simply set the properties now directly to the volumetric light component. For example: VolumetricLight.density = xxx.");
-            }
-        }
-
 
         void OnEnable() {
             Init();
-        }
-
-
 #if UNITY_EDITOR
-        private void OnWillRenderObject() {
-            if (!Application.isPlaying) {
-                requireUpdateMaterial = true;
-            }
-        }
+            // workaround for volumetric effect disappearing when saving the scene
+            EditorSceneManager.sceneSaving += OnSceneSaving;
 #endif
+        }
+
+        void OnSceneSaving (UnityEngine.SceneManagement.Scene scene, string path) {
+            requireUpdateMaterial = true;
+        }
+
 
         public void Init() {
+            fogMatShader = Shader.Find("VolumetricLights/VolumetricLightURP");
+            fogMatInvisibleShader = Shader.Find("VolumetricLights/Invisible");
+
             if (!volumetricLights.Contains(this)) {
                 volumetricLights.Add(this);
             }
@@ -103,6 +99,9 @@ namespace VolumetricLights {
         public void Refresh() {
             if (!enabled) return;
             CheckProfile();
+
+            generatedRange = generatedTipRadius = generatedSpotAngle = generatedBaseRadius = -1;
+            generatedAreaWidth = generatedAreaHeight = generatedAreaFrustumAngle = generatedAreaFrustumMultiplier = 0;
             CheckMesh();
             CheckShadows();
             UpdateMaterialPropertiesNow();
@@ -117,7 +116,12 @@ namespace VolumetricLights {
             requireUpdateMaterial = true;
         }
 
-        private void OnDisable() {
+        private void OnDisable () {
+#if UNITY_EDITOR
+            EditorSceneManager.sceneSaving -= OnSceneSaving;
+
+#endif
+
             if (volumetricLights.Contains(this)) {
                 volumetricLights.Remove(this);
             }
@@ -137,10 +141,6 @@ namespace VolumetricLights {
                 DestroyImmediate(fogMatInvisible);
                 fogMatInvisible = null;
             }
-            if (fogMatLight != null) {
-                DestroyImmediate(fogMatLight);
-                fogMatLight = null;
-            }
             if (meshRenderer != null) {
                 meshRenderer.enabled = false;
             }
@@ -151,7 +151,7 @@ namespace VolumetricLights {
 
             bool isActiveAndEnabled = lightComp.isActiveAndEnabled || alwaysOn;
             if (isActiveAndEnabled) {
-                if (meshRenderer != null && !meshRenderer.enabled) {
+                if (!autoToggle && meshRenderer != null && !meshRenderer.enabled) {
                     requireUpdateMaterial = true;
                 }
             } else {
@@ -189,13 +189,14 @@ namespace VolumetricLights {
             if (autoToggle) {
                 float maxDistSqr = distanceDeactivation * distanceDeactivation;
                 float minDistSqr = distanceStartDimming * distanceStartDimming;
-                if (minDistSqr > maxDistSqr) minDistSqr = maxDistSqr;
+                if (minDistSqr > maxDistSqr) minDistSqr = maxDistSqr - 0.00001f;
                 float dim = 1f - Mathf.Clamp01((distanceToCameraSqr - minDistSqr) / (maxDistSqr - minDistSqr));
                 brightness *= dim;
-                bool isInRange = dim > 0.0f;
+                Tribool isInRange = dim > 0.0f ? Tribool.True : Tribool.False;
                 if (isInRange != wasInRange) {
                     wasInRange = isInRange;
-                    meshRenderer.enabled = isInRange;
+                    if (isInRange == Tribool.True && !meshRenderer.enabled) requireUpdateMaterial = true;
+                    meshRenderer.enabled = isInRange == Tribool.True;
                 }
             }
 
@@ -252,11 +253,21 @@ namespace VolumetricLights {
         void UpdateVolumeGeometryMaterial(Material mat) {
             if (mat == null) return;
 
-            Vector4 tipData = transform.position;
+            Transform t = transform;
+
+            Vector3 pos = t.position;
+            Vector4 tipData;
+            tipData.x = pos.x;
+            tipData.y = pos.y;
+            tipData.z = pos.z;
             tipData.w = tipRadius;
             mat.SetVector(ShaderParams.ConeTipData, tipData);
 
-            Vector4 coneAxis = transform.forward * generatedRange;
+            Vector3 forward = t.forward;
+            Vector4 coneAxis;
+            coneAxis.x = forward.x * generatedRange;
+            coneAxis.y = forward.y * generatedRange;
+            coneAxis.z = forward.z * generatedRange;
             float maxDistSqr = generatedRange * generatedRange;
             coneAxis.w = maxDistSqr;
             mat.SetVector(ShaderParams.ConeAxis, coneAxis);
@@ -272,7 +283,7 @@ namespace VolumetricLights {
 
             Bounds adjustedBounds = bounds;
             if (useCustomBounds && boundsInLocalSpace) {
-                adjustedBounds.center += transform.position;
+                adjustedBounds.center += pos;
             }
             mat.SetVector(ShaderParams.BoundsCenter, adjustedBounds.center);
             mat.SetVector(ShaderParams.BoundsExtents, adjustedBounds.extents);
@@ -298,7 +309,7 @@ namespace VolumetricLights {
 
         void UpdateMaterialPropertiesNow() {
 
-            wasInRange = false;
+            wasInRange = Tribool.Unknown;
             lastDistanceCheckTime = -999;
 
             mainCamera = null;
@@ -318,10 +329,25 @@ namespace VolumetricLights {
             if (fogMatLight == null) {
                 if (meshRenderer != null) {
                     fogMatLight = meshRenderer.sharedMaterial;
+                    if (fogMatLight != null) {
+                        // ensure this is the correct shader
+                        if (fogMatLight.shader != fogMatShader && fogMatLight.shader != fogMatInvisibleShader) {
+                            fogMatLight = null;
+                        }
+                        if (fogMatLight != null) {
+                            // ensure this material is not used by other lights (can happen if user duplicates another light gameobject in scene)
+                            foreach (VolumetricLight light in volumetricLights) {
+                                if (light != null && light != this && light.meshRenderer != null && light.meshRenderer.sharedMaterial == fogMatLight) {
+                                    fogMatLight = null;
+                                    if (mf != null) mf.sharedMesh = null;
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
                 if (fogMatLight == null) {
-                    fogMatLight = new Material(Shader.Find("VolumetricLights/VolumetricLightURP"));
-                    fogMatLight.hideFlags = HideFlags.DontSave;
+                    fogMatLight = new Material(fogMatShader);
                 }
             }
             fogMat = fogMatLight;
@@ -368,6 +394,7 @@ namespace VolumetricLights {
             fogMat.SetFloat(ShaderParams.Penumbra, penumbra);
             fogMat.SetFloat(ShaderParams.RangeFallOff, rangeFallOff);
             fogMat.SetFloat(ShaderParams.Density, density);
+            fogMat.SetFloat(ShaderParams.NearClipDistance, nearClipDistance);
             fogMat.SetVector(ShaderParams.DirectLightData, new Vector4(directLightMultiplier, directLightSmoothSamples, directLightSmoothRadius, 0));
             fogMat.SetVector(ShaderParams.FallOff, new Vector4(attenCoefConstant, attenCoefLinear, attenCoefQuadratic, 0));
             fogMat.SetVector(ShaderParams.RayMarchSettings, new Vector4(raymarchQuality, dithering * 0.001f, jittering, raymarchMinStep));
@@ -441,7 +468,7 @@ namespace VolumetricLights {
             if (meshRenderer != null) {
                 if (density <= 0 || mediumAlbedo.a == 0) {
                     if (fogMatInvisible == null) {
-                        fogMatInvisible = new Material(Shader.Find("VolumetricLights/Invisible"));
+                        fogMatInvisible = new Material(fogMatInvisibleShader);
                         fogMatInvisible.hideFlags = HideFlags.DontSave;
                     }
                     meshRenderer.sharedMaterial = fogMatInvisible;

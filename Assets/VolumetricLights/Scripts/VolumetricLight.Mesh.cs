@@ -38,7 +38,9 @@ namespace VolumetricLights {
             }
 
             bool needMesh = false;
-            mf = GetComponent<MeshFilter>();
+            if (mf == null) {
+                mf = GetComponent<MeshFilter>();
+            }
             if (mf == null || mf.sharedMesh == null) {
                 needMesh = true;
             }

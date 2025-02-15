@@ -1,10 +1,6 @@
 #ifndef VOLUMETRIC_FOG_2_PRIMITIVES
 #define VOLUMETRIC_FOG_2_PRIMITIVES
 
-float3 _BoundsCenter, _BoundsExtents;
-float4x4 _InvRotMatrix;
-float4x4 _RotMatrix;
-
 float BoxIntersection(float3 origin, float3 viewDir) {
     float3 ro = origin - _BoundsCenter;
     float3 invR   = 1.0.xxx / viewDir;

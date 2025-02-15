@@ -8,6 +8,7 @@
     float4 _MainTex_TexelSize;
 
     #include "BeautifyACESFitted.hlsl"
+    #include "BeautifyAGX.hlsl"
     #include "BeautifyColorTemp.hlsl"
     #include "BeautifyDistortion.hlsl"
     #include "BeautifyCommon.hlsl"
@@ -42,7 +43,17 @@
     float4 _EyeAdaptation;
     float4 _BokehData;
     float4 _BokehData2;
+    float3 _BokehData3;
+
     float4 _Outline;
+	#define OUTLINE_EDGE_THRESHOLD _Outline.a
+
+	float4 _OutlineData;
+	#define OUTLINE_INTENSITY_MULTIPLIER _OutlineData.x
+	#define OUTLINE_DISTANCE_FADE _OutlineData.y
+	#define OUTLINE_MIN_DEPTH_THRESHOLD _OutlineData.z
+    #define OUTLINE_MIN_SATURATION_THRESHOLD _OutlineData.w
+
     float3 _ColorTemp;
     float4 _NightVision;
     float2 _NightVisionDepth;
@@ -124,12 +135,21 @@
         float depth  = BEAUTIFY_GET_SCENE_DEPTH_EYE(i.uv);
     #endif
         float xd     = abs(depth - _BokehData.x) - _BokehData2.x * (depth < _BokehData.x);
-        return 0.5 * _BokehData.y * xd/depth;   // radius of CoC
+        return min(_BokehData3.z, 0.5 * _BokehData.y * xd/depth);   // radius of CoC
     }
+
+   	float3 tmoFilmicACES(float3 x) {
+		const float A = 2.51;
+		const float B = 0.03;
+		const float C = 2.43;
+		const float D = 0.59;
+		const float E = 0.14;
+		return (x * (A * x + B) ) / (x * (C * x + D) + E);
+	}
 
 	void beautifyPass(VaryingsBeautify i, inout float3 rgbM) {
         
-        #if BEAUTIFY_ACES_TONEMAP
+        #if BEAUTIFY_ACES_TONEMAP || BEAUTIFY_AGX_TONEMAP || BEAUTIFY_ACES_FITTED_TONEMAP
              rgbM = clamp(rgbM, 0, _FXColor.z);
         #endif
 
@@ -240,7 +260,14 @@
             #if !BEAUTIFY_OUTLINE_SOBEL
                 float3 normalSE   = getNormal(depth, depthS, depthE, -uvNormalDisp.zy,  uvNormalDisp.xz);
                 float  dnorm      = dot(normalNW, normalSE);
-                rgbM              = lerp(rgbM, _Outline.rgb, (float)(dnorm  < _Outline.a));
+                float  satN       = getSaturation(rgbN);
+                float  satS       = getSaturation(rgbS);
+                float  satW       = getSaturation(rgbW);
+                float  satE       = getSaturation(rgbE);
+                float  maxSat     = max( max(satN, satS), max(satW, satE) );
+                float  minSat     = min( min(satN, satS), min(satW, satE) );
+                float  dSat       = maxSat - minSat;
+                rgbM              = lerp(rgbM, _Outline.rgb, (float)(dnorm  < OUTLINE_EDGE_THRESHOLD && dDepth > OUTLINE_MIN_DEPTH_THRESHOLD && dSat > OUTLINE_MIN_SATURATION_THRESHOLD));
             #else
                 float3 uvInc = float3(_MainTex_TexelSize.x, _MainTex_TexelSize.y, 0);
                 float3 rgbSW = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, uv - uvInc.xy).rgb;    // was tex2Dlod
@@ -264,7 +291,7 @@
             #endif
         #endif
 
-		#if UNITY_COLORSPACE_GAMMA && (BEAUTIFY_BLOOM || BEAUTIFY_NIGHT_VISION || BEAUTIFY_THERMAL_VISION || BEAUTIFY_DIRT || BEAUTIFY_EYE_ADAPTATION || BEAUTIFY_PURKINJE || BEAUTIFY_ACES_TONEMAP)
+		#if UNITY_COLORSPACE_GAMMA && (BEAUTIFY_BLOOM || BEAUTIFY_NIGHT_VISION || BEAUTIFY_THERMAL_VISION || BEAUTIFY_DIRT || BEAUTIFY_EYE_ADAPTATION || BEAUTIFY_PURKINJE || BEAUTIFY_ACES_TONEMAP || BEAUTIFY_AGX_TONEMAP || BEAUTIFY_ACES_FITTED_TONEMAP)
 	    	rgbM = GAMMA_TO_LINEAR(rgbM);
 		#endif
 
@@ -338,27 +365,36 @@
             rgbM   = rgbM * diff;
         #endif
 
-        #if BEAUTIFY_ACES_TONEMAP
+        #if BEAUTIFY_AGX_TONEMAP
              rgbM *= _FXColor.r;
-             rgbM    = ACESFitted(rgbM);
+             rgbM  = AGXFitted(rgbM); // already applies gamma correction
              rgbM *= _FXColor.g;
+             rgbM  = saturate(rgbM);
+        #else
+            #if BEAUTIFY_ACES_FITTED_TONEMAP
+                rgbM *= _FXColor.r;
+                rgbM  = ACESFitted(rgbM);
+                rgbM *= _FXColor.g;
+            #endif
+            #if BEAUTIFY_ACES_TONEMAP
+                 rgbM *= _FXColor.r;
+                 rgbM  = tmoFilmicACES(rgbM);
+                 rgbM *= _FXColor.g;
+            #endif
+    		#if UNITY_COLORSPACE_GAMMA && (BEAUTIFY_BLOOM || BEAUTIFY_NIGHT_VISION || BEAUTIFY_THERMAL_VISION || BEAUTIFY_DIRT || BEAUTIFY_EYE_ADAPTATION || BEAUTIFY_PURKINJE || BEAUTIFY_ACES_FITTED_TONEMAP || BEAUTIFY_ACES_TONEMAP)
+        		rgbM    = LINEAR_TO_GAMMA(rgbM);
+		    #endif
         #endif
-
-		#if UNITY_COLORSPACE_GAMMA && (BEAUTIFY_BLOOM || BEAUTIFY_NIGHT_VISION || BEAUTIFY_THERMAL_VISION || BEAUTIFY_DIRT || BEAUTIFY_EYE_ADAPTATION || BEAUTIFY_PURKINJE || BEAUTIFY_ACES_TONEMAP)
-    		rgbM    = LINEAR_TO_GAMMA(rgbM);
-		#endif
 
         #if BEAUTIFY_LUT || BEAUTIFY_3DLUT
             #if !UNITY_COLORSPACE_GAMMA
-            rgbM = LINEAR_TO_GAMMA(rgbM);
+                rgbM = LINEAR_TO_GAMMA(rgbM);
             #endif
             #if BEAUTIFY_3DLUT
-				float3 xyz = rgbM * _LUT3DParams.yyy * _LUT3DParams.xxx + _LUT3DParams.xxx * 0.5;
+				float3 xyz = rgbM * _LUT3DParams.y + _LUT3DParams.x;
 				float3 lut = SAMPLE_TEXTURE3D(_LUT3DTex, sampler_LinearClamp, xyz).rgb;
             #else
-    //          const float3 lutST = float3(1.0/1024, 1.0/32, 32-1);
 	            float3 lutST = float3(_LUTTex_TexelSize.x, _LUTTex_TexelSize.y, _LUTTex_TexelSize.w - 1);
-
                 float3 lookUp = saturate(rgbM) * lutST.zzz;
                 lookUp.xy = lutST.xy * (lookUp.xy + 0.5);
                 float slice = floor(lookUp.z);
@@ -454,6 +490,7 @@
         #endif
 
    		beautifyPass(i, pixel.rgb);
+
    		return pixel;
 	}
 
@@ -494,7 +531,7 @@
         UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
         float2 uv     = UnityStereoTransformScreenSpaceTex(i.uv);
         #if defined(USE_BILINEAR)
-            return SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, uv);
+            return clamp(SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, uv), 0, 1e6);
         #else
 		    return SAMPLE_TEXTURE2D_X(_MainTex, sampler_PointClamp, uv);
         #endif

@@ -134,11 +134,19 @@ inline float getLuma(float3 rgb) {
 }
 
 
-float3 getNormal(float depth, float depth1, float depth2, float2 offset1, float2 offset2) {
+inline float3 getNormal(float depth, float depth1, float depth2, float2 offset1, float2 offset2) {
     float3 p1 = float3(offset1, depth1 - depth);
     float3 p2 = float3(offset2, depth2 - depth);
     float3 normal = cross(p1, p2);
     return normalize(normal);
+}
+
+inline float getSaturation(float3 rgb) {
+    float maxVal = max(max(rgb.r, rgb.g), rgb.b);
+    float minVal = min(min(rgb.r, rgb.g), rgb.b);
+    float delta = maxVal - minVal;
+    if (maxVal == 0.0) return 0;
+    return delta / maxVal;
 }
 
 #endif // __BEAUTIFY_COMMON_INCLUDE

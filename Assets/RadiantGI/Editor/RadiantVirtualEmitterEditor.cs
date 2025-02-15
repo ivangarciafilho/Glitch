@@ -9,10 +9,10 @@ namespace RadiantGI.Universal {
 
         SerializedProperty color, intensity, range;
         SerializedProperty addMaterialEmission, targetRenderer, material, emissionPropertyName, materialIndex;
-        SerializedProperty boxCenter, boxSize, boundsInLocalSpace;
+        SerializedProperty boxCenter, boxSize, boundsInLocalSpace, fadeDistance;
 
         private readonly BoxBoundsHandle m_BoundsHandle = new BoxBoundsHandle();
-
+        private readonly SphereBoundsHandle m_SphereHandle = new SphereBoundsHandle();
 
         void OnEnable() {
             color = serializedObject.FindProperty("color");
@@ -26,16 +26,16 @@ namespace RadiantGI.Universal {
             boxCenter = serializedObject.FindProperty("boxCenter");
             boxSize = serializedObject.FindProperty("boxSize");
             boundsInLocalSpace = serializedObject.FindProperty("boundsInLocalSpace");
+            fadeDistance = serializedObject.FindProperty("fadeDistance");
         }
 
         protected virtual void OnSceneGUI() {
             RadiantVirtualEmitter vi = (RadiantVirtualEmitter)target;
 
+            // draw the handle
             Bounds bounds = vi.GetBounds();
             m_BoundsHandle.center = bounds.center;
             m_BoundsHandle.size = bounds.size;
-
-            // draw the handle
             EditorGUI.BeginChangeCheck();
             m_BoundsHandle.DrawHandle();
             if (EditorGUI.EndChangeCheck()) {
@@ -47,6 +47,17 @@ namespace RadiantGI.Universal {
                 newBounds.center = m_BoundsHandle.center;
                 newBounds.size = m_BoundsHandle.size;
                 vi.SetBounds(newBounds);
+            }
+
+            // draw sphere radius
+            m_SphereHandle.center = vi.transform.position;
+            m_SphereHandle.radius = vi.range;
+            EditorGUI.BeginChangeCheck();
+            m_SphereHandle.DrawHandle();
+            if (EditorGUI.EndChangeCheck()) {
+                // record the target object before setting new values so changes can be undone/redone
+                Undo.RecordObject(vi, "Change Radius");
+                vi.range = m_SphereHandle.radius;
             }
         }
 
@@ -79,7 +90,8 @@ namespace RadiantGI.Universal {
                 }
                 vi.SetBounds(new Bounds(boxCenter.vector3Value, boxSize.vector3Value));
             }
-
+            EditorGUILayout.PropertyField(fadeDistance);
+            
             serializedObject.ApplyModifiedProperties();
 
         }

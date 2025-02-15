@@ -33,11 +33,13 @@ namespace VolumetricLights {
 
         [NonSerialized]
         public RenderTexture translucentMap;
+        [NonSerialized]
+        public RTHandle translucencyMapHandle;
 
-        bool usesCubemap { get { return shadowBakeMode != ShadowBakeMode.HalfSphere && generatedType == LightType.Point; } }
+        public bool usesCubemap { get { return shadowBakeMode != ShadowBakeMode.HalfSphere && generatedType == LightType.Point; } }
         bool usesTranslucency { get { return shadowTranslucency && (generatedType == LightType.Spot || generatedType == LightType.Rectangle || generatedType == LightType.Disc); } }
 
-        void CheckShadows() { // called during initialization to grab a reference of existing cam
+        void CheckShadows () { // called during initialization to grab a reference of existing cam
             if (cam == null) {
                 Transform childCam = transform.Find(SHADOW_CAM_NAME);
                 if (childCam != null) {
@@ -50,13 +52,13 @@ namespace VolumetricLights {
             }
         }
 
-        void ShadowsDisable() { // called from OnDisable
+        void ShadowsDisable () { // called from OnDisable
             if (cam != null) {
                 cam.enabled = false;
             }
         }
 
-        void ShadowsDispose() { // called from OnDestroy
+        void ShadowsDispose () { // called from OnDestroy
             if (cam != null) {
                 cam.targetTexture = null;
                 cam.enabled = false;
@@ -64,7 +66,7 @@ namespace VolumetricLights {
             DisposeRTs();
         }
 
-        void DisposeRTs() {
+        void DisposeRTs () {
             if (rt != null) {
                 rt.Release();
                 DestroyImmediate(rt);
@@ -79,7 +81,7 @@ namespace VolumetricLights {
             }
         }
 
-        void ShadowsSupportCheck() { // called from UpdateMaterials
+        void ShadowsSupportCheck () { // called from UpdateMaterials
 
             bool usesCookie = cookieTexture != null && lightComp.type == LightType.Spot;
             if (!enableShadows && !usesCookie) {
@@ -115,8 +117,6 @@ namespace VolumetricLights {
                     cam.allowHDR = false;
                     cam.allowMSAA = false;
                 }
-
-                cam.stereoTargetEye = StereoTargetEyeMask.None;
             }
 
             UniversalAdditionalCameraData camData = cam.GetComponent<UniversalAdditionalCameraData>();
@@ -137,6 +137,7 @@ namespace VolumetricLights {
 #endif
             }
 
+            cam.depth = -100;
             cam.nearClipPlane = shadowNearDistance;
             cam.orthographicSize = Mathf.Max(generatedAreaWidth, generatedAreaHeight);
 
@@ -196,6 +197,7 @@ namespace VolumetricLights {
             }
 
             fogMat.SetVector(ShaderParams.ShadowIntensity, new Vector4(shadowIntensity, 1f - shadowIntensity, 0, 0));
+            fogMat.SetVector(ShaderParams.ShadowColor, shadowColor);
 
             if ((shadowCullingMask & 2) != 0) {
                 shadowCullingMask &= ~2; // exclude transparent FX layer
@@ -214,7 +216,7 @@ namespace VolumetricLights {
 
 #if UNITY_2021_3_OR_NEWER
         UniversalRendererData depthRendererData;
-        void CheckAndAssignDepthRenderer(UniversalAdditionalCameraData camData) {
+        void CheckAndAssignDepthRenderer (UniversalAdditionalCameraData camData) {
             UniversalRenderPipelineAsset pipe = (UniversalRenderPipelineAsset)GraphicsSettings.currentRenderPipeline;
             if (pipe == null) return;
 
@@ -247,7 +249,7 @@ namespace VolumetricLights {
         /// <summary>
         /// Updates shadows on this volumetric light
         /// </summary>
-        public void ScheduleShadowCapture() {
+        public void ScheduleShadowCapture () {
             if (cam == null) return;
 
             if (usesCubemap) {
@@ -289,7 +291,7 @@ namespace VolumetricLights {
             }
         }
 
-        void SetupShadowMatrix() {
+        void SetupShadowMatrix () {
 
             if (usesCubemap) return;
 
@@ -308,7 +310,7 @@ namespace VolumetricLights {
         }
 
 
-        void ShadowsUpdate() { // called from Update
+        void ShadowsUpdate () { // called from Update
 
             bool usesCookie = cookieTexture != null && lightComp.type == LightType.Spot;
             if (!enableShadows && !usesCookie) return;
@@ -347,7 +349,8 @@ namespace VolumetricLights {
             }
 
             camTransformChanged = false;
-            if (lastCamPos != camTransform.position || lastCamRot != camTransform.rotation) {
+            bool rotationChanged = lastCamRot != camTransform.rotation;
+            if (lastCamPos != camTransform.position || (rotationChanged && !shadowBakeIgnoreRotationChange)) {
                 camTransformChanged = true;
                 lastCamPos = camTransform.position;
                 lastCamRot = camTransform.rotation;
@@ -357,12 +360,12 @@ namespace VolumetricLights {
                 ShadowCamUpdate();
             }
 
-            if (camTransformChanged || usesCookie || cam.enabled) {
+            if (camTransformChanged || rotationChanged || usesCookie || cam.enabled) {
                 SetupShadowMatrix();
             }
         }
 
-        void ShadowCamUpdate() {
+        void ShadowCamUpdate () {
             if (shadowAutoToggle) {
                 float maxDistSqr = shadowDistanceDeactivation * shadowDistanceDeactivation;
                 if (distanceToCameraSqr > maxDistSqr) {
@@ -385,7 +388,7 @@ namespace VolumetricLights {
             if (shadowBakeInterval == ShadowBakeInterval.OnStart) {
                 if (!cam.enabled && camTransformChanged) {
                     ScheduleShadowCapture();
-                } else if (Application.isPlaying && Time.frameCount > camStartFrameCount + 1) {
+                } else if (Time.frameCount > camStartFrameCount + 1) {
                     cam.enabled = false;
                 }
             } else if (!cam.enabled) {
@@ -393,7 +396,7 @@ namespace VolumetricLights {
             }
         }
 
-        void ComputeShadowTransform(Matrix4x4 proj, Matrix4x4 view) {
+        void ComputeShadowTransform (Matrix4x4 proj, Matrix4x4 view) {
             // Currently CullResults ComputeDirectionalShadowMatricesAndCullingPrimitives doesn't
             // apply z reversal to projection matrix. We need to do it manually here.
             if (usesReversedZBuffer) {

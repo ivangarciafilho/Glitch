@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 using UnityEngine.Rendering;
+using System.Reflection;
+using UnityEditor.IMGUI.Controls;
 
 namespace VolumetricFogAndMist2 {
 
@@ -12,27 +14,34 @@ namespace VolumetricFogAndMist2 {
         Editor cachedProfileEditor;
         SerializedProperty profile;
         SerializedProperty maskEditorEnabled, maskBrushMode, maskBrushColor, maskBrushWidth, maskBrushFuzziness, maskBrushOpacity;
-        SerializedProperty enablePointLights, enableNativeLights;
+        SerializedProperty enablePointLights, enableNativeLights, nativeLightsMultiplier, enableAPV, apvIntensityMultiplier;
         SerializedProperty enableVoids;
-        SerializedProperty enableFogOfWar, fogOfWarCenter, fogOfWarIsLocal, fogOfWarSize, fogOfWarTextureSize, fogOfWarRestoreDelay, fogOfWarRestoreDuration, fogOfWarSmoothness, fogOfWarBlur;
+        SerializedProperty enableFogOfWar, fogOfWarCenter, fogOfWarIsLocal, fogOfWarSize, fogOfWarShowCoverage, fogOfWarTextureWidth, fogOfWarTextureHeight, fogOfWarRestoreDelay, fogOfWarRestoreDuration, fogOfWarSmoothness, fogOfWarBlur;
+        SerializedProperty enableFollow, followTarget, followMode, followOffset, followIncludeDistantFog;
         SerializedProperty enableFade, fadeDistance, fadeOut, fadeController, enableSubVolumes, subVolumes;
+        SerializedProperty enableUpdateModeOptions, updateMode, updateModeCamera, updateModeBounds;
         SerializedProperty showBoundary;
 
         static GUIStyle boxStyle;
         VolumetricFog fog;
         public static VolumetricFog lastEditingFog;
 
-        void OnEnable() {
+        void OnEnable () {
             profile = serializedObject.FindProperty("profile");
 
             enablePointLights = serializedObject.FindProperty("enablePointLights");
             enableNativeLights = serializedObject.FindProperty("enableNativeLights");
+            nativeLightsMultiplier = serializedObject.FindProperty("nativeLightsMultiplier");
+            enableAPV = serializedObject.FindProperty("enableAPV");
+            apvIntensityMultiplier = serializedObject.FindProperty("apvIntensityMultiplier");
             enableVoids = serializedObject.FindProperty("enableVoids");
             enableFogOfWar = serializedObject.FindProperty("enableFogOfWar");
             fogOfWarCenter = serializedObject.FindProperty("fogOfWarCenter");
             fogOfWarIsLocal = serializedObject.FindProperty("fogOfWarIsLocal");
             fogOfWarSize = serializedObject.FindProperty("fogOfWarSize");
-            fogOfWarTextureSize = serializedObject.FindProperty("fogOfWarTextureSize");
+            fogOfWarShowCoverage = serializedObject.FindProperty("fogOfWarShowCoverage");
+            fogOfWarTextureWidth = serializedObject.FindProperty("fogOfWarTextureWidth");
+            fogOfWarTextureHeight = serializedObject.FindProperty("fogOfWarTextureHeight");
             fogOfWarRestoreDelay = serializedObject.FindProperty("fogOfWarRestoreDelay");
             fogOfWarRestoreDuration = serializedObject.FindProperty("fogOfWarRestoreDuration");
             fogOfWarSmoothness = serializedObject.FindProperty("fogOfWarSmoothness");
@@ -45,12 +54,22 @@ namespace VolumetricFogAndMist2 {
             maskBrushFuzziness = serializedObject.FindProperty("maskBrushFuzziness");
             maskBrushOpacity = serializedObject.FindProperty("maskBrushOpacity");
 
+            enableFollow = serializedObject.FindProperty("enableFollow");
+            followTarget = serializedObject.FindProperty("followTarget");
+            followMode = serializedObject.FindProperty("followMode");
+            followOffset = serializedObject.FindProperty("followOffset");
+            followIncludeDistantFog = serializedObject.FindProperty("followIncludeDistantFog");
+
             enableFade = serializedObject.FindProperty("enableFade");
             fadeDistance = serializedObject.FindProperty("fadeDistance");
             fadeOut = serializedObject.FindProperty("fadeOut");
             fadeController = serializedObject.FindProperty("fadeController");
             enableSubVolumes = serializedObject.FindProperty("enableSubVolumes");
             subVolumes = serializedObject.FindProperty("subVolumes");
+            enableUpdateModeOptions = serializedObject.FindProperty("enableUpdateModeOptions");
+            updateMode = serializedObject.FindProperty("updateMode");
+            updateModeCamera = serializedObject.FindProperty("updateModeCamera");
+            updateModeBounds = serializedObject.FindProperty("updateModeBounds");
             showBoundary = serializedObject.FindProperty("showBoundary");
 
             fog = (VolumetricFog)target;
@@ -58,7 +77,7 @@ namespace VolumetricFogAndMist2 {
         }
 
 
-        public override void OnInspectorGUI() {
+        public override void OnInspectorGUI () {
 
             var pipe = GraphicsSettings.currentRenderPipeline as UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset;
             if (pipe == null) {
@@ -73,6 +92,25 @@ namespace VolumetricFogAndMist2 {
                 }
                 EditorGUILayout.Separator();
                 GUI.enabled = false;
+            }
+
+            // Check depth texture mode
+            FieldInfo renderers = pipe.GetType().GetField("m_RendererDataList", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (renderers == null) return;
+            foreach (var renderer in (object[])renderers.GetValue(pipe)) {
+                if (renderer == null) continue;
+                FieldInfo depthTextureModeField = renderer.GetType().GetField("m_CopyDepthMode", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (depthTextureModeField != null) {
+                    int depthTextureMode = (int)depthTextureModeField.GetValue(renderer);
+                    if (depthTextureMode == 1) { // transparent copy depth mode
+                        EditorGUILayout.HelpBox("Depth Texture Mode in URP asset must be set to 'After Opaques' or 'Force Prepass'.", MessageType.Warning);
+                        if (GUILayout.Button("Show Pipeline Asset")) {
+                            Selection.activeObject = (Object)renderer;
+                            GUIUtility.ExitGUI();
+                        }
+                        EditorGUILayout.Separator();
+                    }
+                }
             }
 
             if (boxStyle == null) {
@@ -104,13 +142,27 @@ namespace VolumetricFogAndMist2 {
                 }
             }
 
-
+            EditorGUIUtility.labelWidth = 170;
             EditorGUILayout.PropertyField(enableNativeLights);
+            if (enableNativeLights.boolValue) {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(nativeLightsMultiplier, new GUIContent("Intensity Multiplier"));
+                EditorGUI.indentLevel--;
+            }
+            EditorGUILayout.PropertyField(enableAPV, new GUIContent("Enable APV (Probe Volumes)"));
+            if (enableAPV.boolValue) {
+                EditorGUI.indentLevel++;
+#if !UNITY_2023_1_OR_NEWER
+                EditorGUILayout.HelpBox("Adaptative Probe Volumes are only available in Unity 2023.", MessageType.Warning);
+#endif
+                EditorGUILayout.PropertyField(apvIntensityMultiplier, new GUIContent("Intensity Multiplier"));
+                EditorGUI.indentLevel--;
+            }
 
             GUI.enabled = !enableNativeLights.boolValue;
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PropertyField(enablePointLights);
-            if (GUILayout.Button("Point Light Manager", GUILayout.Width(200))) {
+            if (GUILayout.Button("Point Light Manager", GUILayout.Width(180))) {
                 Selection.activeGameObject = VolumetricFogManager.pointLightManager.gameObject;
             }
             EditorGUILayout.EndHorizontal();
@@ -118,10 +170,22 @@ namespace VolumetricFogAndMist2 {
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PropertyField(enableVoids);
-            if (GUILayout.Button("Void Manager", GUILayout.Width(200))) {
+            if (GUILayout.Button("Void Manager", GUILayout.Width(180))) {
                 Selection.activeGameObject = VolumetricFogManager.fogVoidManager.gameObject;
             }
             EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.PropertyField(enableFollow);
+            if (enableFollow.boolValue) {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(followTarget, new GUIContent("Target"));
+                EditorGUILayout.PropertyField(followMode, new GUIContent("Mode"));
+                if ((VolumetricFogFollowMode)followMode.intValue == VolumetricFogFollowMode.FullXYZ) {
+                    EditorGUILayout.PropertyField(followIncludeDistantFog, new GUIContent("Include Distant Fog", "Also adjusts distant fog base altitude to the followed object altitude."));
+                }
+                EditorGUILayout.PropertyField(followOffset, new GUIContent("Offset"));
+                EditorGUI.indentLevel--;
+            }
 
             EditorGUILayout.PropertyField(enableFade);
             if (enableFade.boolValue) {
@@ -147,7 +211,9 @@ namespace VolumetricFogAndMist2 {
                 EditorGUILayout.PropertyField(fogOfWarCenter, new GUIContent("World Center"));
                 EditorGUILayout.PropertyField(fogOfWarIsLocal, new GUIContent("Is Local", "Enable if fog of war center is local to the fog volume"));
                 EditorGUILayout.PropertyField(fogOfWarSize, new GUIContent("World Coverage"));
-                EditorGUILayout.PropertyField(fogOfWarTextureSize, new GUIContent("Texture Size"));
+                EditorGUILayout.PropertyField(fogOfWarShowCoverage, new GUIContent("Show Coverage Bounds"));
+                EditorGUILayout.PropertyField(fogOfWarTextureWidth, new GUIContent("Texture Width"));
+                EditorGUILayout.PropertyField(fogOfWarTextureHeight, new GUIContent("Texture Height"));
                 EditorGUILayout.PropertyField(fogOfWarRestoreDelay, new GUIContent("Restore Delay"));
                 EditorGUILayout.PropertyField(fogOfWarRestoreDuration, new GUIContent("Restore Duration"));
                 EditorGUILayout.PropertyField(fogOfWarSmoothness, new GUIContent("Border Smoothness"));
@@ -158,19 +224,43 @@ namespace VolumetricFogAndMist2 {
 
                 if (maskEditorEnabled.boolValue) {
                     if (GUILayout.Button("Create New Mask Texture")) {
-                        if (EditorUtility.DisplayDialog("Create Mask Texture", "A texture asset will be created with the size specified in current profile (" + fog.fogOfWarTextureSize + "x" + fog.fogOfWarTextureSize + ").\n\nContinue?", "Ok", "Cancel")) {
+                        if (EditorUtility.DisplayDialog("Create Mask Texture", "A texture asset will be created with the size specified in current profile (" + fog.fogOfWarTextureWidth + "x" + fog.fogOfWarTextureHeight + ").\n\nContinue?", "Ok", "Cancel")) {
                             CreateNewMaskTexture();
                             GUIUtility.ExitGUI();
                         }
                     }
                     EditorGUI.BeginChangeCheck();
                     fog.fogOfWarTexture = (Texture2D)EditorGUILayout.ObjectField(new GUIContent("Coverage Texture", "Fog of war coverage mask. A value of alpha of zero means no fog."), fog.fogOfWarTexture, typeof(Texture2D), false);
+                    Texture2D tex = fog.fogOfWarTexture;
                     if (EditorGUI.EndChangeCheck()) {
                         requiresFogOfWarTextureReload = true;
+                        if (tex != null) {
+                            string assetPath = AssetDatabase.GetAssetPath(tex);
+                            if (!string.IsNullOrEmpty(assetPath)) {
+                                TextureImporter importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+                                if (importer != null) {
+                                    bool settingsChanged = false;
+                                    if (!importer.isReadable) {
+                                        importer.isReadable = true;
+                                        settingsChanged = true;
+                                    }
+
+                                    if (importer.textureCompression != TextureImporterCompression.Uncompressed) {
+                                        importer.textureCompression = TextureImporterCompression.Uncompressed;
+                                        settingsChanged = true;
+                                    }
+                                    if (settingsChanged) {
+                                        importer.SaveAndReimport();
+                                        GUIUtility.ExitGUI();
+                                    }
+                                }
+                            }
+                        }
                     }
-                    Texture2D tex = fog.fogOfWarTexture;
+
                     if (tex != null) {
-                        EditorGUILayout.LabelField("   Texture Size", tex.width.ToString());
+                        EditorGUILayout.LabelField("   Texture Width", tex.width.ToString());
+                        EditorGUILayout.LabelField("   Texture Height", tex.height.ToString());
                         string path = AssetDatabase.GetAssetPath(tex);
                         if (string.IsNullOrEmpty(path)) {
                             path = "(Temporary texture)";
@@ -187,7 +277,7 @@ namespace VolumetricFogAndMist2 {
                             maskBrushMode.intValue = maskBrushMode.intValue == 0 ? 1 : 0;
                         }
                         EditorGUILayout.EndHorizontal();
-                        if (maskBrushMode.intValue == (int)MASK_TEXTURE_BRUSH_MODE.ColorFog) {
+                        if (maskBrushMode.intValue == (int)MaskTextureBrushMode.ColorFog) {
                             EditorGUILayout.PropertyField(maskBrushColor, new GUIContent("   Color", "Brush color."));
                         }
                         EditorGUILayout.PropertyField(maskBrushWidth, new GUIContent("   Width", "Width of the snow editor brush."));
@@ -197,17 +287,28 @@ namespace VolumetricFogAndMist2 {
                         if (tex == null) GUI.enabled = false;
                         if (GUILayout.Button("Fill Mask")) {
                             fog.ResetFogOfWar(1f);
-                            maskBrushMode.intValue = (int)MASK_TEXTURE_BRUSH_MODE.RemoveFog;
+                            maskBrushMode.intValue = (int)MaskTextureBrushMode.RemoveFog;
                         }
                         if (GUILayout.Button("Clear Mask")) {
                             fog.ResetFogOfWar(0);
-                            maskBrushMode.intValue = (int)MASK_TEXTURE_BRUSH_MODE.AddFog;
+                            maskBrushMode.intValue = (int)MaskTextureBrushMode.AddFog;
                         }
 
                         GUI.enabled = true;
                         EditorGUILayout.EndHorizontal();
                         EditorGUILayout.EndVertical();
                     }
+                }
+                EditorGUI.indentLevel--;
+            }
+
+            EditorGUILayout.PropertyField(enableUpdateModeOptions);
+            if (enableUpdateModeOptions.boolValue) {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(updateMode);
+                EditorGUILayout.PropertyField(updateModeCamera, new GUIContent("Camera"));
+                if (updateMode.intValue == (int)VolumetricFogUpdateMode.WhenCameraIsInsideArea) {
+                    EditorGUILayout.PropertyField(updateModeBounds, new GUIContent("Bounds"));
                 }
                 EditorGUI.indentLevel--;
             }
@@ -226,11 +327,16 @@ namespace VolumetricFogAndMist2 {
 
         }
 
-        void CreateFogProfile() {
+
+        void CreateFogProfile () {
 
             // Find directional light and adjusts brightness to avoid excessive bright fog
             float brightness = 1f;
+#if UNITY_2023_2_OR_NEWER
+            Light[] lights = FindObjectsByType<Light>(FindObjectsSortMode.None);
+#else
             Light[] lights = FindObjectsOfType<Light>();
+#endif
             if (lights != null) {
                 foreach (Light light in lights) {
                     if (light.type == LightType.Directional) {
@@ -256,6 +362,34 @@ namespace VolumetricFogAndMist2 {
             profile.objectReferenceValue = fp;
             EditorGUIUtility.PingObject(fp);
         }
-    }
 
+
+        void OnSceneGUI () {
+            OnSceneGUI_FogOfWar();
+            OnSceneGUI_TransformHandle();
+        }
+
+        private readonly BoxBoundsHandle m_BoundsHandle = new BoxBoundsHandle();
+
+        void OnSceneGUI_TransformHandle () {
+            if (fog == null) return;
+            Bounds bounds = fog.GetBounds();
+            m_BoundsHandle.center = bounds.center;
+            m_BoundsHandle.size = bounds.size;
+
+            // draw the handle
+            EditorGUI.BeginChangeCheck();
+            m_BoundsHandle.DrawHandle();
+            if (EditorGUI.EndChangeCheck()) {
+                // record the target object before setting new values so changes can be undone/redone
+                Undo.RecordObject(fog, "Change Bounds");
+
+                // copy the handle's updated data back to the target object
+                Bounds newBounds = new Bounds();
+                newBounds.center = m_BoundsHandle.center;
+                newBounds.size = m_BoundsHandle.size;
+                fog.SetBounds(newBounds);
+            }
+        }
+    }
 }

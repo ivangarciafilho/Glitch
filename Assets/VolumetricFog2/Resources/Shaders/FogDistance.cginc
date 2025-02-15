@@ -1,7 +1,6 @@
 #ifndef VOLUMETRIC_FOG_2_FOG_DISTANCE
 #define VOLUMETRIC_FOG_2_FOG_DISTANCE
 
-float4 _DistanceData;
 TEXTURE2D(_DepthGradientTex);
 SAMPLER(_depthGradient_linear_clamp_sampler);
 TEXTURE2D(_HeightGradientTex);
@@ -10,7 +9,7 @@ SAMPLER(_heightGradient_linear_clamp_sampler);
 inline half ApplyFogDistance(float3 rayStart, float3 wpos) {
     float3 vd = rayStart - wpos;
     float voidDistance = dot(vd, vd) * _DistanceData.w;
-    half alpha = saturate(1.0 + (voidDistance - 1.0) * _DistanceData.y);
+    half alpha = saturate(_DistanceData.y - voidDistance);
     return alpha;
 }
 

@@ -11,14 +11,15 @@ float4  _BlueNoise_TexelSize;
 float4  _MainTex_TexelSize;
 float4  _MainTex_ST;
 float4  _DownsampledDepth_TexelSize;
-float3  _MiscData;
+float4  _MiscData;
 float   _BlurScale;
 half4   _ScatteringData;
-half3 _ScatteringTint;
+half3   _ScatteringTint;
 
 #define DITHER_STRENGTH _MiscData.x
 #define BRIGHTNESS _MiscData.y
-#define EDGE_THRESHOLD _MiscData.z
+#define BLUR_EDGE_THRESHOLD _MiscData.z
+#define DOWNSCALING_EDGE_THRESHOLD _MiscData.w
 #define BLUR_SCALE _BlurScale
 #define SCATTERING _ScatteringData.w
 #define SCATTERING_THRESHOLD _ScatteringData.x
@@ -134,11 +135,19 @@ struct AttributesSimple
         half4 pixel0 = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, i.uv);
         half4 pixel1 = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, uv1);
         half4 pixel2 = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, uv2);
-	half4 pixel3 = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, uv3);
+	    half4 pixel3 = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, uv3);
         half4 pixel4 = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, uv4);
 
         float w0 = 0.2270270270;
         half4 wn = half4(0.3162162162.xx, 0.0702702703.xx);
+
+        #if VF2_DEPTH_PEELING // avoids artifacts on particles rect borders
+            wn.x *= pixel1.a;
+            wn.y *= pixel2.a;
+            wn.z *= pixel3.a;
+            wn.w *= pixel4.a;
+        #endif
+        
         #if EDGE_PRESERVE_UPSCALING || EDGE_PRESERVE
             float depthFull = GetDownsampledLinearEyeDepth(i.uv);
             float4 depths;
@@ -146,20 +155,22 @@ struct AttributesSimple
             depths.y = GetDownsampledLinearEyeDepth(uv2);
             depths.z = GetDownsampledLinearEyeDepth(uv3);
             depths.w = GetDownsampledLinearEyeDepth(uv4);
-            half4 depthDiffs = 1.0 + abs(depths - depthFull) * EDGE_THRESHOLD;
+            half4 depthDiffs = 1.0 + abs(depths - depthFull) * BLUR_EDGE_THRESHOLD;
             wn *= saturate(1.0 / depthDiffs);
             half w = w0 + dot(wn, 1.0);
             half4 pixel = pixel0 * w0 + pixel1 * wn.x + pixel2 * wn.y + pixel3 * wn.z + pixel4 * wn.w;
-            pixel /= w;
+            pixel /= w + 0.00001;
         #else
+            half w = w0 + dot(wn, 1.0);
             half4 pixel = pixel0 * w0 + pixel1 * wn.x + pixel2 * wn.y + pixel3 * wn.z + pixel4 * wn.w;
+            pixel /= w + 0.00001;
         #endif
 
         #if DITHER
             ApplyDither(pixel, i.uv);
         #endif
 
-   		return pixel;
+  		return pixel;
 	}
 
 	struct VaryingsSimple {
@@ -189,7 +200,6 @@ struct AttributesSimple
 
         float depthFull = GetRawDepth(i.uv);
 
-        const float threshold = 0.0005;
         const float t = 0.5;
         float2 uv00 = UnityStereoTransformScreenSpaceTex(i.uv + _DownsampledDepth_TexelSize.xy * float2(-t, -t));
         float2 uv10 = UnityStereoTransformScreenSpaceTex(i.uv + _DownsampledDepth_TexelSize.xy * float2(t, -t));
@@ -200,10 +210,11 @@ struct AttributesSimple
         depths.y = SAMPLE_TEXTURE2D_X(_DownsampledDepth, sampler_LinearClamp, uv10).r;
         depths.z = SAMPLE_TEXTURE2D_X(_DownsampledDepth, sampler_LinearClamp, uv01).r;
         depths.w = SAMPLE_TEXTURE2D_X(_DownsampledDepth, sampler_LinearClamp, uv11).r;
+
         float4 diffs = abs(depthFull.xxxx - depths);
 
         float2 minUV = UnityStereoTransformScreenSpaceTex(i.uv);
-        if (any(diffs > threshold)) {
+        if (any(diffs > DOWNSCALING_EDGE_THRESHOLD)) {
             // Check 10 vs 00
             float minDiff  = lerp(diffs.x, diffs.y, diffs.y < diffs.x);
             minUV    = lerp(uv00, uv10, diffs.y < diffs.x);
@@ -213,8 +224,25 @@ struct AttributesSimple
             // Check against 11
             minUV    = lerp(minUV, uv11, diffs.w < minDiff);
         } 
+
+        #if VF2_DEPTH_PEELING // avoids artifacts on particles rect borders
+            half4 pixel = SAMPLE_TEXTURE2D_X(_MainTex, sampler_PointClamp, minUV);
+        #else
+            half4 pixel = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, minUV);
+        #endif
         
-        half4 pixel = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, minUV);
+        #if DITHER
+            ApplyDither(pixel, i.uv);
+        #endif
+
+   		return pixel;
+	}
+
+    half4 FragBlend (VaryingsSimple i): SV_Target {
+    	UNITY_SETUP_INSTANCE_ID(i);
+        UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
+
+        half4 pixel = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, UnityStereoTransformScreenSpaceTex(i.uv));
 
         #if DITHER
             ApplyDither(pixel, i.uv);
@@ -305,7 +333,6 @@ struct AttributesSimple
         float2 minUV = i.uv;
         #if SCATTERING_HQ
             float depthFull = GetRawDepth(i.uv);
-            const float threshold = 0.0005;
             const float t = 0.5;
             float2 uv00 = UnityStereoTransformScreenSpaceTex(i.uv + _DownsampledDepth_TexelSize.xy * float2(-t, -t));
             float2 uv10 = UnityStereoTransformScreenSpaceTex(i.uv + _DownsampledDepth_TexelSize.xy * float2(t, -t));
@@ -318,7 +345,7 @@ struct AttributesSimple
             depths.w = SAMPLE_TEXTURE2D_X(_DownsampledDepth, sampler_LinearClamp, uv11).r;
             float4 diffs = abs(depthFull.xxxx - depths);
 
-            if (any(diffs > threshold)) {
+            if (any(diffs > DOWNSCALING_EDGE_THRESHOLD)) {
                 // Check 10 vs 00
                 float minDiff  = lerp(diffs.x, diffs.y, diffs.y < diffs.x);
                 minUV    = lerp(uv00, uv10, diffs.y < diffs.x);
@@ -331,8 +358,13 @@ struct AttributesSimple
         #endif
         
         half4 fog = SAMPLE_TEXTURE2D_X(_LightBuffer, sampler_LinearClamp, minUV);
+        #if !VF2_DEPTH_PEELING
+            // when using depth peeling, we have to respect the fog blending factor for both back and front fog layers to 
+            // avoid artifacts
+            color.a = saturate( fog.a * fog.a * SCATTERING * 4.0);
+        #endif
+
         color.rgb *= _ScatteringTint;
-        color.a = saturate( fog.a * fog.a * SCATTERING * 4.0);
 
         return color;
     }

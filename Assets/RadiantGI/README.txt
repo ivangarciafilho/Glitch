@@ -71,7 +71,57 @@ https://assetstore.unity.com/publishers/15018
 Version history
 ---------------
 
-Current version
+Version 20.2
+- Virtual emitters: easily change radius in SceneView through a Sphere handle
+- Virtual emitters: added fade distance option
+
+Version 20.1.2
+- [Fix] Fixed rendering sorting issue with Volumetric Fog & Mist asset
+
+Version 20.1.1
+- [Fix] Fixed NFO artifacts at far distances
+
+Version 20.1
+- Added "Ignore Overlay Cameras" and "Cameras Layer Mask" options to Radiant Render Feature
+
+Version 20.0.2
+- [Fix] Fixed an issue on Uniy 2022 or later when Post Processing is enabled on camera with temporal reprojection
+
+Version 20.0.1
+- Added inspector warning if Depth Texture Mode is set to After Transparents (should be After Opaques or Depth PrePass)
+
+Version 20.0
+- Added support for Render Graph (Unity 2023.3)
+
+Version 8.2.1
+- [Fix] Fixes an issue that delayed virtual emitters activation
+
+Version 8.2
+- Source Brightness (reduces the brigthness of the original image before adding GI)
+- GI Weight (this will reduce the pixel color to allow the added GI to be more prominent in the LDR color range)
+
+Version 8.1
+- Temporal Filter chroma threshold max range increased to 2
+- Internal raycast improvements
+- [Fix] Fixed reflective shadow map lighting changes linked to directional light position
+- [Fix] Fixed pixelization issue
+
+Version 8.0.1
+- [Fix] Fixed banding artifacts on WebGL
+
+Version 8.0
+- Organic Light: new feature that injects light variation in the scene creating more interesting and complex lighting
+
+Version 7.1.1
+- [Fix] Fixed integration with Unity SSAO
+
+Version 7.1
+- Added "Capture Size" parameter to Radiant Shadow Map script. Increase this value to cover a wider area when using third person view cameras for example.
+
+Version 7.0
+- Max Brightness option produces now more natural results
+
+Version 6.9
 - Added specular contribution option. Decrease to avoid overexposition of GI over shiny materials.
 - [Fix] Fixed rendering issue in deferred when rendering layers option is enabled
 

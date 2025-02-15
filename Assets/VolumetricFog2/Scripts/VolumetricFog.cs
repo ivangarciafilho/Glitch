@@ -8,27 +8,45 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace VolumetricFogAndMist2 {
 
-    public enum VolumetricFogShape {
-        Box,
-        Sphere
+
+    public enum VolumetricFogFollowMode {
+        FullXYZ = 0,
+        RestrictToXZPlane = 1
+    }
+
+    public enum VolumetricFogUpdateMode {
+        WhenFogVolumeIsVisible = 1,
+        WhenCameraIsInsideArea = 2
     }
 
     [ExecuteInEditMode]
     [DefaultExecutionOrder(100)]
+    [HelpURL("https://kronnect.com/guides/volumetric-fog-urp-introduction/")]
     public partial class VolumetricFog : MonoBehaviour {
 
         public VolumetricFogProfile profile;
 
         [Tooltip("Supports Unity native lights including point and spot lights.")]
         public bool enableNativeLights;
+        [Tooltip("Multiplier to native lights intensity")]
+        public float nativeLightsMultiplier = 1f;
         [Tooltip("Enable fast point lights. This option is much faster than native lights. However, if you enable native lights, this option can't be enabled as point lights are already included in the native lights support.")]
         public bool enablePointLights;
-        public bool enableSpotLights;
+        [Tooltip("Supports Adaptative Probe Volumes (Unity 2023.1+)")]
+        public bool enableAPV;
+        [Tooltip("Multiplier to native lights intensity")]
+        public float apvIntensityMultiplier = 1f;
         public bool enableVoids;
-
+        [Tooltip("Makes this fog volume follow another object automatically")]
+        public bool enableFollow;
+        public Transform followTarget;
+        public VolumetricFogFollowMode followMode = VolumetricFogFollowMode.RestrictToXZPlane;
+        public bool followIncludeDistantFog;
+        public Vector3 followOffset;
         [Tooltip("Fades in/out fog effect when reference controller enters the fog volume.")]
         public bool enableFade;
         [Tooltip("Fog volume blending starts when reference controller is within this fade distance to any volume border.")]
@@ -41,11 +59,18 @@ namespace VolumetricFogAndMist2 {
         public bool enableSubVolumes;
         [Tooltip("Allowed subVolumes. If no subvolumes are specified, any subvolume entered by this controller will affect this fog volume.")]
         public List<VolumetricFogSubVolume> subVolumes;
+        [Tooltip("Customize how this fog volume data is updated and animated")]
+        public bool enableUpdateModeOptions;
+        public VolumetricFogUpdateMode updateMode = VolumetricFogUpdateMode.WhenFogVolumeIsVisible;
+        [Tooltip("Camera used to compute visibility of this fog volume. If not set, the system will use the main camera.")]
+        public Camera updateModeCamera;
+        public Bounds updateModeBounds = new Bounds(Vector3.zero, Vector3.one * 100);
         [Tooltip("Shows the fog volume boundary in Game View")]
         public bool showBoundary;
 
         [NonSerialized]
         public MeshRenderer meshRenderer;
+        MeshFilter mf;
         Material fogMat, noiseMat, turbulenceMat;
         Shader fogShader;
         RenderTexture rtNoise, rtTurbulence;
@@ -54,18 +79,23 @@ namespace VolumetricFogAndMist2 {
         Vector3 sunDir;
         float dayLight, moonLight;
         List<string> shaderKeywords;
+        string[] keywordsArray;
         Texture3D detailTex, refDetailTex;
         Mesh debugMesh;
         Material fogDebugMat;
         VolumetricFogProfile activeProfile, lerpProfile;
         Vector3 lastControllerPosition;
         float alphaMultiplier = 1f;
+        Material distantFogMat;
 
         bool profileIsInstanced;
         bool requireUpdateMaterial;
         ColorSpace currentAppliedColorSpace;
         static Texture2D blueNoiseTex;
         Color ambientMultiplied;
+
+        float lastVolumeHeight;
+        Bounds cachedBounds;
 
         /// <summary>
         /// This property will return an instanced copy of the profile and use it for this volumetric fog from now on. Works similarly to Unity's material vs sharedMaterial.
@@ -86,6 +116,9 @@ namespace VolumetricFogAndMist2 {
             }
         }
 
+        [NonSerialized]
+        public bool forceTerrainCaptureUpdate;
+
         public readonly static List<VolumetricFog> volumetricFogs = new List<VolumetricFog>();
 
         public Material material => fogMat;
@@ -93,32 +126,37 @@ namespace VolumetricFogAndMist2 {
 
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void Init() {
+        static void Init () {
             volumetricFogs.Clear();
         }
 
 
-        void OnEnable() {
+        void OnEnable () {
             volumetricFogs.Add(this);
             VolumetricFogManager manager = Tools.CheckMainManager();
-            gameObject.layer = manager.fogLayer;
             FogOfWarInit();
             CheckSurfaceCapture();
             UpdateMaterialPropertiesNow();
         }
 
-        void OnDisable() {
+        void OnDisable () {
             if (volumetricFogs.Contains(this)) volumetricFogs.Remove(this);
             if (profile != null) {
                 profile.onSettingsChanged -= UpdateMaterialProperties;
             }
         }
 
-        void OnValidate() {
+        void OnDidApplyAnimationProperties () {  // support for animating property based fields
             UpdateMaterialProperties();
         }
 
-        void OnDestroy() {
+        void OnValidate () {
+            nativeLightsMultiplier = Mathf.Max(0, nativeLightsMultiplier);
+            apvIntensityMultiplier = Mathf.Max(0, apvIntensityMultiplier);
+            UpdateMaterialProperties();
+        }
+
+        void OnDestroy () {
             if (rtNoise != null) {
                 rtNoise.Release();
             }
@@ -129,24 +167,52 @@ namespace VolumetricFogAndMist2 {
                 DestroyImmediate(fogMat);
                 fogMat = null;
             }
+            if (distantFogMat != null) {
+                DestroyImmediate(distantFogMat);
+                distantFogMat = null;
+            }
             FogOfWarDestroy();
             DisposeSurfaceCapture();
         }
 
-        void OnDrawGizmosSelected() {
+        void OnDrawGizmosSelected () {
+            if (enableFogOfWar && fogOfWarShowCoverage) {
+                Gizmos.color = new Color(1, 0, 0, 0.75F);
+                Vector3 position = anchoredFogOfWarCenter;
+                position.y = transform.position.y;
+                Vector3 size = fogOfWarSize;
+                size.y = transform.localScale.y;
+                Gizmos.DrawWireCube(position, size);
+            }
+
+            if (enableUpdateModeOptions && updateMode == VolumetricFogUpdateMode.WhenCameraIsInsideArea) {
+                Gizmos.color = new Color(0, 1, 0, 0.75F);
+                Gizmos.DrawWireCube(updateModeBounds.center, updateModeBounds.size);
+            }
+
             Gizmos.color = new Color(1, 1, 0, 0.75F);
             Gizmos.matrix = transform.localToWorldMatrix;
             Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
         }
 
-        void LateUpdate() {
+        public Bounds GetBounds () {
+            return new Bounds(transform.position, transform.localScale);
+        }
+
+        public void SetBounds (Bounds bounds) {
+            transform.position = bounds.center;
+            transform.localScale = bounds.size;
+        }
+
+        void LateUpdate () {
             if (fogMat == null || meshRenderer == null || profile == null) return;
+
+            if (enableUpdateModeOptions && !CanUpdate()) return;
 
             if (requireUpdateMaterial) {
                 requireUpdateMaterial = false;
                 UpdateMaterialPropertiesNow();
             }
-
 
 #if FOG_ROTATION
             Matrix4x4 rot = Matrix4x4.TRS(Vector3.zero, transform.rotation, Vector3.one);
@@ -156,11 +222,45 @@ namespace VolumetricFogAndMist2 {
             transform.rotation = Quaternion.identity;
 #endif
 
-            Vector3 center = transform.position;
-            Vector3 extents = transform.lossyScale * 0.5f;
-            Bounds bounds = new Bounds(center, extents * 2f);
-
             ComputeActiveProfile();
+
+            if (activeProfile.customHeight) {
+                Vector3 scale = transform.localScale;
+                if (activeProfile.height == 0) {
+                    activeProfile.height = scale.y;
+                }
+                if (scale.y != activeProfile.height) {
+                    scale.y = activeProfile.height;
+                    transform.localScale = scale;
+                }
+            }
+
+            if (activeProfile.scaleNoiseWithHeight > 0 && lastVolumeHeight != transform.localScale.y) {
+                ApplyProfileSettings();
+            }
+
+            if (enableFollow && followTarget != null) {
+                Vector3 position = followTarget.position;
+                if (followMode == VolumetricFogFollowMode.RestrictToXZPlane) {
+                    position.y = transform.position.y;
+                }
+                transform.position = position + followOffset;
+            }
+
+            Vector3 center, extents;
+            if (activeProfile.shape == VolumetricFogShape.Custom && activeProfile.customMesh != null) {
+                // Get the mesh bounds in world space
+                Bounds meshBounds = activeProfile.customMesh.bounds;
+                Vector3 boundsCenter = transform.TransformPoint(meshBounds.center);
+                Vector3 boundsExtents = Vector3.Scale(meshBounds.extents, transform.lossyScale);
+                center = boundsCenter;
+                extents = boundsExtents;
+            } else {
+                center = transform.position;
+                extents = transform.lossyScale * 0.5f;
+            }
+
+            Bounds bounds = new Bounds(center, extents * 2f);
 
             bool requireApplyProfileSettings = enableFade || enableSubVolumes;
 #if UNITY_EDITOR
@@ -249,7 +349,7 @@ namespace VolumetricFogAndMist2 {
 
             fogMat.SetVector(ShaderParams.LightColor, lightColor);
 
-            meshRenderer.enabled = lightColor.a > 0;
+            meshRenderer.enabled = activeProfile.density > 0 && lightColor.a > 0;
 
             float deltaTime = Time.deltaTime;
             windAcum += activeProfile.windDirection * deltaTime;
@@ -278,7 +378,6 @@ namespace VolumetricFogAndMist2 {
                     fogDebugMat = new Material(Shader.Find("Hidden/VolumetricFog2/VolumeDebug"));
                 }
                 if (debugMesh == null) {
-                    MeshFilter mf = GetComponent<MeshFilter>();
                     if (mf != null) {
                         debugMesh = mf.sharedMesh;
                     }
@@ -295,78 +394,205 @@ namespace VolumetricFogAndMist2 {
                 FogVoidManager.usingVoids = true;
             }
 
-            SurfaceCaptureUpdate();
+            if (activeProfile.terrainFit) {
+                SurfaceCaptureUpdate();
+            }
+
+            if (activeProfile.distantFog) {
+                if (mf != null && distantFogMat != null) {
+                    distantFogMat.SetVector(ShaderParams.SunDir, sunDir);
+                    distantFogMat.SetVector(ShaderParams.LightColor, lightColor);
+                    float baseAltitude = activeProfile.distantFogBaseAltitude;
+                    if (enableFollow && followIncludeDistantFog && followMode == VolumetricFogFollowMode.FullXYZ && followTarget != null) {
+                        baseAltitude += followTarget.position.y + followOffset.y;
+                    }
+                    distantFogMat.SetVector(ShaderParams.DistantFogData2, new Vector4(baseAltitude, activeProfile.distantFogSymmetrical ? -1e6f : 1, 0, 0));
+                    if (!VolumetricFogRenderFeature.isUsingDepthPeeling) {
+                        distantFogMat.renderQueue = activeProfile.distantFogRenderQueue;
+                        const float bs = 50000;
+                        Matrix4x4 m = Matrix4x4.TRS(transform.position, Quaternion.identity, new Vector3(bs, bs, bs));
+                        Graphics.DrawMesh(mf.sharedMesh, m, distantFogMat, gameObject.layer);
+                    }
+                }
+            }
         }
 
 
-        void UpdateNoise() {
+        public void RenderDistantFog (CommandBuffer cmd) {
+            if (mf == null || distantFogMat == null || !activeProfile.distantFog) return;
+                    const float bs = 50000;
+            Matrix4x4 m = Matrix4x4.TRS(transform.position, Quaternion.identity, new Vector3(bs, bs, bs));
+            UpdateDistantFogPropertiesNow();
+            cmd.DrawMesh(mf.sharedMesh, m, distantFogMat);
+        }
+
+        Bounds cameraFrustumBounds;
+        static readonly Vector3[] frustumVertices = new Vector3[8];
+        Vector3 cameraFrustumLastPosition;
+        Quaternion cameraFrustumLastRotation;
+
+
+        bool CanUpdate () {
+
+#if UNITY_EDITOR
+            if (!Application.isPlaying) return true;
+#endif
+
+            Camera cam = updateModeCamera;
+            if (cam == null) {
+                cam = Camera.main;
+                if (cam == null) return true;
+            }
+
+            bool isVisible;
+            Transform camTransform = cam.transform;
+            Vector3 camPos = camTransform.position;
+            if (updateMode == VolumetricFogUpdateMode.WhenFogVolumeIsVisible) {
+                Quaternion camRot = camTransform.rotation;
+                if (camPos != cameraFrustumLastPosition || camRot != cameraFrustumLastRotation) {
+                    cameraFrustumLastPosition = camPos;
+                    cameraFrustumLastRotation = camRot;
+                    CalculateFrustumBounds(cam);
+                }
+                if (transform.hasChanged || cachedBounds.size.x == 0) {
+                    cachedBounds = meshRenderer.bounds;
+                    transform.hasChanged = false;
+                }
+                isVisible = cameraFrustumBounds.Intersects(cachedBounds);
+            } else {
+                isVisible = updateModeBounds.Contains(camPos);
+            }
+            return isVisible;
+        }
+
+        void CalculateFrustumBounds (Camera camera) {
+            CalculateFrustumVertices(camera);
+            cameraFrustumBounds = new Bounds(frustumVertices[0], Vector3.zero);
+            for (int k = 1; k < 8; k++) {
+                cameraFrustumBounds.Encapsulate(frustumVertices[k]);
+            }
+        }
+
+        void CalculateFrustumVertices (Camera cam) {
+            float nearClipPlane = cam.nearClipPlane;
+            frustumVertices[0] = cam.ViewportToWorldPoint(new Vector3(0, 0, nearClipPlane));
+            frustumVertices[1] = cam.ViewportToWorldPoint(new Vector3(0, 1, nearClipPlane));
+            frustumVertices[2] = cam.ViewportToWorldPoint(new Vector3(1, 0, nearClipPlane));
+            frustumVertices[3] = cam.ViewportToWorldPoint(new Vector3(1, 1, nearClipPlane));
+            float farClipPlane = cam.farClipPlane;
+            frustumVertices[4] = cam.ViewportToWorldPoint(new Vector3(0, 0, farClipPlane));
+            frustumVertices[5] = cam.ViewportToWorldPoint(new Vector3(0, 1, farClipPlane));
+            frustumVertices[6] = cam.ViewportToWorldPoint(new Vector3(1, 0, farClipPlane));
+            frustumVertices[7] = cam.ViewportToWorldPoint(new Vector3(1, 1, farClipPlane));
+        }
+
+        void UpdateNoise () {
 
             if (activeProfile == null) return;
             Texture noiseTex = activeProfile.noiseTexture;
             if (noiseTex == null) return;
 
-            if (rtTurbulence == null || rtTurbulence.width != noiseTex.width) {
-                RenderTextureDescriptor desc = new RenderTextureDescriptor(noiseTex.width, noiseTex.height, RenderTextureFormat.ARGB32, 0);
-                rtTurbulence = new RenderTexture(desc);
-                rtTurbulence.wrapMode = TextureWrapMode.Repeat;
-            }
-            turbAcum += Time.deltaTime * activeProfile.turbulence;
-            turbAcum %= 10000;
-            turbulenceMat.SetFloat(ShaderParams.TurbulenceAmount, turbAcum);
-            turbulenceMat.SetFloat(ShaderParams.NoiseStrength, activeProfile.noiseStrength);
-            turbulenceMat.SetFloat(ShaderParams.NoiseFinalMultiplier, activeProfile.noiseFinalMultiplier);
-            Graphics.Blit(noiseTex, rtTurbulence, turbulenceMat);
-
-            if (rtNoise == null || rtNoise.width != noiseTex.width) {
-                RenderTextureDescriptor desc = new RenderTextureDescriptor(noiseTex.width, noiseTex.height, RenderTextureFormat.ARGB32, 0);
-                rtNoise = new RenderTexture(desc);
-                rtNoise.wrapMode = TextureWrapMode.Repeat;
-            }
-            noiseMat.SetColor(ShaderParams.SpecularColor, activeProfile.specularColor);
-            noiseMat.SetFloat(ShaderParams.SpecularIntensity, activeProfile.specularIntensity);
-
-            float spec = 1.0001f - activeProfile.specularThreshold;
-            float nlighty = sunDir.y > 0 ? (1.0f - sunDir.y) : (1.0f + sunDir.y);
-            float nyspec = nlighty / spec;
-
-            noiseMat.SetFloat(ShaderParams.SpecularThreshold, nyspec);
-            noiseMat.SetVector(ShaderParams.SunDir, sunDir);
-
             float fogIntensity = 1.15f;
             fogIntensity *= (dayLight + moonLight);
             Color textureBaseColor = Color.Lerp(ambientMultiplied, activeProfile.albedo * fogIntensity, fogIntensity);
-            noiseMat.SetColor(ShaderParams.Color, textureBaseColor);
-            Graphics.Blit(rtTurbulence, rtNoise, noiseMat);
 
-            fogMat.SetTexture(ShaderParams.MainTex, rtNoise);
+            if (activeProfile.noiseFinalMultiplier != 0 && !activeProfile.constantDensity) {
+                if (rtTurbulence == null || rtTurbulence.width != noiseTex.width) {
+                    RenderTextureDescriptor desc = new RenderTextureDescriptor(noiseTex.width, noiseTex.height, RenderTextureFormat.ARGB32, 0);
+                    rtTurbulence = new RenderTexture(desc);
+                    rtTurbulence.wrapMode = TextureWrapMode.Repeat;
+                }
+                turbAcum += Time.deltaTime * activeProfile.turbulence;
+                turbAcum %= 10000;
+                turbulenceMat.SetFloat(ShaderParams.TurbulenceAmount, turbAcum);
+                turbulenceMat.SetFloat(ShaderParams.NoiseStrength, activeProfile.noiseStrength);
+                turbulenceMat.SetFloat(ShaderParams.NoiseFinalMultiplier, activeProfile.noiseFinalMultiplier);
+                Graphics.Blit(noiseTex, rtTurbulence, turbulenceMat);
+
+                int noiseSize = Mathf.Min(noiseTex.width, (int)activeProfile.noiseTextureOptimizedSize);
+                if (rtNoise == null || rtNoise.width != noiseSize) {
+                    RenderTextureDescriptor desc = new RenderTextureDescriptor(noiseSize, noiseSize, RenderTextureFormat.ARGB32, 0);
+                    rtNoise = new RenderTexture(desc);
+                    rtNoise.wrapMode = TextureWrapMode.Repeat;
+                }
+                noiseMat.SetColor(ShaderParams.SpecularColor, activeProfile.specularColor);
+                noiseMat.SetFloat(ShaderParams.SpecularIntensity, activeProfile.specularIntensity);
+
+                float spec = 1.0001f - activeProfile.specularThreshold;
+                float nlighty = sunDir.y > 0 ? (1.0f - sunDir.y) : (1.0f + sunDir.y);
+                float nyspec = nlighty / spec;
+
+                noiseMat.SetFloat(ShaderParams.SpecularThreshold, nyspec);
+                noiseMat.SetVector(ShaderParams.SunDir, sunDir);
+
+                noiseMat.SetColor(ShaderParams.Color, textureBaseColor);
+                Graphics.Blit(rtTurbulence, rtNoise, noiseMat);
+
+                fogMat.SetTexture(ShaderParams.MainTex, rtNoise);
+            }
 
             Color detailColor = new Color(textureBaseColor.r * 0.5f, textureBaseColor.g * 0.5f, textureBaseColor.b * 0.5f, 0);
             fogMat.SetColor(ShaderParams.DetailColor, detailColor);
         }
 
 
-        public void UpdateMaterialProperties() {
+        public void UpdateMaterialProperties () {
+            UpdateMaterialProperties(false);
+        }
+
+        /// <summary>
+        /// Schedules an update of the fog properties at end of this frame
+        /// </summary>
+        /// <param name="forceTerrainCaptureUpdate">In addition to apply any fog property change, perform a terrain heightmap capture (if Terrain Fit option is enabled)</param>
+        public void UpdateMaterialProperties (bool forceTerrainCaptureUpdate) {
+#if UNITY_EDITOR
+            if (!Application.isPlaying && activeProfile != null) {
+                UpdateMaterialPropertiesNow(true);
+            }
+#endif
+            if (forceTerrainCaptureUpdate) {
+                this.forceTerrainCaptureUpdate = true;
+            }
             requireUpdateMaterial = true;
         }
 
-        public void UpdateMaterialPropertiesNow() {
+        /// <summary>
+        /// Forces an immediate material update
+        /// </summary>
+        /// <param name="skipTerrainCapture">Applies all fog properties changes but do not perform a terrain heightmap capture (if Terrain Fit option is enabled)</param>
+        /// <param name="forceTerrainCaptureUpdate">In addition to apply any fog property change, perform a terrain heightmap capture (if Terrain Fit option is enabled).</param>
+        public void UpdateMaterialPropertiesNow (bool skipTerrainCapture = false, bool forceTerrainCaptureUpdate = false) {
 
             if (gameObject == null || !gameObject.activeInHierarchy) {
                 return;
             }
 
+            if (forceTerrainCaptureUpdate) {
+                this.forceTerrainCaptureUpdate = true;
+            }
+
+            if (gameObject.layer == 0) { // fog layer cannot be default so terrain fit culling mask can work properly
+                gameObject.layer = 1;
+            }
+
             fadeDistance = Mathf.Max(0.1f, fadeDistance);
 
-            meshRenderer = GetComponent<MeshRenderer>();
+            if (meshRenderer == null) {
+                meshRenderer = GetComponent<MeshRenderer>();
+            }
+            if (mf == null) {
+                mf = GetComponent<MeshFilter>();
+            }
 
             if (profile == null) {
                 if (fogMat == null && meshRenderer != null) {
-                    fogMat = new Material(Shader.Find("VolumetricFog2/Empty"));
+                    fogMat = new Material(Shader.Find("Hidden/VolumetricFog2/Empty"));
                     fogMat.hideFlags = HideFlags.DontSave;
                     meshRenderer.sharedMaterial = fogMat;
                 }
                 return;
             }
+
             // Subscribe to profile changes
             profile.onSettingsChanged -= UpdateMaterialProperties;
             profile.onSettingsChanged += UpdateMaterialProperties;
@@ -382,10 +608,10 @@ namespace VolumetricFogAndMist2 {
             }
 
             if (turbulenceMat == null) {
-                turbulenceMat = new Material(Shader.Find("VolumetricFog2/Turbulence2D"));
+                turbulenceMat = new Material(Shader.Find("Hidden/VolumetricFog2/Turbulence2D"));
             }
             if (noiseMat == null) {
-                noiseMat = new Material(Shader.Find("VolumetricFog2/Noise2DGen"));
+                noiseMat = new Material(Shader.Find("Hidden/VolumetricFog2/Noise2DGen"));
             }
             if (blueNoiseTex == null) {
                 blueNoiseTex = Resources.Load<Texture2D>("Textures/BlueNoiseVF128");
@@ -419,12 +645,14 @@ namespace VolumetricFogAndMist2 {
 
             ComputeActiveProfile();
             ApplyProfileSettings();
-            SurfaceCaptureSupportCheck();
+
+            if (!skipTerrainCapture) {
+                SurfaceCaptureSupportCheck();
+            }
         }
 
-        void ComputeActiveProfile() {
+        void ComputeActiveProfile () {
 
-            if (maskEditorEnabled) alphaMultiplier = 0.85f;
             if (Application.isPlaying) {
                 if (enableFade || enableSubVolumes) {
                     if (fadeController == null) {
@@ -474,7 +702,7 @@ namespace VolumetricFogAndMist2 {
             }
         }
 
-        float ComputeVolumeFade(Transform transform, float fadeDistance) {
+        float ComputeVolumeFade (Transform transform, float fadeDistance) {
             Vector3 diff = transform.position - fadeController.position;
             diff.x = diff.x < 0 ? -diff.x : diff.x;
             diff.y = diff.y < 0 ? -diff.y : diff.y;
@@ -489,21 +717,26 @@ namespace VolumetricFogAndMist2 {
         }
 
 
-        void ApplyProfileSettings() {
+        void ApplyProfileSettings () {
             currentAppliedColorSpace = QualitySettings.activeColorSpace;
 
+            lastVolumeHeight = transform.localScale.y;
             meshRenderer.sortingLayerID = activeProfile.sortingLayerID;
             meshRenderer.sortingOrder = activeProfile.sortingOrder;
             fogMat.renderQueue = activeProfile.renderQueue;
-            float noiseScale = 0.1f / activeProfile.noiseScale;
+            float noiseScale = activeProfile.noiseScale;
+            if (activeProfile.scaleNoiseWithHeight > 0) {
+                noiseScale *= Mathf.Lerp(1f, transform.localScale.y * 0.04032f, activeProfile.scaleNoiseWithHeight);
+            }
+            noiseScale = 0.1f / noiseScale;
             fogMat.SetFloat(ShaderParams.NoiseScale, noiseScale);
             fogMat.SetFloat(ShaderParams.DeepObscurance, activeProfile.deepObscurance * (currentAppliedColorSpace == ColorSpace.Gamma ? 1f : 1.2f));
-            fogMat.SetFloat(ShaderParams.LightDiffusionIntensity, activeProfile.lightDiffusionIntensity);
-            fogMat.SetFloat(ShaderParams.LightDiffusionPower, activeProfile.lightDiffusionPower);
-            fogMat.SetFloat(ShaderParams.ShadowIntensity, activeProfile.shadowIntensity);
-            fogMat.SetFloat(ShaderParams.ShadowCancellation, activeProfile.shadowCancellation);
+            fogMat.SetVector(ShaderParams.LightDiffusionData, new Vector4( activeProfile.lightDiffusionModel != DiffusionModel.Simple ? activeProfile.lightDiffusionPower / 256.1f : activeProfile.lightDiffusionPower, activeProfile.lightDiffusionIntensity, activeProfile.lightDiffusionNearDepthAtten));
+            fogMat.SetVector(ShaderParams.ShadowData, new Vector4(activeProfile.shadowIntensity, activeProfile.shadowCancellation, activeProfile.shadowMaxDistance, 0));
             fogMat.SetFloat(ShaderParams.Density, activeProfile.density);
-            fogMat.SetVector(ShaderParams.RaymarchSettings, new Vector4(activeProfile.raymarchQuality, activeProfile.dithering * 0.01f, activeProfile.jittering, activeProfile.raymarchMinStep));
+            fogMat.SetFloat(ShaderParams.NativeLightsMultiplier, nativeLightsMultiplier);
+            fogMat.SetFloat(ShaderParams.APVIntensityMultiplier, apvIntensityMultiplier);
+            fogMat.SetVector(ShaderParams.RaymarchSettings, new Vector4(1f / activeProfile.raymarchQuality, activeProfile.dithering * 0.01f, activeProfile.jittering, activeProfile.raymarchMinStep));
 
             if (activeProfile.useDetailNoise) {
                 float detailScale = (1f / activeProfile.detailScale) * noiseScale;
@@ -536,15 +769,17 @@ namespace VolumetricFogAndMist2 {
 
             bool mustSetDistanceData = activeProfile.distance > 0 || activeProfile.enableDepthGradient;
             if (mustSetDistanceData) {
-                fogMat.SetVector(ShaderParams.DistanceData, new Vector4(0, 10f * (1f - activeProfile.distanceFallOff), 1f / (0.0001f + activeProfile.depthGradientMaxDistance * activeProfile.depthGradientMaxDistance), 1f / (0.0001f + activeProfile.distance * activeProfile.distance)));
+                float fallOffFactor = 10f * (1f - activeProfile.distanceFallOff);
+                fogMat.SetVector(ShaderParams.DistanceData, new Vector4(0, -1f + fallOffFactor, 1f / (0.0001f + activeProfile.depthGradientMaxDistance * activeProfile.depthGradientMaxDistance), fallOffFactor / (0.0001f + activeProfile.distance * activeProfile.distance)));
+
+                if (activeProfile.distance > 0) {
+                    shaderKeywords.Add(ShaderParams.SKW_DISTANCE);
+                }
             }
 
             float maxDistanceFallOff = activeProfile.maxDistance - activeProfile.maxDistance * (1f - activeProfile.maxDistanceFallOff) + 1f;
-            fogMat.SetVector(ShaderParams.MaxDistanceData, new Vector4(activeProfile.maxDistance, maxDistanceFallOff, 0, 0));
+            fogMat.SetVector(ShaderParams.MaxDistanceData, new Vector4(activeProfile.maxDistance, maxDistanceFallOff, activeProfile.maxDistanceFallOff, 0));
 
-            if (activeProfile.distance > 0) {
-                shaderKeywords.Add(ShaderParams.SKW_DISTANCE);
-            }
             if (activeProfile.enableDepthGradient) {
                 shaderKeywords.Add(ShaderParams.SKW_DEPTH_GRADIENT);
                 fogMat.SetTexture(ShaderParams.DepthGradientTexture, activeProfile.depthGradientTex);
@@ -553,24 +788,29 @@ namespace VolumetricFogAndMist2 {
                 shaderKeywords.Add(ShaderParams.SKW_HEIGHT_GRADIENT);
                 fogMat.SetTexture(ShaderParams.HeightGradientTexture, activeProfile.heightGradientTex);
             }
-            if (activeProfile.shape == VolumetricFogShape.Box) {
-                shaderKeywords.Add(ShaderParams.SKW_SHAPE_BOX);
-            } else {
+            if (activeProfile.shape == VolumetricFogShape.Sphere) {
                 shaderKeywords.Add(ShaderParams.SKW_SHAPE_SPHERE);
+            } else {
+                shaderKeywords.Add(ShaderParams.SKW_SHAPE_BOX);
             }
             if (enableNativeLights) {
-                shaderKeywords.Add(ShaderParams.SKW_NATIVE_LIGHTS);
+                if (nativeLightsMultiplier > 0) {
+                    shaderKeywords.Add(ShaderParams.SKW_NATIVE_LIGHTS);
+                }
             } else if (enablePointLights) {
                 shaderKeywords.Add(ShaderParams.SKW_POINT_LIGHTS);
+            }
+            if (enableAPV && apvIntensityMultiplier > 0) {
+                shaderKeywords.Add(ShaderParams.SKW_APV);
             }
             if (enableVoids) {
                 shaderKeywords.Add(ShaderParams.SKW_VOIDS);
             }
-            if (activeProfile.receiveShadows) {
+            if (activeProfile.receiveShadows && activeProfile.shadowMaxDistance > 0) {
                 shaderKeywords.Add(ShaderParams.SKW_RECEIVE_SHADOWS);
             }
 #if UNITY_2021_3_OR_NEWER
-            if (activeProfile.cookie) { 
+            if (activeProfile.cookie) {
                 shaderKeywords.Add(ShaderParams.SKW_DIRECTIONAL_COOKIE);
             }
 #endif
@@ -579,31 +819,71 @@ namespace VolumetricFogAndMist2 {
                 UpdateFogOfWarMaterialBoundsProperties();
                 shaderKeywords.Add(ShaderParams.SKW_FOW);
             }
-            if (activeProfile.useDetailNoise) {
+            if (activeProfile.density == 0 || activeProfile.constantDensity) {
+                shaderKeywords.Add(ShaderParams.SKW_CONSTANT_DENSITY);
+            } else if (activeProfile.useDetailNoise) {
                 shaderKeywords.Add(ShaderParams.SKW_DETAIL_NOISE);
             }
             if (activeProfile.terrainFit) {
                 shaderKeywords.Add(ShaderParams.SKW_SURFACE);
             }
+            if (activeProfile.lightDiffusionModel == DiffusionModel.Smooth) {
+                shaderKeywords.Add(ShaderParams.SKW_DIFFUSION_SMOOTH);
+            } else if (activeProfile.lightDiffusionModel == DiffusionModel.Strong) {
+                shaderKeywords.Add(ShaderParams.SKW_DIFFUSION_STRONG);
+            }
+
 #if UNITY_2021_3_OR_NEWER
             fogMat.enabledKeywords = null;
 #endif
-            fogMat.shaderKeywords = shaderKeywords.ToArray();
+
+            int keywordsCount = shaderKeywords.Count;
+            if (keywordsArray == null || keywordsArray.Length < keywordsCount) {
+                keywordsArray = new string[keywordsCount];
+            }
+            int keywordsArrayLength = keywordsArray.Length;
+            for (int k = 0; k < keywordsArrayLength; k++) {
+                if (k < keywordsCount) {
+                    keywordsArray[k] = shaderKeywords[k];
+                } else {
+                    keywordsArray[k] = "";
+                }
+            }
+            fogMat.shaderKeywords = keywordsArray;
+
+            if (activeProfile.distantFog) {
+                UpdateDistantFogPropertiesNow();
+            }
         }
 
-        void UpdateFogOfWarMaterialBoundsProperties() {
-            Vector3 fogOfWarCenter = anchoredFogOfWarCenter;
-            fogMat.SetVector(ShaderParams.FogOfWarCenter, fogOfWarCenter);
-            fogMat.SetVector(ShaderParams.FogOfWarSize, fogOfWarSize);
-            Vector3 ca = fogOfWarCenter - 0.5f * fogOfWarSize;
-            fogMat.SetVector(ShaderParams.FogOfWarCenterAdjusted, new Vector4(ca.x / fogOfWarSize.x, 1f, ca.z / (fogOfWarSize.z + 0.0001f), 0));
+        void UpdateDistantFogPropertiesNow () {
+            if (distantFogMat == null) {
+                distantFogMat = new Material(Shader.Find("Hidden/VolumetricFog2/DistantFog"));
+            }
+            distantFogMat.SetColor(ShaderParams.Color, activeProfile.distantFogColor);
+            distantFogMat.SetVector(ShaderParams.DistantFogData, new Vector4(activeProfile.distantFogStartDistance, activeProfile.distantFogDistanceDensity, activeProfile.distantFogMaxHeight, activeProfile.distantFogHeightDensity));
+            distantFogMat.SetVector(ShaderParams.LightDiffusionData, new Vector4(activeProfile.lightDiffusionPower, activeProfile.distantFogDiffusionIntensity * activeProfile.lightDiffusionIntensity, activeProfile.lightDiffusionNearDepthAtten, 0));
         }
 
         /// <summary>
         /// Issues a refresh of the depth pre-pass alpha clipping renderers list
         /// </summary>
-        public static void FindAlphaClippingObjects() {
+        public static void FindAlphaClippingObjects () {
             DepthRenderPrePassFeature.DepthRenderPass.FindAlphaClippingRenderers();
+        }
+
+        /// <summary>
+        /// Adds a specific renderer to the alpha clipping objects managed by the semitransparent depth prepass option
+        /// </summary>
+        public static void AddAlphaClippingObject (Renderer renderer) {
+            DepthRenderPrePassFeature.DepthRenderPass.AddAlphaClippingObject(renderer);
+        }
+
+        /// <summary>
+        /// Removes a specific renderer to the alpha clipping objects managed by the semitransparent depth prepass option
+        /// </summary>
+        public static void RemoveAlphaClippingObject (Renderer renderer) {
+            DepthRenderPrePassFeature.DepthRenderPass.RemoveAlphaClippingObject(renderer);
         }
 
     }

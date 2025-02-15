@@ -25,16 +25,18 @@ float4 _TranslucencyTexture_TexelSize;
 float4 shadowTextureStart;
 float4 shadowTextureEnd;
 half3 _ShadowIntensity;
+half4 _ShadowColor;
 
 TEXTURE2D(_Cookie2D);
 SAMPLER(sampler_Cookie2D);
 float4 _Cookie2D_SS;
 float2 _Cookie2D_Offset;
 
-
 inline void ComputeShadowTextureCoords(float3 rayStart, float3 rayDir, float t0, float t1) {
-    shadowTextureStart = mul(_ShadowMatrix, float4(rayStart + rayDir * t0, 1.0));
-    shadowTextureEnd = mul(_ShadowMatrix, float4(rayStart + rayDir * t1, 1.0));
+    #if !VL_SHADOWS_CUBEMAP
+        shadowTextureStart = mul(_ShadowMatrix, float4(rayStart + rayDir * t0, 1.0));
+        shadowTextureEnd = mul(_ShadowMatrix, float4(rayStart + rayDir * t1, 1.0));
+    #endif
 }
 
 half TestShadowMap(float4 shadowCoords) {

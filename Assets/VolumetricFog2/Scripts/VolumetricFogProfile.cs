@@ -7,6 +7,33 @@ namespace VolumetricFogAndMist2 {
 
     public delegate void OnSettingsChanged();
 
+    public enum VolumetricFogNoiseSize {
+        [InspectorName("8")]
+        _8 = 8,
+        [InspectorName("16")]
+        _16 = 16,
+        [InspectorName("32")]
+        _32 = 32,
+        [InspectorName("64")]
+        _64 = 64,
+        [InspectorName("128")]
+        _128 = 128,
+        [InspectorName("256")]
+        _256 = 256
+    }
+
+    public enum DiffusionModel {
+        Simple,
+        Smooth,
+        Strong
+    }
+
+    public enum VolumetricFogShape {
+        Box,
+        Sphere,
+        Custom
+    }
+
     [CreateAssetMenu(menuName = "Volumetric Fog \x8B& Mist/Fog Profile", fileName = "VolumetricFogProfile", order = 1001)]
     public class VolumetricFogProfile : ScriptableObject {
 
@@ -24,7 +51,11 @@ namespace VolumetricFogAndMist2 {
         public int sortingOrder;
 
         [Header("Density")]
+        [Tooltip("Do not use any noise at all")]
+        public bool constantDensity;
         public Texture2D noiseTexture;
+        [Tooltip("Size of the final noise used by the shader. Reduce to improve performance on old devices.")]
+        public VolumetricFogNoiseSize noiseTextureOptimizedSize = VolumetricFogNoiseSize._256;
         [Range(0, 3)] public float noiseStrength = 1f;
         public float noiseScale = 15f;
         public float noiseFinalMultiplier = 1f;
@@ -39,11 +70,16 @@ namespace VolumetricFogAndMist2 {
 
         [Header("Geometry")]
         public VolumetricFogShape shape = VolumetricFogShape.Box;
+        [Range(0, 1)]
+        public float scaleNoiseWithHeight;
         [Range(0, 1f)] public float border = 0.05f;
+        [Tooltip("Ignores volume height and use a custom height defined by this profile")]
+        public bool customHeight;
+        public float height;
         public float verticalOffset;
         [Tooltip("When enabled, makes fog appear at certain distance from a camera")]
         public float distance;
-        [Range(0, 1)] public float distanceFallOff;
+        [Range(0, 1)] public float distanceFallOff = 0.93f;
         [Tooltip("Maximum distance from camera")]
         public float maxDistance = 10000;
         [Range(0, 1)]
@@ -56,11 +92,11 @@ namespace VolumetricFogAndMist2 {
         public LayerMask terrainLayerMask = -1;
         [Tooltip("The height of fog above terrain surface.")]
         public float terrainFogHeight = 25f;
-        public float terrainFogMinAltitude = 0f;
+        public float terrainFogMinAltitude;
         public float terrainFogMaxAltitude = 150f;
 
-
         [Header("Colors")]
+        [ColorUsage(showAlpha: false)]
         public Color albedo = new Color32(227, 227, 227, 255);
         public bool enableDepthGradient;
         [GradientUsage(hdr: true, ColorSpace.Linear)] public Gradient depthGradient;
@@ -90,14 +126,33 @@ namespace VolumetricFogAndMist2 {
         public float sunIntensity = 1f;
         [Tooltip("Ambient light influence")]
         public float ambientLightMultiplier;
-        [Range(0, 64)] public float lightDiffusionPower = 32;
-        [Range(0, 1)] public float lightDiffusionIntensity = 0.4f;
+        public DiffusionModel lightDiffusionModel = DiffusionModel.Simple;
+        [Range(0, 256)] public float lightDiffusionPower = 32;
+        public float lightDiffusionIntensity = 0.4f;
+        public float lightDiffusionNearDepthAtten;
         public bool receiveShadows;
         [Range(0, 1)] public float shadowIntensity = 0.5f;
         [Tooltip("Removes shadowed fog")]
         [Range(0, 1)] public float shadowCancellation;
+        public float shadowMaxDistance = 250f;
         [Tooltip("Uses the directional light cookie")]
         public bool cookie;
+
+        [Header("Distant Fog")]
+        [Tooltip("Enables exponential distant fog. Use this option to cover horizon/sky/far distances with optimal performance")]
+        public bool distantFog;
+        public float distantFogStartDistance = 1000f;
+        public float distantFogDistanceDensity = 0.5f;
+        public float distantFogMaxHeight = 4000;
+        public float distantFogHeightDensity = 0.5f;
+        public Color distantFogColor = new Color(0.358f, 0.358f, 0.358f);
+        public float distantFogDiffusionIntensity = 0.4f;
+        public int distantFogRenderQueue = 2999;
+        public float distantFogBaseAltitude;
+        public bool distantFogSymmetrical;
+
+        [Tooltip("Custom mesh to use when shape is set to Custom")]
+        public Mesh customMesh;
 
         public event OnSettingsChanged onSettingsChanged;
 
@@ -128,8 +183,11 @@ namespace VolumetricFogAndMist2 {
                 UnityEditor.EditorApplication.delayCall += () => {
                     try {
                         onSettingsChanged();
+                        UnityEditor.EditorApplication.delayCall += () => UnityEditorInternal.InternalEditorUtility.RepaintAllViews();
                     } catch { }
                 };
+#else
+                onSettingsChanged();
 #endif
             }
         }
@@ -143,6 +201,7 @@ namespace VolumetricFogAndMist2 {
             raymarchMinStep = Mathf.Max(0.1f, raymarchMinStep);
             jittering = Mathf.Max(0, jittering);
             terrainFogHeight = Mathf.Max(0, terrainFogHeight);
+            height = Mathf.Max(0, height);
             if (depthGradient == null) {
                 depthGradient = new Gradient();
                 depthGradient.colorKeys = new GradientColorKey[] {
@@ -150,9 +209,25 @@ namespace VolumetricFogAndMist2 {
                     new GradientColorKey(Color.white, 1)
                 };
             }
+            if (heightGradient == null) {
+                heightGradient = new Gradient();
+                heightGradient.colorKeys = new GradientColorKey[] {
+                    new GradientColorKey(Color.white, 0),
+                    new GradientColorKey(Color.white, 1)
+                };
+            }
+            maxDistance = Mathf.Max(0.0001f, maxDistance);
             depthGradientMaxDistance = Mathf.Max(0, depthGradientMaxDistance);
             ambientLightMultiplier = Mathf.Max(0, ambientLightMultiplier);
             sunIntensity = Mathf.Max(0, sunIntensity);
+            shadowMaxDistance = Mathf.Max(0, shadowMaxDistance);
+            lightDiffusionIntensity = Mathf.Max(0, lightDiffusionIntensity);
+            lightDiffusionNearDepthAtten = Mathf.Max(0, lightDiffusionNearDepthAtten);
+            distantFogStartDistance = Mathf.Max(0, distantFogStartDistance);
+            distantFogDistanceDensity = Mathf.Max(0, distantFogDistanceDensity);
+            distantFogMaxHeight = Mathf.Max(0, distantFogMaxHeight);
+            distantFogHeightDensity = Mathf.Max(0, distantFogHeightDensity);
+            distantFogDiffusionIntensity = Mathf.Max(0, distantFogDiffusionIntensity);
 
             if (enableDepthGradient) {
                 const int DEPTH_GRADIENT_TEX_SIZE = 32;
@@ -231,10 +306,13 @@ namespace VolumetricFogAndMist2 {
             density = p1.density * t0 + p2.density * t;
             shape = t < 0.5f ? p1.shape : p2.shape;
             border = p1.border * t0 + p2.border * t;
+            customHeight = t < 0.5f ? p1.customHeight : p2.customHeight;
+            height = p1.height * t0 + p2.height * t;
             verticalOffset = p1.verticalOffset * t0 + p2.verticalOffset * t;
             distance = p1.distance * t0 + p2.distance * t;
             distanceFallOff = p1.distanceFallOff * t0 + p2.distanceFallOff * t;
             albedo = p1.albedo * t0 + p2.albedo * t;
+            constantDensity = t < 0.5f ? p1.constantDensity : p2.constantDensity;
             enableDepthGradient = p1.enableDepthGradient || p2.enableDepthGradient;
             LerpGradient(depthGradient, p1.depthGradient, p2.depthGradient, t);
             depthGradientMaxDistance = p1.depthGradientMaxDistance * t0 + p2.depthGradientMaxDistance * t;
@@ -250,10 +328,13 @@ namespace VolumetricFogAndMist2 {
             windDirection = p1.windDirection * t0 + p2.windDirection * t;
             useCustomDetailNoiseWindDirection = t < 0.5f ? p1.useCustomDetailNoiseWindDirection : p2.useCustomDetailNoiseWindDirection;
             detailNoiseWindDirection = p1.detailNoiseWindDirection * t0 + p2.detailNoiseWindDirection * t;
+            lightDiffusionModel = t < 0.5f ? p1.lightDiffusionModel : p2.lightDiffusionModel;
             lightDiffusionPower = p1.lightDiffusionPower * t0 + p2.lightDiffusionPower * t;
             lightDiffusionIntensity = p1.lightDiffusionIntensity * t0 + p2.lightDiffusionIntensity * t;
             receiveShadows = t < 0.5f ? p1.receiveShadows : p2.receiveShadows;
             shadowIntensity = p1.shadowIntensity * t0 + p2.shadowIntensity * t;
+            shadowCancellation = t < 0.5f ? p1.shadowCancellation : p2.shadowCancellation;
+            shadowMaxDistance = p1.shadowMaxDistance * t0 + p2.shadowMaxDistance * t;
             terrainFit = t < 0.5f ? p1.terrainFit : p2.terrainFit;
             terrainFitResolution = t < 0.5 ? p1.terrainFitResolution : p2.terrainFitResolution;
             terrainFogHeight = p1.terrainFogHeight * t0 + p2.terrainFogHeight * t;
@@ -266,6 +347,15 @@ namespace VolumetricFogAndMist2 {
             sunIntensity = p1.sunIntensity * t0 + p2.sunIntensity * t;
             ambientLightMultiplier = p1.ambientLightMultiplier * t0 + p2.ambientLightMultiplier * t;
             cookie = t < 0.5f ? p1.cookie : p2.cookie;
+            distantFog = t < 0.5f ? p1.distantFog : p2.distantFog;
+            distantFogStartDistance = p1.distantFogStartDistance * t0 + p2.distantFogStartDistance * t;
+            distantFogDistanceDensity = p1.distantFogDistanceDensity * t0 + p2.distantFogDistanceDensity * t;
+            distantFogMaxHeight = p1.distantFogMaxHeight * t0 + p2.distantFogMaxHeight * t;
+            distantFogHeightDensity = p1.distantFogHeightDensity * t0 + p2.distantFogHeightDensity * t;
+            distantFogColor = p1.distantFogColor * t0 + p2.distantFogColor * t;
+            distantFogDiffusionIntensity = p1.distantFogDiffusionIntensity * t0 + p2.distantFogDiffusionIntensity * t;
+            distantFogBaseAltitude = p1.distantFogBaseAltitude * t0 + p2.distantFogBaseAltitude * t;
+            distantFogRenderQueue = t < 0.5f ? p1.distantFogRenderQueue : p2.distantFogRenderQueue;
 
             ValidateSettings();
         }
@@ -274,6 +364,8 @@ namespace VolumetricFogAndMist2 {
         readonly static List<float> alphaKeysTimes = new List<float>();
 
         void LerpGradient(Gradient g, Gradient a, Gradient b, float t) {
+
+            if (g == null || a == null || b == null) return;
 
             if (a.colorKeys.Length + b.colorKeys.Length > 8 || a.alphaKeys.Length + b.alphaKeys.Length > 8) {
                 Debug.LogError("Gradients total key count exceeding 8, can not lerp");

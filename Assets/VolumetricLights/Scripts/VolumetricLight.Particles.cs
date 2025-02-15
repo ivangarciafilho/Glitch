@@ -100,6 +100,7 @@ namespace VolumetricLights {
                         particleMaterial.SetTexture(ShaderParams.CookieTexture, cookieTexture);
                         particleMaterial.SetVector(ShaderParams.CookieTexture_ScaleAndSpeed, new Vector4(cookieScale.x, cookieScale.y, cookieSpeed.x, cookieSpeed.y));
                         particleMaterial.SetVector(ShaderParams.CookieTexture_Offset, new Vector4(cookieOffset.x, cookieOffset.y, 0, 0));
+                        particleMaterial.SetFloat(ShaderParams.NearClipDistance, nearClipDistance);
                     } else {
                         keywords.Add(ShaderParams.SKW_SPOT);
                     }

@@ -16,10 +16,10 @@ namespace VolumetricLights {
         SerializedProperty autoToggle, distanceStartDimming, distanceDeactivation, autoToggleCheckInterval;
         SerializedProperty useNoise, noiseTexture, noiseStrength, noiseScale, noiseFinalMultiplier, density, mediumAlbedo, brightness;
         SerializedProperty attenuationMode, attenCoefConstant, attenCoefLinear, attenCoefQuadratic, rangeFallOff, diffusionIntensity, penumbra;
-        SerializedProperty tipRadius, cookieTexture, cookieScale, cookieOffset, cookieSpeed, frustumAngle, windDirection;
+        SerializedProperty tipRadius, nearClipDistance, cookieTexture, cookieScale, cookieOffset, cookieSpeed, frustumAngle, windDirection;
         SerializedProperty enableDustParticles, dustBrightness, dustMinSize, dustMaxSize, dustDistanceAttenuation, dustWindSpeed, dustAutoToggle, dustDistanceDeactivation, dustPrewarm;
-        SerializedProperty enableShadows, shadowIntensity, shadowTranslucency, shadowTranslucencyIntensity, shadowTranslucencyBlend, shadowResolution, shadowCullingMask, shadowBakeInterval, shadowNearDistance, shadowAutoToggle, shadowDistanceDeactivation;
-        SerializedProperty shadowBakeMode, shadowOrientation, shadowDirection;
+        SerializedProperty enableShadows, shadowIntensity, shadowColor, shadowTranslucency, shadowTranslucencyIntensity, shadowTranslucencyBlend, shadowResolution, shadowCullingMask, shadowBakeInterval, shadowNearDistance, shadowAutoToggle, shadowDistanceDeactivation;
+        SerializedProperty shadowBakeMode, shadowBakeIgnoreRotationChange, shadowOrientation, shadowDirection;
 
         SerializedProperty useCustomBounds, bounds, boundsInLocalSpace;
         SerializedProperty areaWidth, areaHeight;
@@ -77,6 +77,7 @@ namespace VolumetricLights {
             diffusionIntensity = serializedObject.FindProperty("diffusionIntensity");
             penumbra = serializedObject.FindProperty("penumbra");
             tipRadius = serializedObject.FindProperty("tipRadius");
+            nearClipDistance = serializedObject.FindProperty("nearClipDistance");
             cookieTexture = serializedObject.FindProperty("cookieTexture");
             cookieScale = serializedObject.FindProperty("cookieScale");
             cookieOffset = serializedObject.FindProperty("cookieOffset");
@@ -94,6 +95,7 @@ namespace VolumetricLights {
             dustPrewarm = serializedObject.FindProperty("dustPrewarm");
             enableShadows = serializedObject.FindProperty("enableShadows");
             shadowIntensity = serializedObject.FindProperty("shadowIntensity");
+            shadowColor = serializedObject.FindProperty("shadowColor");
             shadowTranslucency = serializedObject.FindProperty("shadowTranslucency");
             shadowTranslucencyIntensity = serializedObject.FindProperty("shadowTranslucencyIntensity");
             shadowTranslucencyBlend = serializedObject.FindProperty("shadowTranslucencyBlend");
@@ -104,6 +106,7 @@ namespace VolumetricLights {
             shadowAutoToggle = serializedObject.FindProperty("shadowAutoToggle");
             shadowDistanceDeactivation = serializedObject.FindProperty("shadowDistanceDeactivation");
             shadowBakeMode = serializedObject.FindProperty("shadowBakeMode");
+            shadowBakeIgnoreRotationChange = serializedObject.FindProperty("shadowBakeIgnoreRotationChange");
             shadowOrientation = serializedObject.FindProperty("shadowOrientation");
             shadowDirection = serializedObject.FindProperty("shadowDirection");
             autoToggle = serializedObject.FindProperty("autoToggle");
@@ -156,8 +159,18 @@ namespace VolumetricLights {
                 EditorGUILayout.Separator();
             }
 
+
+            EditorGUILayout.BeginVertical(GUI.skin.box);
+
+            if (raymarchPreset.intValue >= 30 && !VolumetricLightsRenderFeature.installed) {
+                EditorGUILayout.HelpBox("Consider adding the Volumetric Lights Render Feature to URP assets to improve performance or reduce noise appearance. Click 'Global Settings' button to add it.", MessageType.Info);
+            }
+
+
+            EditorGUILayout.BeginHorizontal();
+
             if (pipe != null) {
-                if (GUILayout.Button("Show Global Settings")) {
+                if (GUILayout.Button("Global Settings")) {
                     if (VolumetricLightsRenderFeature.installed) {
                         var so = new SerializedObject(pipe);
                         var prop = so.FindProperty("m_RendererDataList");
@@ -170,12 +183,22 @@ namespace VolumetricLights {
                         }
 
                     } else {
-                        if (EditorUtility.DisplayDialog("Show Global Settings", "The global settings can be found in the Volumetric Lights Render Feature which can't be found in the URP default renderer asset. Click Ok to select the current URP asset so you can add the render feature now.", "Ok", "Cancel")) {
+                        if (EditorUtility.DisplayDialog("Volumetric Lights Global Settings", "The global settings can be found in the Volumetric Lights Render Feature which can't be found in the URP default renderer asset. Click Ok to select the current URP asset so you can add the render feature now.", "Ok", "Cancel")) {
                             Selection.activeObject = pipe;
                         }
                     }
                 }
             }
+            if (GUILayout.Button("Help & Tips")) {
+                Application.OpenURL("https://kronnect.com/guides/volumetric-lights-2-urp-performance-tips/");
+            }
+            if (GUILayout.Button("Contact Us", EditorStyles.miniButton)) {
+                Application.OpenURL("https://kronnect.com");
+            }
+
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.EndVertical();
 
 
             if (boxStyle == null) {
@@ -261,6 +284,9 @@ namespace VolumetricLights {
             EditorGUILayout.PropertyField(alwaysOn);
             EditorGUILayout.PropertyField(castDirectLight);
             if (castDirectLight.boolValue) {
+                if (!VolumetricLightsRenderFeature.installed) {
+                    EditorGUILayout.HelpBox("When using RenderGraph, this option requires the Volumetric Lights Render Feature added to the URP asset. Click 'Global Settings' button to add it.", MessageType.Warning);
+                }
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(directLightMultiplier, new GUIContent("Intensity"));
                 EditorGUILayout.PropertyField(directLightSmoothSamples, new GUIContent("Softness Samples"));
@@ -305,6 +331,7 @@ namespace VolumetricLights {
             switch (vl.lightComp.type) {
                 case LightType.Spot:
                     EditorGUILayout.PropertyField(tipRadius);
+                    EditorGUILayout.PropertyField(nearClipDistance);
                     EditorGUILayout.PropertyField(cookieTexture, new GUIContent("Cookie Texture (RGB)", "Assign any colored or grayscale texture. RGB values drive the color tint."));
                     if (cookieTexture.objectReferenceValue != null) {
                         EditorGUI.indentLevel++;
@@ -328,6 +355,7 @@ namespace VolumetricLights {
             if (enableShadows.boolValue) {
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(shadowIntensity, new GUIContent("Intensity"));
+                EditorGUILayout.PropertyField(shadowColor, new GUIContent("Color"));
 #if UNITY_2021_3_OR_NEWER
                 EditorGUILayout.PropertyField(shadowTranslucency, new GUIContent("Translucency"));
                 if (shadowTranslucency.boolValue) {
@@ -344,13 +372,27 @@ namespace VolumetricLights {
                 EditorGUILayout.PropertyField(shadowResolution, new GUIContent("Resolution"));
                 EditorGUILayout.PropertyField(shadowCullingMask, new GUIContent("Culling Mask"));
                 EditorGUILayout.PropertyField(shadowBakeInterval, new GUIContent("Bake Interval"));
+                if (shadowBakeInterval.intValue == (int)ShadowBakeInterval.OnStart) {
+                    EditorGUI.indentLevel++;
+                    EditorGUILayout.BeginHorizontal();
+                    if (!vl.usesCubemap) {
+                        EditorGUILayout.PropertyField(shadowBakeIgnoreRotationChange, new GUIContent("Ignore Rotation"));
+                        if (GUILayout.Button("Update Shadows", GUILayout.Width(120))) {
+                            vl.ScheduleShadowCapture();
+                        }
+                    }
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUI.indentLevel--;
+                }
                 if (vl.lightComp != null && vl.lightComp.type == LightType.Point) {
                     EditorGUILayout.PropertyField(shadowBakeMode, new GUIContent("Bake Mode"));
-                    if (!shadowBakeMode.boolValue) {
+                    if (shadowBakeMode.intValue == (int)ShadowBakeMode.HalfSphere) {
+                        EditorGUI.indentLevel++;
                         EditorGUILayout.PropertyField(shadowOrientation, new GUIContent("Orientation", "Only for point lights: specify the direction for the baked shadows (shadows are captured in a half sphere or 180º). You can choose a fixed direction or make the shadows be aligned with the direction to the player camera."));
                         if (shadowOrientation.intValue == (int)ShadowOrientation.FixedDirection) {
                             EditorGUILayout.PropertyField(shadowDirection, new GUIContent("Direction"));
                         }
+                        EditorGUI.indentLevel--;
                     }
                 }
                 EditorGUILayout.PropertyField(shadowNearDistance, new GUIContent("Near Clip Distance"));

@@ -10,7 +10,7 @@ namespace Beautify.Universal {
     public delegate float OnBeforeFocusEvent(float currentFocusDistance);
 
 
-    [ExecuteInEditMode]
+    [ExecuteAlways]
     public class BeautifySettings : MonoBehaviour {
 
         [Header("Scene Settings")]
@@ -19,37 +19,36 @@ namespace Beautify.Universal {
 
         public OnBeforeFocusEvent OnBeforeFocus;
 
-        [NonSerialized]
         public static float depthOfFieldCurrentFocalPointDistance;
 
-        [NonSerialized]
         public static int bloomExcludeMask;
 
-        [NonSerialized]
         public static int anamorphicFlaresExcludeMask;
 
-        [NonSerialized]
         public static bool dofTransparentSupport;
 
-        [NonSerialized]
         public static int dofTransparentLayerMask;
 
-        [NonSerialized]
         public static bool dofTransparentDoubleSided;
 
-        [NonSerialized]
         public static bool dofAlphaTestSupport;
 
-        [NonSerialized]
         public static int dofAlphaTestLayerMask;
 
-        [NonSerialized]
         public static bool dofAlphaTestDoubleSided;
+
+        public static bool outlineDepthPrepass;
+        public static bool outlineUseObjectId;
+        public static int outlineLayerMask;
+        public static float outlineLayerCutOff;
+
+        public static bool outlineDepthPrepassUseOptimizedShader;
+
+        internal static bool _refreshAlphaClipRenderers;
 
         static BeautifySettings _instance;
         static Volume _beautifyVolume;
         static Beautify _beautify;
-
 
         /// <summary>
         /// Forces a reset of the internal cached settings of Beautify. Call this method if Beautify settings are not resetted when switching scenes.
@@ -197,163 +196,29 @@ namespace Beautify.Universal {
         }
 
         void OnEnable() {
-#if UNITY_EDITOR
-            ManageBuildOptimizationStatus(true);
-#endif
+            #if UNITY_EDITOR
+            if (!Application.isPlaying) {
+                BeautifyRendererFeature.StripBeautifyFeatures();
+            }
+            #endif
+            SceneManager.sceneLoaded += SceneManager_sceneLoaded;
+        }
+
+        private void OnDisable() {
+            SceneManager.sceneLoaded -= SceneManager_sceneLoaded;
+        }
+
+        private void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1) {
+            UnloadBeautify();
         }
 
 
-#if UNITY_EDITOR
-        static bool wasBuildOptActive;
-        public static void ManageBuildOptimizationStatus(bool force) {
-            Beautify beautify = sharedSettings;
-            if (beautify == null) return;
-
-            if (!beautify.active && (wasBuildOptActive || force)) {
-                StripBeautifyKeywords();
-            } else if (beautify.active && (!wasBuildOptActive || force)) {
-                SetStripShaderKeywords(beautify);
-            }
-            wasBuildOptActive = beautify.active;
+        /// <summary>
+        /// Updates the list of alpha clip renderers
+        /// </summary>
+        public static void UpdateAlphaClipRenderers() {
+            _refreshAlphaClipRenderers = true;
         }
 
-        const string PLAYER_PREF_KEYNAME = "BeautifyStripKeywordSet";
-
-
-        public static void StripBeautifyKeywords() {
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            sb.Append(BeautifyRendererFeature.SKW_BLOOM);
-            sb.Append(BeautifyRendererFeature.SKW_BLOOM_USE_DEPTH);
-            sb.Append(BeautifyRendererFeature.SKW_DEPTH_OF_FIELD);
-            sb.Append(BeautifyRendererFeature.SKW_DEPTH_OF_FIELD_TRANSPARENT);
-            sb.Append(BeautifyRendererFeature.SKW_DIRT);
-            sb.Append(BeautifyRendererFeature.SKW_LUT);
-            sb.Append(BeautifyRendererFeature.SKW_LUT3D);
-            sb.Append(BeautifyRendererFeature.SKW_OUTLINE);
-            sb.Append(BeautifyRendererFeature.SKW_NIGHT_VISION);
-            sb.Append(BeautifyRendererFeature.SKW_PURKINJE);
-            sb.Append(BeautifyRendererFeature.SKW_TONEMAP_ACES);
-            sb.Append(BeautifyRendererFeature.SKW_VIGNETTING);
-            sb.Append(BeautifyRendererFeature.SKW_VIGNETTING_MASK);
-            sb.Append(BeautifyRendererFeature.SKW_COLOR_TWEAKS);
-            sb.Append(BeautifyRendererFeature.SKW_TURBO);
-            sb.Append(BeautifyRendererFeature.SKW_DITHER);
-            sb.Append(BeautifyRendererFeature.SKW_SHARPEN);
-            sb.Append(BeautifyRendererFeature.SKW_EYE_ADAPTATION);
-            sb.Append(BeautifyRendererFeature.SKW_CHROMATIC_ABERRATION);
-            PlayerPrefs.SetString(PLAYER_PREF_KEYNAME, sb.ToString());
-        }
-
-        public static void SetStripShaderKeywords(Beautify beautify) {
-
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            bool auto = beautify.optimizeBuildBeautifyAuto.value;
-            if (auto) {
-                beautify.stripBeautifyBloom.value = false;
-                beautify.stripBeautifyDoF.value = false;
-                beautify.stripBeautifyDoFTransparentSupport.value = false;
-                beautify.stripBeautifyLensDirt.value = false;
-                beautify.stripBeautifyLUT.value = false;
-                beautify.stripBeautifyLUT3D.value = false;
-                beautify.stripBeautifyOutline.value = false;
-                beautify.stripBeautifyNightVision.value = false;
-                beautify.stripBeautifyThermalVision.value = false;
-                beautify.stripBeautifyColorTweaks.value = false;
-                beautify.stripBeautifyPurkinje.value = false;
-                beautify.stripBeautifyTonemapping.value = false;
-                beautify.stripBeautifyDithering.value = false;
-                beautify.stripBeautifySharpen.value = false;
-                beautify.stripBeautifyEyeAdaptation.value = false;
-                beautify.stripBeautifyVignetting.value = false;
-            }
-            if (beautify.stripBeautifyEdgeAA.value || (auto && beautify.antialiasStrength.value <= 0)) {
-                sb.Append(BeautifyRendererFeature.SKW_EDGE_ANTIALIASING);
-            }
-            if (beautify.stripBeautifyBloom.value || (auto && beautify.bloomIntensity.value <= 0)) {
-                sb.Append(BeautifyRendererFeature.SKW_BLOOM);
-                sb.Append(BeautifyRendererFeature.SKW_BLOOM_USE_DEPTH);
-            }
-            if (beautify.stripBeautifyDoF.value || (auto && !beautify.depthOfField.value)) {
-                sb.Append(BeautifyRendererFeature.SKW_DEPTH_OF_FIELD);
-            }
-            if (beautify.stripBeautifyDoF.value || (auto && !(beautify.depthOfFieldTransparentSupport.value || beautify.depthOfFieldAlphaTestSupport.value) )) {
-                sb.Append(BeautifyRendererFeature.SKW_DEPTH_OF_FIELD_TRANSPARENT);
-            }
-            if (beautify.stripBeautifyLensDirt.value || (auto && beautify.lensDirtIntensity.value <= 0)) {
-                sb.Append(BeautifyRendererFeature.SKW_DIRT);
-            }
-            bool usesLUT = beautify.lut.value && beautify.lutTexture.value != null;
-            bool usesLUT3D = usesLUT && beautify.lutTexture.value is Texture3D;
-            if (beautify.stripBeautifyLUT3D.value || (auto && !usesLUT3D)) {
-                sb.Append(BeautifyRendererFeature.SKW_LUT3D);
-            }
-            if (beautify.stripBeautifyLUT.value || (auto && !usesLUT)) {
-                sb.Append(BeautifyRendererFeature.SKW_LUT);
-            }
-            if (beautify.stripBeautifyOutline.value || (auto && !beautify.outline.value)) {
-                sb.Append(BeautifyRendererFeature.SKW_OUTLINE);
-            }
-            if (beautify.stripBeautifyNightVision.value || (auto && !beautify.nightVision.value)) {
-                sb.Append(BeautifyRendererFeature.SKW_NIGHT_VISION);
-            }
-            if (beautify.stripBeautifyThermalVision.value || (auto && !beautify.nightVision.value)) {
-                sb.Append(BeautifyRendererFeature.SKW_THERMAL_VISION);
-            }
-            bool usesColorTweaks = beautify.sepia.value > 0 || beautify.daltonize.value > 0 || beautify.colorTempBlend.value > 0;
-            if (beautify.stripBeautifyColorTweaks.value || (auto && !usesColorTweaks)) {
-                sb.Append(BeautifyRendererFeature.SKW_COLOR_TWEAKS);
-            }
-            if (beautify.stripBeautifyPurkinje.value || (auto && !beautify.purkinje.value)) {
-                sb.Append(BeautifyRendererFeature.SKW_PURKINJE);
-            }
-            if (beautify.stripBeautifyTonemapping.value || (auto && beautify.tonemap.value != Beautify.TonemapOperator.ACES)) {
-                sb.Append(BeautifyRendererFeature.SKW_TONEMAP_ACES);
-            }
-            if (beautify.stripBeautifyDithering.value || (auto && beautify.ditherIntensity.value <= 0)) {
-                sb.Append(BeautifyRendererFeature.SKW_DITHER);
-            }
-            if (beautify.stripBeautifySharpen.value || (auto && beautify.sharpenIntensity.value <= 0)) {
-                sb.Append(BeautifyRendererFeature.SKW_SHARPEN);
-            }
-            if (beautify.stripBeautifyEyeAdaptation.value || (auto && !beautify.eyeAdaptation.value)) {
-                sb.Append(BeautifyRendererFeature.SKW_EYE_ADAPTATION);
-            }
-            if (beautify.stripBeautifyChromaticAberration.value || (auto && beautify.chromaticAberrationIntensity.value <= 0)) {
-                sb.Append(BeautifyRendererFeature.SKW_CHROMATIC_ABERRATION);
-            }
-
-            float outerRing = 1f - beautify.vignettingOuterRing.value;
-            float innerRing = 1f - beautify.vignettingInnerRing.value;
-            bool vignettingEnabled = outerRing < 1 || innerRing < 1f || beautify.vignettingFade.value > 0 || beautify.vignettingBlink.value > 0;
-            if (beautify.stripBeautifyVignetting.value || (auto && !vignettingEnabled)) {
-                sb.Append(BeautifyRendererFeature.SKW_VIGNETTING);
-                sb.Append(BeautifyRendererFeature.SKW_VIGNETTING_MASK);
-            }
-
-            bool stripUnityPPS = beautify.optimizeBuildUnityPPSAuto.value;
-            if (beautify.stripUnityBloom.value || stripUnityPPS) {
-                sb.Append("_BLOOM_LQ _BLOOM_HQ _BLOOM_LQ_DIRT _BLOOM_HQ_DIRT");
-            }
-            if (beautify.stripUnityChromaticAberration.value || stripUnityPPS) {
-                sb.Append("_CHROMATIC_ABERRATION");
-            }
-            if (beautify.stripUnityDistortion.value || stripUnityPPS) {
-                sb.Append("_DISTORTION");
-            }
-            if (beautify.stripUnityFilmGrain.value || stripUnityPPS) {
-                sb.Append("_FILM_GRAIN");
-            }
-            if (beautify.stripUnityDithering.value || stripUnityPPS) {
-                sb.Append("_DITHERING");
-            }
-            if (beautify.stripUnityTonemapping.value || stripUnityPPS) {
-                sb.Append("_TONEMAP_ACES _TONEMAP_NEUTRAL");
-            }
-            if (beautify.stripUnityDebugVariants.value || stripUnityPPS) {
-                sb.Append("DEBUG_DISPLAY");
-            }
-            PlayerPrefs.SetString(PLAYER_PREF_KEYNAME, sb.ToString());
-        }
-#endif
     }
 }

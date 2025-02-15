@@ -122,10 +122,6 @@ namespace Beautify.Universal {
         }
 
         [AttributeUsage(AttributeTargets.Field)]
-        public class BuildToggle : Attribute {
-        }
-
-        [AttributeUsage(AttributeTargets.Field)]
         public class ShowStrippedLabel : Attribute {
         }
 
@@ -137,7 +133,9 @@ namespace Beautify.Universal {
 
         public enum TonemapOperator {
             Linear = 0,
-            ACES = 1
+            ACESFitted = 1,
+            ACES = 2,
+            AGX = 3
         }
 
         public enum DoFFocusMode {
@@ -186,6 +184,11 @@ namespace Beautify.Universal {
             AfterBloom = 10
         }
 
+        public enum OutlineTechnique {
+            Depth = 0,
+            PerObjectId = 1
+        }
+
         public enum DownsamplingMode {
             BeautifyEffectsOnly = 0,
             FullFrame = 10
@@ -195,6 +198,17 @@ namespace Beautify.Universal {
             None,
             Simple,
             Smooth
+        }
+
+        public enum BloomLayersFilterMethod {
+            SelectedLayersOnly,
+            ExcludeSelectedLayers
+        }
+
+        public enum EyeAdaptationMeteringMode {
+            FullFrame,
+            MinDepth,
+            Mask
         }
 
         [Serializable]
@@ -233,11 +247,13 @@ namespace Beautify.Universal {
         public sealed class BeautifyBlinkStyleParameter : VolumeParameter<BlinkStyle> { }
 
         [Serializable]
-        public sealed class BeautifyVignetteFitMode : VolumeParameter<VignetteFitMode> { }
+        public sealed class BeautifyVignetteFitModeParameter : VolumeParameter<VignetteFitMode> { }
 
         [Serializable]
-        public sealed class BeautifySunFlaresDepthOcclusionMode : VolumeParameter<SunFlaresDepthOcclusionMode> { }
+        public sealed class BeautifySunFlaresDepthOcclusionModeParameter : VolumeParameter<SunFlaresDepthOcclusionMode> { }
 
+        [Serializable]
+        public sealed class BeautifyEyeAdaptationMeteringModeParameter : VolumeParameter<EyeAdaptationMeteringMode> { }
 
         [Serializable]
         public sealed class MinMaxFloatParameter : VolumeParameter<Vector2> {
@@ -250,6 +266,11 @@ namespace Beautify.Universal {
                 this.max = max;
             }
         }
+
+
+        [Serializable]
+        public sealed class BeautifyBloomLayersFilterMethodParameter : VolumeParameter<BloomLayersFilterMethod> { }
+
 
         #region General settings
 
@@ -265,7 +286,7 @@ namespace Beautify.Universal {
         [GeneralSettings, DisplayName("Panning"), DisplayConditionEnum("compareStyle", (int)CompareStyle.FreeAngle, false)]
         public ClampedFloatParameter comparePanning = new ClampedFloatParameter(0.25f, 0, 0.5f);
 
-        [GeneralSettings, DisplayName("Angle"), DisplayConditionBool("compareMode", true, "compareSameSide", false)]
+        [GeneralSettings, DisplayName("Angle"), DisplayConditionEnum("compareStyle", (int)CompareStyle.FreeAngle, true)]
         public FloatParameter compareLineAngle = new ClampedFloatParameter(1.4f, -Mathf.PI, Mathf.PI);
 
         [GeneralSettings, DisplayName("Line Width"), DisplayConditionBool("compareMode")]
@@ -286,6 +307,9 @@ namespace Beautify.Universal {
         [GeneralSettings, Performance, DisplayName("Direct Write To Camera"), GlobalOverride, Tooltip("Writes result directly to camera target saving intermediate blits. This option will overwrite any previous post-processing effects so make sure there's no other effects being executed besides Beautify.")]
         public BoolParameter directWrite = new BoolParameter(false, overrideState: true);
 
+        [GeneralSettings, Performance, DisplayName("Ignore Depth Texture"), GlobalOverride, Tooltip("Doesn't request depth texture - effects or options that rely on depth will be disabled.")]
+        public BoolParameter ignoreDepthTexture = new BoolParameter(false, overrideState: true);
+
         [GeneralSettings, Performance, DisplayName("Downsampling"), GlobalOverride, Tooltip("Reduces camera target before applying Beautify effects This option can contribute to compensate render scale if it's set to greater than 1 or to improve performance.")]
         public BoolParameter downsampling = new BoolParameter(false, overrideState: true);
 
@@ -298,104 +322,20 @@ namespace Beautify.Universal {
         [GeneralSettings, Performance, DisplayName("Bilinear Filtering"), GlobalOverride, Tooltip("Enables bilinear filtering when using downsampling."), DisplayConditionBool("downsampling")]
         public BoolParameter downsamplingBilinear = new BoolParameter(false);
 
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Automatically Strip Unused Features"), GlobalOverride, BuildToggle, Tooltip("Do not compile any shader features not active in the inspector, reducing build time.")]
-        public BoolParameter optimizeBuildBeautifyAuto = new BoolParameter(true, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip Tonemapping"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile tonemapping shader feature, reducing build time.")]
-        public BoolParameter stripBeautifyTonemapping = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip Sharpen"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile sharpen shader feature, reducing build time.")]
-        public BoolParameter stripBeautifySharpen = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip Dithering"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile dithering shader feature, reducing build time.")]
-        public BoolParameter stripBeautifyDithering = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip Edge Antialiasing"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile edge antialiasing shader feature, reducing build time.")]
-        public BoolParameter stripBeautifyEdgeAA = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip LUT"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile LUT shader feature, reducing build time.")]
-        public BoolParameter stripBeautifyLUT = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip LUT 3D"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile LUT 3D shader feature, reducing build time.")]
-        public BoolParameter stripBeautifyLUT3D = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip Sepia, Daltonize & White Balance"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile White Balance shader feature, reducing build time.")]
-        public BoolParameter stripBeautifyColorTweaks = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip Bloom, Anamorphic & Sun Flares"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile Bloom, Anamorphic & Sun Flares shader features, reducing build time.")]
-        public BoolParameter stripBeautifyBloom = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip Lens Dirt"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile Lens Dirt shader feature, reducing build time.")]
-        public BoolParameter stripBeautifyLensDirt = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip Chromatic Aberration"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile Chromatic Aberration shader feature, reducing build time.")]
-        public BoolParameter stripBeautifyChromaticAberration = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip Depth of Field"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile Depth Of Field shader feature, reducing build time.")]
-        public BoolParameter stripBeautifyDoF = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip Depth of Field Transparent Support"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile Depth Of Field transparency support shader feature, reducing build time.")]
-        public BoolParameter stripBeautifyDoFTransparentSupport = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip Eye Adaptation"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile Purkinje Shift shader feature, reducing build time.")]
-        public BoolParameter stripBeautifyEyeAdaptation = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip Purkinje Shift"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile Purkinje Shift shader feature, reducing build time.")]
-        public BoolParameter stripBeautifyPurkinje = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip Vignetting"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile Vignetting shader features, reducing build time.")]
-        public BoolParameter stripBeautifyVignetting = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip Outline"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile Outline shader feature, reducing build time.")]
-        public BoolParameter stripBeautifyOutline = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip Night Vision"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile Night Vision shader feature, reducing build time.")]
-        public BoolParameter stripBeautifyNightVision = new BoolParameter(true, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip Thermal Vision"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile Thermal Vision shader feature, reducing build time.")]
-        public BoolParameter stripBeautifyThermalVision = new BoolParameter(true, overrideState: true);
-
-        [GeneralSettings, OptimizeBeautifyBuild, DisplayName("Strip Frame"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildBeautifyAuto", false), Tooltip("Do not compile Frame shader features, reducing build time.")]
-        public BoolParameter stripBeautifyFrame = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeUnityPostProcessingBuild, DisplayName("Strip All"), GlobalOverride, BuildToggle, Tooltip("Do not compile Unity Post Processing shader features, reducing build time.")]
-        public BoolParameter optimizeBuildUnityPPSAuto = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeUnityPostProcessingBuild, DisplayName("Strip Film Grain"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildUnityPPSAuto", false), Tooltip("Do not compile Unity Post Processing's Film Grain shader feature, reducing build time.")]
-        public BoolParameter stripUnityFilmGrain = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeUnityPostProcessingBuild, DisplayName("Strip Dithering"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildUnityPPSAuto", false), Tooltip("Do not compile Unity Post Processing's Dithering shader feature, reducing build time.")]
-        public BoolParameter stripUnityDithering = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeUnityPostProcessingBuild, DisplayName("Strip Tonemapping"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildUnityPPSAuto", false), Tooltip("Do not compile Unity Post Processing's Tonemapping shader feature, reducing build time.")]
-        public BoolParameter stripUnityTonemapping = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeUnityPostProcessingBuild, DisplayName("Strip Bloom"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildUnityPPSAuto", false), Tooltip("Do not compile Unity Post Processing's Bloom shader feature, reducing build time.")]
-        public BoolParameter stripUnityBloom = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeUnityPostProcessingBuild, DisplayName("Strip Chromatic Aberration"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildUnityPPSAuto", false), Tooltip("Do not compile Unity Post Processing's Chromatic Aberration shader feature, reducing build time.")]
-        public BoolParameter stripUnityChromaticAberration = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeUnityPostProcessingBuild, DisplayName("Strip Distortion"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildUnityPPSAuto", false), Tooltip("Do not compile Unity Post Processing's Screen Distortion features, reducing build time.")]
-        public BoolParameter stripUnityDistortion = new BoolParameter(false, overrideState: true);
-
-        [GeneralSettings, OptimizeUnityPostProcessingBuild, DisplayName("Strip Debug Variants"), GlobalOverride, BuildToggle, DisplayConditionBool("optimizeBuildUnityPPSAuto", false), Tooltip("Do not compile Unity Post Processing's debug variants, reducing build time.")]
-        public BoolParameter stripUnityDebugVariants = new BoolParameter(false, overrideState: true);
-
         #endregion
 
         #region Sharpen settings
 
-        [ImageEnhancement, Sharpen, DisplayName("Intensity"), DisplayConditionBool("stripBeautifySharpen", false), ShowStrippedLabel]
+        [ImageEnhancement, Sharpen, DisplayName("Intensity"), ShowStrippedLabel]
         public ClampedFloatParameter sharpenIntensity = new ClampedFloatParameter(0f, 0f, 25f);
 
-        [ImageEnhancement, Sharpen, DisplayName("Depth Threshold"), DisplayConditionBool("turboMode", false), Tooltip("By default, sharpen ignores edges to avoid aliasing. Increase this property to also include edges. Edge detection is based on scene depth.")]
+        [ImageEnhancement, Sharpen, DisplayName("Depth Threshold"), DisplayConditionBool("turboMode", false, "ignoreDepthTexture", false), Tooltip("By default, sharpen ignores edges to avoid aliasing. Increase this property to also include edges. Edge detection is based on scene depth.")]
         public ClampedFloatParameter sharpenDepthThreshold = new ClampedFloatParameter(0.035f, 0f, 0.05f);
 
-        [ImageEnhancement, Sharpen, DisplayName("Depth Range"), DisplayConditionBool("turboMode", false), Tooltip("Restricts sharpen to a scene depth range.")]
+        [ImageEnhancement, Sharpen, DisplayName("Depth Range"), DisplayConditionBool("turboMode", false, "ignoreDepthTexture", false), Tooltip("Restricts sharpen to a scene depth range.")]
         public MinMaxFloatParameter sharpenMinMaxDepth = new MinMaxFloatParameter(new Vector2(0, 0.999f), 0, 1.1f);
 
-        [ImageEnhancement, Sharpen, DisplayName("Depth Range FallOff"), DisplayConditionBool("turboMode", false)]
+        [ImageEnhancement, Sharpen, DisplayName("Depth Range FallOff"), DisplayConditionBool("turboMode", false, "ignoreDepthTexture", false)]
         public ClampedFloatParameter sharpenMinMaxDepthFallOff = new ClampedFloatParameter(0f, 0f, 1f);
 
         [ImageEnhancement, Sharpen, DisplayName("Relaxation"), Tooltip("Reduces sharpen intensity based on area brightness.")]
@@ -414,7 +354,7 @@ namespace Beautify.Universal {
 
         #region Edge AA
 
-        [ImageEnhancement, EdgeAntialiasing, DisplayName("Strength"), DisplayConditionBool("stripBeautifyEdgeAA", false), Tooltip("Strength of the integrated edge antialiasing. A value of 0 disables this feature."), ShowStrippedLabel]
+        [ImageEnhancement, EdgeAntialiasing, DisplayName("Strength"), DisplayConditionBool("ignoreDepthTexture", false), Tooltip("Strength of the integrated edge antialiasing. A value of 0 disables this feature."), ShowStrippedLabel]
         public ClampedFloatParameter antialiasStrength = new ClampedFloatParameter(0, 0, 20);
 
         [ImageEnhancement, EdgeAntialiasing, DisplayName("Edge Threshold"), Tooltip("Minimum difference in depth between neighbour pixels to determine if edge antialiasing should be applied.")]
@@ -430,16 +370,19 @@ namespace Beautify.Universal {
 
         #region Tonemapping and Color Grading
 
-        [TonemappingAndColorGrading, DisplayConditionBool("stripBeautifyTonemapping", false), ShowStrippedLabel]
+        [TonemappingAndColorGrading, ShowStrippedLabel]
         public BeautifyTonemapOperatorParameter tonemap = new BeautifyTonemapOperatorParameter { value = TonemapOperator.Linear };
 
-        [TonemappingAndColorGrading, Min(0), DisplayName("Max Input Brightness"), Tooltip("Clamps input image brightness to avoid artifacts due to NaN or out of range pixel values."), DisplayConditionEnum("tonemap", (int)TonemapOperator.ACES)]
+        [TonemappingAndColorGrading, DisplayName("Gamma"), Tooltip("Gamma applied to the AGX tonemapper."), DisplayConditionEnum("tonemap", (int)TonemapOperator.AGX, true)]
+        public FloatParameter tonemapAGXGamma = new ClampedFloatParameter(2.5f, 0, 5f);
+
+        [TonemappingAndColorGrading, Min(0), DisplayName("Max Input Brightness"), Tooltip("Clamps input image brightness to avoid artifacts due to NaN or out of range pixel values."), DisplayConditionEnum("tonemap", (int)TonemapOperator.Linear, false)]
         public FloatParameter tonemapMaxInputBrightness = new FloatParameter(1000f);
 
-        [TonemappingAndColorGrading, Min(0), DisplayName("Pre Exposure"), Tooltip("Brightness multiplier before applying tonemap operator."), DisplayConditionEnum("tonemap", (int)TonemapOperator.ACES)]
+        [TonemappingAndColorGrading, Min(0), DisplayName("Pre Exposure"), Tooltip("Brightness multiplier before applying tonemap operator."), DisplayConditionEnum("tonemap", (int)TonemapOperator.Linear, false)]
         public FloatParameter tonemapExposurePre = new FloatParameter(1f);
 
-        [TonemappingAndColorGrading, Min(0), DisplayName("Post Brightness"), Tooltip("Brightness multiplier after applying tonemap operator."), DisplayConditionEnum("tonemap", (int)TonemapOperator.ACES)]
+        [TonemappingAndColorGrading, Min(0), DisplayName("Post Brightness"), Tooltip("Brightness multiplier after applying tonemap operator."), DisplayConditionEnum("tonemap", (int)TonemapOperator.Linear, false)]
         public FloatParameter tonemapBrightnessPost = new FloatParameter(1f);
 
         [TonemappingAndColorGrading]
@@ -451,28 +394,26 @@ namespace Beautify.Universal {
         [TonemappingAndColorGrading]
         public ClampedFloatParameter contrast = new ClampedFloatParameter(1.0f, 0.5f, 1.5f);
 
-        [TonemappingAndColorGrading, DisplayConditionBool("stripBeautifyColorTweaks", false), ShowStrippedLabel]
+        [TonemappingAndColorGrading, ShowStrippedLabel]
         public ClampedFloatParameter daltonize = new ClampedFloatParameter(0f, 0f, 2f);
 
-        [TonemappingAndColorGrading, DisplayConditionBool("stripBeautifyColorTweaks", false), ShowStrippedLabel]
+        [TonemappingAndColorGrading, ShowStrippedLabel]
         public ClampedFloatParameter sepia = new ClampedFloatParameter(0f, 0f, 1f);
 
         [TonemappingAndColorGrading]
         public ColorParameter tintColor = new ColorParameter(new Color(1, 1, 1, 0));
 
-        [TonemappingAndColorGrading, WhiteBalance, DisplayName("Temperature"), DisplayConditionBool("stripBeautifyColorTweaks", false), ShowStrippedLabel]
-        public ClampedFloatParameter colorTemp = new ClampedFloatParameter(6550f, 1000f, 40000f);
-
-        [TonemappingAndColorGrading, WhiteBalance, DisplayName("Blend"), DisplayConditionBool("stripBeautifyColorTweaks", false)]
+        [TonemappingAndColorGrading, WhiteBalance, DisplayName("Blend"), ShowStrippedLabel]
         public ClampedFloatParameter colorTempBlend = new ClampedFloatParameter(0f, 0f, 1f);
 
+        [TonemappingAndColorGrading, WhiteBalance, DisplayName("Temperature")]
+        public ClampedFloatParameter colorTemp = new ClampedFloatParameter(6550f, 1000f, 40000f);
 
         #endregion
 
-
         #region LUT
 
-        [TonemappingAndColorGrading, LUT, DisplayName("Enable LUT"), ToggleAllFields, DisplayConditionBool("stripBeautifyLUT", false), ShowStrippedLabel]
+        [TonemappingAndColorGrading, LUT, DisplayName("Enable LUT"), ToggleAllFields, ShowStrippedLabel]
         public BoolParameter lut = new BoolParameter(false);
 
         [TonemappingAndColorGrading, LUT, DisplayName("Intensity")]
@@ -483,10 +424,9 @@ namespace Beautify.Universal {
 
         #endregion
 
-
         #region Bloom
 
-        [LensAndLightingEffects, Bloom, DisplayName("Intensity"), DisplayConditionBool("stripBeautifyBloom", false), ShowStrippedLabel]
+        [LensAndLightingEffects, Bloom, DisplayName("Intensity"), ShowStrippedLabel]
         public FloatParameter bloomIntensity = new FloatParameter(0);
 
         [LensAndLightingEffects, Bloom, DisplayName("Threshold")]
@@ -504,16 +444,19 @@ namespace Beautify.Universal {
         [LensAndLightingEffects, Bloom, DisplayName("Tint Color"), Tooltip("Use Alpha channel to blend original bloom color with the tinted color.")]
         public ColorParameter bloomTint = new ColorParameter(new Color(0.5f, 0.5f, 1f, 0f));
 
-        [LensAndLightingEffects, Bloom, DisplayName("Depth Attenuation")]
+        [LensAndLightingEffects, Bloom, DisplayName("Depth Attenuation"), DisplayConditionBool("ignoreDepthTexture", false)]
         public FloatParameter bloomDepthAtten = new FloatParameter(0f);
 
-        [LensAndLightingEffects, Bloom, DisplayName("Near Attenuation"), Min(0)]
+        [LensAndLightingEffects, Bloom, DisplayName("Near Attenuation"), DisplayConditionBool("ignoreDepthTexture", false), Min(0)]
         public FloatParameter bloomNearAtten = new FloatParameter(0f);
 
-        [LensAndLightingEffects, Bloom, DisplayName("Exclude Layers")]
+        [LensAndLightingEffects, Bloom, DisplayName("Use Layers"), DisplayConditionBool("ignoreDepthTexture", false)]
         public BoolParameter bloomExcludeLayers = new BoolParameter(false);
 
-        [LensAndLightingEffects, Bloom, DisplayName("Exclusion Layer Mask"), DisplayConditionBool("bloomExcludeLayers")]
+        [LensAndLightingEffects, Bloom, DisplayName("Include/Exclude Layers"), DisplayConditionBool("bloomExcludeLayers", true, "ignoreDepthTexture", false), Tooltip("Choose if bloom should be applied only to specified layers or if bloom should be excluded from the specified layers.")]
+        public BeautifyBloomLayersFilterMethodParameter bloomLayersFilterMethod = new BeautifyBloomLayersFilterMethodParameter { value = BloomLayersFilterMethod.ExcludeSelectedLayers };
+
+        [LensAndLightingEffects, Bloom, DisplayName("Layers"), DisplayConditionBool("bloomExcludeLayers", true, "ignoreDepthTexture", false)]
         public BeautifyLayerMaskParameter bloomExclusionLayerMask = new BeautifyLayerMaskParameter { value = 0 };
 
         [LensAndLightingEffects, Bloom, DisplayName("Antiflicker")]
@@ -587,7 +530,7 @@ namespace Beautify.Universal {
 
         #region Anamorphic flares
 
-        [LensAndLightingEffects, AnamorphicFlares, DisplayName("Intensity"), DisplayConditionBool("stripBeautifyBloom", false), ShowStrippedLabel]
+        [LensAndLightingEffects, AnamorphicFlares, DisplayName("Intensity"), ShowStrippedLabel]
         public FloatParameter anamorphicFlaresIntensity = new FloatParameter(0f);
 
         [LensAndLightingEffects, AnamorphicFlares, DisplayName("Threshold")]
@@ -608,16 +551,19 @@ namespace Beautify.Universal {
         [LensAndLightingEffects, AnamorphicFlares, DisplayName("Max Brightness")]
         public FloatParameter anamorphicFlaresMaxBrightness = new FloatParameter(1000f);
 
-        [LensAndLightingEffects, AnamorphicFlares, DisplayName("Depth Attenuation")]
+        [LensAndLightingEffects, AnamorphicFlares, DisplayName("Depth Attenuation"), DisplayConditionBool("ignoreDepthTexture", false)]
         public FloatParameter anamorphicFlaresDepthAtten = new FloatParameter(0f);
 
-        [LensAndLightingEffects, AnamorphicFlares, DisplayName("Near Attenuation"), Min(0)]
+        [LensAndLightingEffects, AnamorphicFlares, DisplayName("Near Attenuation"), DisplayConditionBool("ignoreDepthTexture", false), Min(0)]
         public FloatParameter anamorphicFlaresNearAtten = new FloatParameter(0f);
 
-        [LensAndLightingEffects, AnamorphicFlares, DisplayName("Exclude Layers")]
+        [LensAndLightingEffects, AnamorphicFlares, DisplayName("Use Layers"), DisplayConditionBool("ignoreDepthTexture", false)]
         public BoolParameter anamorphicFlaresExcludeLayers = new BoolParameter(false);
 
-        [LensAndLightingEffects, AnamorphicFlares, DisplayName("Exclusion Layer Mask"), DisplayConditionBool("anamorphicFlaresExcludeLayers")]
+        [LensAndLightingEffects, AnamorphicFlares, DisplayName("Include/Exclude Layers"), DisplayConditionBool("anamorphicFlaresExcludeLayers", true, "ignoreDepthTexture", false), Tooltip("Choose if the effect should be applied only on the specified layers or if it should be excluded instead.")]
+        public BeautifyBloomLayersFilterMethodParameter anamorphicFlaresLayersFilterMethod = new BeautifyBloomLayersFilterMethodParameter { value = BloomLayersFilterMethod.ExcludeSelectedLayers };
+
+        [LensAndLightingEffects, AnamorphicFlares, DisplayName("Layers"), DisplayConditionBool("anamorphicFlaresExcludeLayers", true, "ignoreDepthTexture", false)]
         public BeautifyLayerMaskParameter anamorphicFlaresExclusionLayerMask = new BeautifyLayerMaskParameter { value = 0 };
 
         [LensAndLightingEffects, AnamorphicFlares, DisplayName("Antiflicker")]
@@ -633,7 +579,7 @@ namespace Beautify.Universal {
 
         #region Sun Flares
 
-        [LensAndLightingEffects, SunFlares, DisplayName("Global Intensity"), DisplayConditionBool("stripBeautifyBloom", false), ShowStrippedLabel]
+        [LensAndLightingEffects, SunFlares, DisplayName("Global Intensity"), ShowStrippedLabel]
         public ClampedFloatParameter sunFlaresIntensity = new ClampedFloatParameter(0.0f, 0, 1f);
 
         [LensAndLightingEffects, SunFlares, DisplayName("Tint Color")]
@@ -648,8 +594,8 @@ namespace Beautify.Universal {
         [LensAndLightingEffects, SunFlares, DisplayName("Downsampling")]
         public ClampedIntParameter sunFlaresDownsampling = new ClampedIntParameter(1, 1, 5);
 
-        [LensAndLightingEffects, SunFlares, DisplayName("Depth Occlusion Mode"), Tooltip("None = no depth buffer checking. Simple = sample depth buffer at Sun position. Smooth = sample 4 positions around Sun position and interpolate value across frames.")]
-        public BeautifySunFlaresDepthOcclusionMode sunFlaresDepthOcclusionMode = new BeautifySunFlaresDepthOcclusionMode { value = SunFlaresDepthOcclusionMode.Simple };
+        [LensAndLightingEffects, SunFlares, DisplayName("Depth Occlusion Mode"), DisplayConditionBool("ignoreDepthTexture", false), Tooltip("None = no depth buffer checking. Simple = sample depth buffer at Sun position. Smooth = sample 4 positions around Sun position and interpolate value across frames.")]
+        public BeautifySunFlaresDepthOcclusionModeParameter sunFlaresDepthOcclusionMode = new BeautifySunFlaresDepthOcclusionModeParameter { value = SunFlaresDepthOcclusionMode.Simple };
 
         [LensAndLightingEffects, SunFlares, DisplayName("Occlusion Threshold"), DisplayConditionEnum("sunFlaresDepthOcclusionMode", (int)SunFlaresDepthOcclusionMode.Smooth)]
         public ClampedFloatParameter sunFlaresDepthOcclusionThreshold = new ClampedFloatParameter(0.5f, 0, 1f);
@@ -748,7 +694,7 @@ namespace Beautify.Universal {
 
         #region Lens Dirt
 
-        [LensAndLightingEffects, LensDirt, DisplayName("Intensity"), Min(0), DisplayConditionBool("stripBeautifyLensDirt", false), ShowStrippedLabel]
+        [LensAndLightingEffects, LensDirt, DisplayName("Intensity"), Min(0), ShowStrippedLabel]
         public FloatParameter lensDirtIntensity = new FloatParameter(0f);
 
         [LensAndLightingEffects, LensDirt, DisplayName("Threshold")]
@@ -764,7 +710,7 @@ namespace Beautify.Universal {
 
         #region Chromatic Aberration
 
-        [LensAndLightingEffects, ChromaticAberration, DisplayName("Intensity"), Min(0), DisplayConditionBool("stripBeautifyChromaticAberration", false), ShowStrippedLabel]
+        [LensAndLightingEffects, ChromaticAberration, DisplayName("Intensity"), Min(0), ShowStrippedLabel]
         public FloatParameter chromaticAberrationIntensity = new ClampedFloatParameter(0f, 0f, 0.1f);
 
         [LensAndLightingEffects, ChromaticAberration, DisplayName("Hue Shift"), Min(0), DisplayConditionBool("turboMode", false)]
@@ -780,17 +726,17 @@ namespace Beautify.Universal {
 
         #region Depth of Field
 
-        [LensAndLightingEffects, DepthOfField, DisplayName("Enable"), ToggleAllFields, DisplayConditionBool("stripBeautifyDoF", false), ShowStrippedLabel]
+        [LensAndLightingEffects, DepthOfField, DisplayName("Enable"), ToggleAllFields, DisplayConditionBool("ignoreDepthTexture", false), ShowStrippedLabel]
         public BoolParameter depthOfField = new BoolParameter(false);
 
         [Header("Focus")]
         [LensAndLightingEffects, DepthOfField, DisplayName("Focus Mode")]
         public BeautifyDoFFocusModeParameter depthOfFieldFocusMode = new BeautifyDoFFocusModeParameter { value = DoFFocusMode.FixedDistance };
 
-        [LensAndLightingEffects, DepthOfField, DisplayName("Min Distance"), DisplayConditionEnum("depthOfFieldFocusMode", (int)DoFFocusMode.AutoFocus, isEqual: false)]
+        [LensAndLightingEffects, DepthOfField, DisplayName("Min Distance"), DisplayConditionEnum("depthOfFieldFocusMode", (int)DoFFocusMode.FixedDistance, isEqual: false)]
         public FloatParameter depthOfFieldAutofocusMinDistance = new FloatParameter(0);
 
-        [LensAndLightingEffects, DepthOfField, DisplayName("Max Distance"), DisplayConditionEnum("depthOfFieldFocusMode", (int)DoFFocusMode.AutoFocus, isEqual: false)]
+        [LensAndLightingEffects, DepthOfField, DisplayName("Max Distance"), DisplayConditionEnum("depthOfFieldFocusMode", (int)DoFFocusMode.FixedDistance, isEqual: false)]
         public FloatParameter depthOfFieldAutofocusMaxDistance = new FloatParameter(10000);
 
         [LensAndLightingEffects, DepthOfField, DisplayName("Fallback"), Tooltip("Focus behaviour if object is not visible on the screen"), DisplayConditionEnum("depthOfFieldFocusMode", (int)DoFFocusMode.FollowTarget)]
@@ -840,7 +786,7 @@ namespace Beautify.Universal {
 
         [Header("Extra Features")]
 
-        [LensAndLightingEffects, DepthOfField, DisplayName("Transparency Support"), DisplayConditionBool("stripBeautifyDoFTransparentSupport", false), ShowStrippedLabel]
+        [LensAndLightingEffects, DepthOfField, DisplayName("Transparency Support"), ShowStrippedLabel]
         public BoolParameter depthOfFieldTransparentSupport = new BoolParameter(false);
 
         [LensAndLightingEffects, DepthOfField, DisplayName("Layer Mask"), DisplayConditionBool("depthOfFieldTransparentSupport")]
@@ -850,7 +796,7 @@ namespace Beautify.Universal {
         [Tooltip("When enabled, transparent geometry is rendered with cull off.")]
         public BoolParameter depthOfFieldTransparentDoubleSided = new BoolParameter(false);
 
-        [LensAndLightingEffects, DepthOfField, DisplayName("Transparency Alpha Test Support"), DisplayConditionBool("stripBeautifyDoFTransparentSupport", false), ShowStrippedLabel]
+        [LensAndLightingEffects, DepthOfField, DisplayName("Transparency Alpha Test Support"), ShowStrippedLabel]
         [Tooltip("When enabled, transparent materials using alpha clipping will be included in the transparent mask")]
         public BoolParameter depthOfFieldAlphaTestSupport = new BoolParameter(false);
 
@@ -897,6 +843,12 @@ namespace Beautify.Universal {
         [LensAndLightingEffects, DepthOfField, DisplayName("Max Brightness")]
         public FloatParameter depthOfFieldMaxBrightness = new FloatParameter(1000f);
 
+        [LensAndLightingEffects, DepthOfField, DisplayName("Max Blur Radius")]
+        public FloatParameter depthOfFieldMaxBlurRadius = new FloatParameter(1000f);
+
+        [LensAndLightingEffects, DepthOfField, DisplayName("Resolution Invariant"), Tooltip("Adjusts circle of confusion radius based on screen resolution.")]
+        public BoolParameter depthOfFieldResolutionInvariant = new BoolParameter(false);
+        
         [LensAndLightingEffects, DepthOfField, DisplayName("Max Depth")]
         public ClampedFloatParameter depthOfFieldMaxDistance = new ClampedFloatParameter(1f, 0, 1f);
 
@@ -907,7 +859,7 @@ namespace Beautify.Universal {
 
         #region Eye Adaptation
 
-        [LensAndLightingEffects, EyeAdaptation, DisplayName("Enable"), ToggleAllFields, DisplayConditionBool("stripBeautifyEyeAdaptation", false), ShowStrippedLabel]
+        [LensAndLightingEffects, EyeAdaptation, DisplayName("Enable"), ToggleAllFields, ShowStrippedLabel]
         public BoolParameter eyeAdaptation = new BoolParameter(false);
 
         [LensAndLightingEffects, EyeAdaptation, DisplayName("Min Exposure")]
@@ -922,11 +874,20 @@ namespace Beautify.Universal {
         [LensAndLightingEffects, EyeAdaptation, DisplayName("Dark Adapt Speed")]
         public ClampedFloatParameter eyeAdaptationSpeedToDark = new ClampedFloatParameter(0.2f, 0f, 1f);
 
+        [LensAndLightingEffects, EyeAdaptation, DisplayName("Metering Mode")]
+        public BeautifyEyeAdaptationMeteringModeParameter eyeAdaptationMeteringMode = new BeautifyEyeAdaptationMeteringModeParameter { value = EyeAdaptationMeteringMode.FullFrame };
+
+        [LensAndLightingEffects, EyeAdaptation, DisplayName("Min Camera Distance"), Tooltip("Minimum object depth in meters to consider for eye adaptation"), DisplayConditionEnum("eyeAdaptationMeteringMode", (int)EyeAdaptationMeteringMode.MinDepth)]
+        public FloatParameter eyeAdaptationMinCameraDistance = new FloatParameter(0f);
+
+        [LensAndLightingEffects, EyeAdaptation, DisplayName("Metering Mask (A)"), Tooltip("When assigned, eye adaptation will be applied only to the pixels within the mask (red channel)"), DisplayConditionEnum("eyeAdaptationMeteringMode", (int)EyeAdaptationMeteringMode.Mask)]
+        public TextureParameter eyeAdaptationMask = new TextureParameter(null);
+
         #endregion
 
         #region Purkinje effect
 
-        [LensAndLightingEffects, PurkinjeShift, DisplayName("Enable"), ToggleAllFields, DisplayConditionBool("stripBeautifyPurkinje", false), ShowStrippedLabel]
+        [LensAndLightingEffects, PurkinjeShift, DisplayName("Enable"), ToggleAllFields, ShowStrippedLabel]
         public BoolParameter purkinje = new BoolParameter(false);
 
         [LensAndLightingEffects, PurkinjeShift, DisplayName("Shift Amount")]
@@ -939,7 +900,7 @@ namespace Beautify.Universal {
 
         #region Vignetting
 
-        [ArtisticChoices, Vignette, DisplayName("Outer Ring"), DisplayConditionBool("stripBeautifyVignetting", false), ShowStrippedLabel]
+        [ArtisticChoices, Vignette, DisplayName("Outer Ring"), ShowStrippedLabel]
         public ClampedFloatParameter vignettingOuterRing = new ClampedFloatParameter(0f, -2f, 1f);
 
         [ArtisticChoices, Vignette, DisplayName("Inner Ring")]
@@ -952,7 +913,7 @@ namespace Beautify.Universal {
         public BoolParameter vignettingCircularShape = new BoolParameter(false);
 
         [ArtisticChoices, Vignette, DisplayName("Fit Mode"), DisplayConditionBool("vignettingCircularShape")]
-        public BeautifyVignetteFitMode vignettingCircularShapeFitMode = new BeautifyVignetteFitMode { value = VignetteFitMode.FitToWidth };
+        public BeautifyVignetteFitModeParameter vignettingCircularShapeFitMode = new BeautifyVignetteFitModeParameter { value = VignetteFitMode.FitToWidth };
 
         [ArtisticChoices, Vignette, DisplayName("Aspect Ratio"), DisplayConditionBool("vignettingCircularShape", false)]
         public ClampedFloatParameter vignettingAspectRatio = new ClampedFloatParameter(1f, 0, 1f);
@@ -979,17 +940,35 @@ namespace Beautify.Universal {
         [Serializable]
         public sealed class BeautifyOutlineStageParameter : VolumeParameter<OutlineStage> { }
 
-        [ArtisticChoices, Outline, DisplayConditionBool("stripBeautifyOutline", false), ShowStrippedLabel]
+        [Serializable]
+        public sealed class BeautifyOutlineTechniqueParameter : VolumeParameter<OutlineTechnique> { }
+
+        [ArtisticChoices, Outline, DisplayConditionBool("ignoreDepthTexture", false), ShowStrippedLabel]
         public BoolParameter outline = new BoolParameter(false);
 
         [ArtisticChoices, Outline, DisplayName("Color")]
-        public ColorParameter outlineColor = new ColorParameter(value: new Color(0, 0, 0, 0.8f), hdr: true, showAlpha: true, showEyeDropper: true);
+        public ColorParameter outlineColor = new ColorParameter(value: new Color(0, 0, 0, 0.8f), hdr: true, showAlpha: false, showEyeDropper: true);
 
-        [ArtisticChoices, Outline, DisplayName("Threshold")]
-        public ClampedFloatParameter outlineThreshold = new ClampedFloatParameter(0.2f, 0f, 1f);
+        [ArtisticChoices, Outline, DisplayName("Technique"), Tooltip("Depth: uses scene depth to find edges. Per Object Id: performs a custom pre-pass which renders meshes id to identify independent objects.")]
+        public BeautifyOutlineTechniqueParameter outlineTechnique = new BeautifyOutlineTechniqueParameter { value = OutlineTechnique.Depth };
+
+        [ArtisticChoices, Outline, DisplayName("Minimum Separation"), DisplayConditionEnum("outlineTechnique", (int)OutlineTechnique.PerObjectId)]
+        public ClampedIntParameter outlineMinSeparation = new ClampedIntParameter(1, 1, 5);
+
+        [ArtisticChoices, Outline, DisplayName("Edge Threshold"), DisplayConditionEnum("outlineTechnique", (int)OutlineTechnique.Depth)]
+        public ClampedFloatParameter outlineThreshold = new ClampedFloatParameter(0.2f, 0f, 0.5f);
+
+        [ArtisticChoices, Outline, DisplayName("Depth Diff Threshold"), DisplayConditionEnum("outlineTechnique", (int)OutlineTechnique.Depth)]
+        public ClampedFloatParameter outlineMinDepthThreshold = new ClampedFloatParameter(0.0005f, 0f, 0.01f);
+
+        [ArtisticChoices, Outline, DisplayName("Saturation Diff Threshold"), DisplayConditionEnum("outlineTechnique", (int)OutlineTechnique.Depth)]
+        public ClampedFloatParameter outlineSaturationDiffThreshold = new ClampedFloatParameter(0.015f, 0f, 0.5f);
 
         [ArtisticChoices, Outline, DisplayName("Customize")]
         public BoolParameter outlineCustomize = new BoolParameter(false);
+
+        [ArtisticChoices, Outline, DisplayName("Layer Mask"), DisplayConditionBool("outlineCustomize"), Tooltip("Optionally specify which objects should receive the outline effect")]
+        public LayerMaskParameter outlineLayerMask = new LayerMaskParameter(-1);
 
         [ArtisticChoices, Outline, DisplayName("Render Stage"), DisplayConditionBool("outlineCustomize")]
         public BeautifyOutlineStageParameter outlineStageParameter = new BeautifyOutlineStageParameter { value = OutlineStage.BeforeBloom };
@@ -1010,40 +989,49 @@ namespace Beautify.Universal {
         [ArtisticChoices, Outline, DisplayName("Distance Fade"), DisplayConditionBool("outlineCustomize")]
         public FloatParameter outlineDistanceFade = new FloatParameter(0);
 
+        [ArtisticChoices, Outline, DisplayName("Use Optimized Shader"), DisplayConditionBool("outlineCustomize"), Tooltip("Uses a depth-only custom shader which should be faster. This option is only used when outline technique is set to Depth. If the scene uses shaders that transform the vertices coordinates, you may want to disable this option.")]
+        public BoolParameter outlineUsesOptimizedShader = new BoolParameter(false);
+
+#if UNITY_2022_3_OR_NEWER
+        [ArtisticChoices, Outline, DisplayName("Cut Off"), DisplayConditionBool("outlineUsesOptimizedShader"), Tooltip("Optionally set the alpha test/cut off. Only applies if optimized shader is used.")]
+        public ClampedFloatParameter outlineLayerCutOff = new ClampedFloatParameter(0f, 0, 1);
+#endif
+
+
         #endregion
 
         #region Night Vision
 
-        [ArtisticChoices, NightVision, DisplayName("Enable"), DisplayConditionBool("stripBeautifyNightVision", false), ShowStrippedLabel]
+        [ArtisticChoices, NightVision, DisplayName("Enable"), ShowStrippedLabel]
         public BoolParameter nightVision = new BoolParameter(false);
 
-        [ArtisticChoices, NightVision, DisplayName("Scan Lines Color"), DisplayConditionBool("stripBeautifyNightVision", false)]
+        [ArtisticChoices, NightVision, DisplayName("Scan Lines Color")]
         public ColorParameter nightVisionColor = new ColorParameter(new Color(0.5f, 1f, 0.5f, 0.5f));
 
-        [ArtisticChoices, NightVision, DisplayName("Max Visible Depth"), DisplayConditionBool("stripBeautifyNightVision", false)]
+        [ArtisticChoices, NightVision, DisplayName("Max Visible Depth")]
         public FloatParameter nightVisionDepth = new FloatParameter(100000);
 
-        [ArtisticChoices, NightVision, DisplayName("Max Visible Depth Fall Off"), DisplayConditionBool("stripBeautifyNightVision", false)]
+        [ArtisticChoices, NightVision, DisplayName("Max Visible Depth Fall Off")]
         public ClampedFloatParameter nightVisionDepthFallOff = new ClampedFloatParameter(1, 0.01f, 10);
 
         #endregion
 
         #region Thermal Vision
 
-        [ArtisticChoices, ThermalVision, DisplayName("Enable"), DisplayConditionBool("stripBeautifyThermalVision", false), ShowStrippedLabel]
+        [ArtisticChoices, ThermalVision, DisplayName("Enable"), ShowStrippedLabel]
         public BoolParameter thermalVision = new BoolParameter(false);
 
-        [ArtisticChoices, ThermalVision, DisplayName("Scan Lines"), DisplayConditionBool("stripBeautifyThermalVision", false)]
+        [ArtisticChoices, ThermalVision, DisplayName("Scan Lines")]
         public BoolParameter thermalVisionScanLines = new BoolParameter(true);
 
-        [ArtisticChoices, ThermalVision, DisplayName("Distortion Amount"), DisplayConditionBool("stripBeautifyThermalVision", false)]
+        [ArtisticChoices, ThermalVision, DisplayName("Distortion Amount")]
         public ClampedFloatParameter thermalVisionDistortionAmount = new ClampedFloatParameter(9f, 0, 100f);
 
         #endregion
 
         #region RGB Dither
 
-        [ImageEnhancement, Dither, DisplayName("Intensity"), DisplayConditionBool("stripBeautifyDithering", false), ShowStrippedLabel]
+        [ImageEnhancement, Dither, DisplayName("Intensity"), ShowStrippedLabel]
         public ClampedFloatParameter ditherIntensity = new ClampedFloatParameter(0.0f, 0, 0.02f);
 
         #endregion
@@ -1058,7 +1046,7 @@ namespace Beautify.Universal {
         [Serializable]
         public sealed class BeautifyFrameStyleParameter : VolumeParameter<FrameStyle> { }
 
-        [ArtisticChoices, Frame, DisplayName("Enable"), DisplayConditionBool("stripBeautifyFrame", false)]
+        [ArtisticChoices, Frame, DisplayName("Enable"), ShowStrippedLabel]
         public BoolParameter frame = new BoolParameter(false);
 
         [ArtisticChoices, Frame, DisplayName("Style")]
@@ -1113,7 +1101,7 @@ namespace Beautify.Universal {
         public bool IsTileCompatible() => true;
 
         public bool RequiresDepthTexture() {
-            return sharpenIntensity.value > 0 || depthOfField.value || bloomDepthAtten.value > 0 || bloomNearAtten.value > 0 || anamorphicFlaresDepthAtten.value > 0 || anamorphicFlaresNearAtten.value > 0 || sunFlaresIntensity.value > 0 || outline.value;
+            return sharpenIntensity.value > 0 || antialiasStrength.value > 0 || depthOfField.value || bloomDepthAtten.value > 0 || bloomNearAtten.value > 0 || anamorphicFlaresDepthAtten.value > 0 || anamorphicFlaresNearAtten.value > 0 || sunFlaresIntensity.value > 0 || outline.value;
         }
 
         int downsamplingUsed;
@@ -1132,7 +1120,10 @@ namespace Beautify.Universal {
             outlineDistanceFade.value = Mathf.Max(outlineDistanceFade.value, 0);
             antialiasDepthAttenuation.value = Mathf.Max(antialiasDepthAttenuation.value, 0);
             nightVisionDepth.value = Mathf.Max(0, nightVisionDepth.value);
-
+            depthOfFieldMaxBlurRadius.value = Mathf.Max(0, depthOfFieldMaxBlurRadius.value);
+            tonemapMaxInputBrightness.value = Mathf.Max(0, tonemapMaxInputBrightness.value);
+            eyeAdaptationMinCameraDistance.value = Mathf.Max(0, eyeAdaptationMinCameraDistance.value);
+            
             if (!downsampling.value && downsamplingUsed == 1) {
                 // deactivate downsampling on the pipeline
                 UniversalRenderPipelineAsset pipe = (UniversalRenderPipelineAsset)GraphicsSettings.currentRenderPipeline;

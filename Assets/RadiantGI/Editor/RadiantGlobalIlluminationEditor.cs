@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditor.Rendering;
 using DebugView = RadiantGI.Universal.RadiantGlobalIllumination.DebugView;
+using System.Reflection;
+using UnityEngine.Rendering;
 
 namespace RadiantGI.Universal {
 #if UNITY_2022_2_OR_NEWER
@@ -94,6 +96,31 @@ namespace RadiantGI.Universal {
         }
 
         public override void OnInspectorGUI() {
+
+            var pipe = GraphicsSettings.currentRenderPipeline as UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset;
+            if (pipe == null) {
+                EditorGUILayout.HelpBox("Universal Rendering Pipeline asset is not set in Project Settings / Graphics !", MessageType.Error);
+                return;
+            }
+
+            // Check depth texture mode
+            FieldInfo renderers = pipe.GetType().GetField("m_RendererDataList", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (renderers == null) return;
+            foreach (var renderer in (object[])renderers.GetValue(pipe)) {
+                if (renderer == null) continue;
+                FieldInfo depthTextureModeField = renderer.GetType().GetField("m_CopyDepthMode", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (depthTextureModeField != null) {
+                    int depthTextureMode = (int)depthTextureModeField.GetValue(renderer);
+                    if (depthTextureMode == 1) { // transparent copy depth mode
+                        EditorGUILayout.HelpBox("Depth Texture Mode in URP asset must be set to 'After Opaques' or 'Force Prepass'.", MessageType.Warning);
+                        if (GUILayout.Button("Show Pipeline Asset")) {
+                            Selection.activeObject = (Object)renderer;
+                            GUIUtility.ExitGUI();
+                        }
+                        EditorGUILayout.Separator();
+                    }
+                }
+            }
 
             serializedObject.Update();
 

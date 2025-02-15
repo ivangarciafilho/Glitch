@@ -57,6 +57,7 @@ Shader "VolumetricLights/DustParticles"
 		[HideInInspector] _ExtraGeoData("Extra Geo Data", Vector) = (1.0, 0, 0)
         [HideInInspector] _Border("Border", Float) = 0.1
         [HideInInspector] _DistanceFallOff("Length Falloff", Float) = 0
+        [HideInInspector] _NearClipDistance("Near Clip Distance", Float) = 0
         [HideInInspector] _FallOff("FallOff Physical", Vector) = (1.0, 2.0, 1.0)
         [HideInInspector] _ConeAxis("Cone Axis", Vector) = (0,0,0,0.5)
         [HideInInspector] _AreaExtents("Area Extents", Vector) = (0,0,0,1)
@@ -97,10 +98,10 @@ Shader "VolumetricLights/DustParticles"
 //            #pragma shader_feature _FADING_ON
 //            #pragma shader_feature _DISTORTION_ON
 
-            #pragma multi_compile_local VL_SPOT VL_SPOT_COOKIE VL_POINT VL_AREA_RECT VL_AREA_DISC 
-            #pragma multi_compile_local _ VL_SHADOWS VL_SHADOWS_CUBEMAP VL_SHADOWS_TRANSLUCENCY
-    		#pragma multi_compile_local _ VL_PHYSICAL_ATTEN
-            #pragma shader_feature_local _ VL_CUSTOM_BOUNDS
+            #pragma multi_compile_local_fragment VL_SPOT VL_SPOT_COOKIE VL_POINT VL_AREA_RECT VL_AREA_DISC 
+            #pragma multi_compile_local_fragment _ VL_SHADOWS VL_SHADOWS_CUBEMAP VL_SHADOWS_TRANSLUCENCY
+    		#pragma multi_compile_local_fragment _ VL_PHYSICAL_ATTEN
+            #pragma shader_feature_local_fragment _ VL_CUSTOM_BOUNDS
 
             // -------------------------------------
             // Unity defined keywords
@@ -112,8 +113,8 @@ Shader "VolumetricLights/DustParticles"
             #undef unity_WorldToObject
             #define unity_WorldToObject _WorldToLocal
 
-            #include "DustParticlesInput.hlsl"
-            #include "DustParticlesForwardPass.hlsl"
+            #include_with_pragmas "DustParticlesInput.hlsl"
+            #include_with_pragmas "DustParticlesForwardPass.hlsl"
 
             ENDHLSL
         }

@@ -1,4 +1,4 @@
-Shader "VolumetricFog2/FoWBlur" {
+Shader "Hidden/VolumetricFog2/FoWBlur" {
 Properties {
 	_MainTex ("", 2D) = "white" {}
 	_Color ("", Color) = (1,1,1,1)
@@ -23,7 +23,7 @@ SubShader {
 	    float2 uv4: TEXCOORD4;
 	};
 	
-	sampler _MainTex;
+	sampler2D _MainTex;
 	float4 _MainTex_ST;
 	float4 _MainTex_TexelSize;
 	

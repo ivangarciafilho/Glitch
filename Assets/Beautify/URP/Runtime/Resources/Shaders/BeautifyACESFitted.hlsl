@@ -1,6 +1,5 @@
-#ifndef BEAUTIFY_ACES_FITTED
-#define BEAUTIFY_ACES_FITTED
-
+// This file "BeautifyACESFitted.hlsl" is covered by MIT license as follows:
+//
 //=================================================================================================
 //
 //  ACES Fitted, an alternate ACES tonemap operator by MJP and David Neubelt
@@ -9,9 +8,11 @@
 //  Licensed under the MIT license
 //
 //=================================================================================================
-
 // The code in this file was originally written by Stephen Hill (@self_shadow), who deserves all
 // credit for coming up with this fit and implementing it. Buy him a beer next time you see him. :)
+
+#ifndef BEAUTIFY_ACES_FITTED
+#define BEAUTIFY_ACES_FITTED
 
 // sRGB => XYZ => D65_2_D60 => AP1 => RRT_SAT
 static const float3x3 ACESInputMat =
@@ -36,19 +37,19 @@ float3 RRTAndODTFit(float3 v)
     return a / b;
 }
 
-float3 ACESFitted(float3 color)
+float3 ACESFitted(float3 val)
 {
-    color = mul(ACESInputMat, color);
+    val = mul(ACESInputMat, val);
 
     // Apply RRT and ODT
-    color = RRTAndODTFit(color);
+    val = RRTAndODTFit(val);
 
-    color = mul(ACESOutputMat, color);
+    val = mul(ACESOutputMat, val);
 
     // Clamp to [0, 1]
-    color = saturate(color);
+    //val = saturate(val);
 
-    return color;
+    return val;
 }
 
 #endif // BEAUTIFY_ACES_FITTED

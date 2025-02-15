@@ -1,10 +1,12 @@
 ﻿//#define FOG_VOID_ROTATION
 
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace VolumetricFogAndMist2 {
 
     [ExecuteInEditMode]
+    [HelpURL("https://kronnect.com/guides/volumetric-fog-urp-adding-volumetric-fog-mist-to-your-scene/#ftoc-heading-1")]
     public class VolumetricFogManager : MonoBehaviour, IVolumetricFogManager {
 
         public string managerName {
@@ -21,19 +23,24 @@ namespace VolumetricFogAndMist2 {
         public Light sun;
         [Tooltip("Directional light used as the Moon")]
         public Light moon;
-        [Tooltip("Layer to be used for fog elements. This layer will be excluded from the depth pre-pass.")]
-        public int fogLayer = 1;
         [Tooltip("Flip depth texture. Use only as a workaround to a bug in URP if the depth shows inverted in GameView. Alternatively you can enable MSAA or HDR instead of using this option.")]
         public bool flipDepthTexture;
         [Tooltip("Enable this option to choose this manager when others could be loaded from sub-scenes")]
         public bool mainManager;
         [Tooltip("Optionally specify which transparent layers must be included in the depth prepass. Use only to avoid fog clipping with certain transparent objects.")]
         public LayerMask includeTransparent;
+        [Tooltip("Cull mode for the transparent depth prepass")]
+        public CullMode transparentCullMode = CullMode.Back;
+        [Tooltip("Renders fog in two stages: on the back and on the front of transparent objects such as particles")]
+        public bool depthPeeling;
         [Tooltip("Optionally specify which semi-transparent (materials using alpha clipping or cut-off) must be included in the depth prepass. Use only to avoid fog clipping with certain transparent objects.")]
         public LayerMask includeSemiTransparent;
         [Tooltip("Optionally determines the alpha cut off for semitransparent objects")]
         [Range(0, 1)]
         public float alphaCutOff;
+        [Tooltip("Cull mode for the semitransparent depth prepass")]
+        public CullMode semiTransparentCullMode = CullMode.Back;
+
         [Tooltip("Light scattering effect through fog")]
         [Range(0, 1)]
         public float scattering;
@@ -51,6 +58,8 @@ namespace VolumetricFogAndMist2 {
 
         [Range(1, 8)]
         public float downscaling = 1;
+        [Tooltip("Depth-based detection threshold for the upscaling reconstruction filter")]
+        public float downscalingEdgeDepthThreshold = 0.05f;
         [Range(0, 6)]
         public int blurPasses;
         [Range(1, 8)]
@@ -75,6 +84,8 @@ namespace VolumetricFogAndMist2 {
 
         const string SKW_FLIP_DEPTH_TEXTURE = "VF2_FLIP_DEPTH_TEXTURE";
 
+        public const uint FOG_VOLUMES_RENDERING_LAYER = 1 << 49;
+
         public static VolumetricFogManager instance {
             get {
                 if (_instance == null) {
@@ -85,8 +96,21 @@ namespace VolumetricFogAndMist2 {
         }
 
         public static VolumetricFogManager GetManagerIfExists() {
+            if (_instance != null && _instance.gameObject == null) _instance = null;
             if (_instance == null) {
-                _instance = FindObjectOfType<VolumetricFogManager>();
+                VolumetricFogManager[] managers = Misc.FindObjectsOfType<VolumetricFogManager>(true);
+                int count = managers.Length;
+                // look for main manager
+                for (int k = 0; k < count; k++) {
+                    VolumetricFogManager manager = managers[k];
+                    if (manager.mainManager) {
+                        _instance = manager;
+                        return _instance;
+                    }
+                }
+                if (count > 0) {
+                    _instance = managers[0];
+                }
             }
             return _instance;
         }
@@ -110,7 +134,7 @@ namespace VolumetricFogAndMist2 {
             _pointLightManager = null;
             _fogVoidManager = null;
             // Ensures no other fog manager exist
-            VolumetricFogManager[] managers = FindObjectsOfType<VolumetricFogManager>(true);
+            VolumetricFogManager[] managers = Misc.FindObjectsOfType<VolumetricFogManager>(true);
             if (managers.Length > 1) {
                 bool isThisTheMainManager = mainManager;
                 for (int k = 0; k < managers.Length; k++) {
@@ -118,6 +142,8 @@ namespace VolumetricFogAndMist2 {
                 }
                 if (!isThisTheMainManager) return;
             }
+            if (_instance == null) _instance = this;
+
             SetupLights();
             SetupDepthPrePass();
             Tools.CheckManager(ref _pointLightManager);
@@ -125,6 +151,7 @@ namespace VolumetricFogAndMist2 {
         }
 
         void OnValidate() {
+            downscalingEdgeDepthThreshold = Mathf.Max(0.0001f, downscalingEdgeDepthThreshold);
             blurEdgeDepthThreshold = Mathf.Max(0.0001f, blurEdgeDepthThreshold);
             scatteringThreshold = Mathf.Max(0, scatteringThreshold);
             scatteringIntensity = Mathf.Max(0, scatteringIntensity);
@@ -133,7 +160,7 @@ namespace VolumetricFogAndMist2 {
 
 
         void SetupLights() {
-            Light[] lights = FindObjectsOfType<Light>();
+            Light[] lights = Misc.FindObjectsOfType<Light>();
             for (int k = 0; k < lights.Length; k++) {
                 Light l = lights[k];
                 if (l.type == LightType.Directional) {
@@ -146,8 +173,10 @@ namespace VolumetricFogAndMist2 {
         }
 
         void SetupDepthPrePass() {
-            Shader.SetGlobalInt(SKW_FLIP_DEPTH_TEXTURE, flipDepthTexture ? 1 : 0);
-            DepthRenderPrePassFeature.DepthRenderPass.SetupLayerMasks(includeTransparent & ~(1 << fogLayer), includeSemiTransparent & ~(1 << fogLayer));
+            #if !UNITY_EDITOR
+                Shader.SetGlobalInt(SKW_FLIP_DEPTH_TEXTURE, flipDepthTexture ? 1 : 0);
+            #endif
+            DepthRenderPrePassFeature.DepthRenderPass.SetupLayerMasks(includeTransparent, includeSemiTransparent);
         }
 
         /// <summary>

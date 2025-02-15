@@ -40,7 +40,35 @@ Of course, all updates of Volumetric Lights will be eventually available on the 
 Version history
 ---------------
 
-Current version
+v10.2
+- Added "Ignore Rotation Change" option to baked shadows. This option allows baked shadows to rotate with the light, improving performance.
+- Improved performance while in edit mode
+
+v10.1.1
+- Added DOTs instancing support to depth prepass shaders
+- Added helpful links and tips to the inspector
+
+v10.0.2
+- Performance optimizations for disabled lights
+
+v10.0
+- Added support for Render Graph (Unity 2023.3)
+
+v7.1.1
+- [Fix] Fixed VR issue using OpenXR
+
+v7.1
+- Small improvements to light diffusion effect
+
+v7.0
+- Added "Shadow Color" option. Shadow color can now be customized (also alpha) to create many special effects with Blend Mode.
+
+v6.9
+- Added Near Clip Distance to spotlights
+
+v6.8.2
+- [Fix] Fixed material issue when a light is duplicated in Unity Editor
+
 - Added "Dust Prewarm" option. By default, dust particles are prewarmed/populated during activation. This behaviour can be disabled to gain performance when activating many lights at the same time.
 
 v6.7

@@ -37,11 +37,6 @@
 	    boundsCenter.y = clamp(SURFACE_CAM_ALTITUDE - surfaceDepth * 10000, TERRAIN_FOG_MIN_ALTITUDE, TERRAIN_FOG_MAX_ALTITUDE);
     }
 
-#else
-
-    #define SurfaceComputeEndPoints(wposStart, wposEnd)
-    #define SurfaceApply(boundsCenter, boundsExtents)
-
 #endif // VF2_SURFACE
 
 #endif // VOLUMETRIC_FOG_2_SURFACE

@@ -37,7 +37,7 @@
         float2 pos = uv * SOURCE_SIZE / 2;
         float2 noise = normalize(SAMPLE_TEXTURE2D_LOD(_NoiseTex, sampler_PointRepeat, pos * _NoiseTex_TexelSize.xy, 0).xw) * 2.0 - 1.0;
 
-        float samplingRadius = NEAR_FIELD_OBSCURANCE_SPREAD / eyeDepth;
+        float samplingRadius = max(0.01, NEAR_FIELD_OBSCURANCE_SPREAD / eyeDepth);
 
         float3 normalWS = GetWorldNormal(uv);
         half occlusion = 0;

@@ -12,8 +12,8 @@ void AddDirectLighting(float3 wpos, float2 uv, inout half4 sum) {
     #endif
     half3 atten = GetShadowAttenWS_Soft(wpos) * DistanceAttenuation(wpos);
     half3 lambert = LightingLambert(color, _ToLightDir.xyz, normal);
-    half4 directLight = half4(lambert * atten * DIRECT_LIGHT_MULTIPLIER, 1.0);
-    sum += directLight * (1.0 - sum.a);
+    half3 directLight = lambert * atten * DIRECT_LIGHT_MULTIPLIER;
+    sum.rgb += directLight * (1.0 - sum.a);
 }
 
 #endif

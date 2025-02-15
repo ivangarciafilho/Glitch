@@ -164,6 +164,7 @@ namespace VolumetricLights {
 
         [Header("Spot Light")]
         [Tooltip("Radius of the tip of the cone. Only applies to spot lights.")] public float tipRadius;
+        public float nearClipDistance;
         [Tooltip("Custom cookie texture (RGB).")] public Texture2D cookieTexture;
 
         public Vector2 cookieScale = Vector2.one;
@@ -195,6 +196,7 @@ namespace VolumetricLights {
         [Header("Shadow Occlusion")]
         public bool enableShadows;
         public float shadowIntensity = 0.7f;
+        public Color shadowColor = new Color(0, 0, 0, 1);
         [Tooltip("Enable translucent shadow map")]
         public bool shadowTranslucency;
         [Tooltip("Customizable intensity for the translucent map sampling")]
@@ -204,6 +206,8 @@ namespace VolumetricLights {
         public ShadowResolution shadowResolution = ShadowResolution._256;
         public LayerMask shadowCullingMask = ~2;
         public ShadowBakeInterval shadowBakeInterval = ShadowBakeInterval.OnStart;
+        [Tooltip("When enabled, baked shadows won't be updated when light rotates, only when position changes. This produces that baked shadows can also rotate when the light does, improving performance. This option only works in play mode.")]
+        public bool shadowBakeIgnoreRotationChange;        
         public float shadowNearDistance = 0.1f;
         [Tooltip("Fully enable/disable shadows when far from main camera in order to optimize performance")]
         public bool shadowAutoToggle;
@@ -246,6 +250,7 @@ namespace VolumetricLights {
             }
 
             tipRadius = Mathf.Max(0, tipRadius);
+            nearClipDistance = Mathf.Max(0, nearClipDistance);
             density = Mathf.Max(0, density);
             noiseScale = Mathf.Max(0.1f, noiseScale);
             diffusionIntensity = Mathf.Max(0, diffusionIntensity);
@@ -321,6 +326,7 @@ namespace VolumetricLights {
             vl.diffusionIntensity = diffusionIntensity;
             vl.penumbra = penumbra;
             vl.tipRadius = tipRadius;
+            vl.nearClipDistance = nearClipDistance;
             vl.cookieTexture = cookieTexture;
             vl.cookieScale = cookieScale;
             vl.cookieSpeed = cookieSpeed;
@@ -338,6 +344,7 @@ namespace VolumetricLights {
             vl.dustPrewarm = dustPrewarm;
             vl.enableShadows = enableShadows;
             vl.shadowIntensity = shadowIntensity;
+            vl.shadowColor = shadowColor;
             vl.shadowTranslucency = shadowTranslucency;
             vl.shadowTranslucencyIntensity = shadowTranslucencyIntensity;
             vl.shadowTranslucencyBlend = shadowTranslucencyBlend;
@@ -345,6 +352,7 @@ namespace VolumetricLights {
             vl.shadowCullingMask = shadowCullingMask;
             vl.shadowBakeInterval = shadowBakeInterval;
             vl.shadowNearDistance = shadowNearDistance;
+            vl.shadowBakeIgnoreRotationChange = shadowBakeIgnoreRotationChange;
             vl.shadowAutoToggle = shadowAutoToggle;
             vl.shadowDistanceDeactivation = shadowDistanceDeactivation;
             vl.shadowBakeMode = shadowBakeMode;
@@ -394,6 +402,7 @@ namespace VolumetricLights {
             diffusionIntensity = vl.diffusionIntensity;
             penumbra = vl.penumbra;
             tipRadius = vl.tipRadius;
+            nearClipDistance = vl.nearClipDistance;
             cookieTexture = vl.cookieTexture;
             cookieScale = vl.cookieScale;
             cookieOffset = vl.cookieOffset;
@@ -411,6 +420,7 @@ namespace VolumetricLights {
             dustDistanceDeactivation = vl.dustDistanceDeactivation;
             enableShadows = vl.enableShadows;
             shadowIntensity = vl.shadowIntensity;
+            shadowColor = vl.shadowColor;
             shadowTranslucency = vl.shadowTranslucency;
             shadowTranslucencyIntensity = vl.shadowTranslucencyIntensity;
             shadowTranslucencyBlend = vl.shadowTranslucencyBlend;
@@ -418,6 +428,7 @@ namespace VolumetricLights {
             shadowCullingMask = vl.shadowCullingMask;
             shadowBakeInterval = vl.shadowBakeInterval;
             shadowNearDistance = vl.shadowNearDistance;
+            shadowBakeIgnoreRotationChange = vl.shadowBakeIgnoreRotationChange;
             shadowAutoToggle = vl.shadowAutoToggle;
             shadowDistanceDeactivation = vl.shadowDistanceDeactivation;
             shadowBakeMode = vl.shadowBakeMode;

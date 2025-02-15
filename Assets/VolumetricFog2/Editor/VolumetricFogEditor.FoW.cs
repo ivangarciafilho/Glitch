@@ -8,7 +8,7 @@ namespace VolumetricFogAndMist2 {
 
         bool mouseIsDown;
 
-        private void OnSceneGUI() {
+        private void OnSceneGUI_FogOfWar() {
 
             Event e = Event.current;
             if (fog == null || !fog.enableFogOfWar || !maskEditorEnabled.boolValue || e == null || fog.fogOfWarTexture == null) {
@@ -28,8 +28,7 @@ namespace VolumetricFogAndMist2 {
 
             Ray ray = HandleUtility.GUIPointToWorldRay(mousePos);
             Bounds bounds = new Bounds(fog.transform.position, new Vector3(fog.transform.lossyScale.x, 0.01f, fog.transform.lossyScale.z));
-            float distance;
-            if (bounds.IntersectRay(ray, out distance)) {
+            if (bounds.IntersectRay(ray, out float distance)) {
                 Vector3 hitPoint = ray.origin + ray.direction * distance;
                 float handleSize = HandleUtility.GetHandleSize(hitPoint) * 0.5f;
                 Handles.color = new Color(0, 0, 1, 0.5f);
@@ -48,16 +47,14 @@ namespace VolumetricFogAndMist2 {
                     if (eventType == EventType.MouseDown) {
                         GUIUtility.hotControl = controlID;
                         mouseIsDown = true;
-                        PaintOnMaskPosition(hitPoint);
                     } else if (eventType == EventType.MouseUp) {
                         GUIUtility.hotControl = controlID;
                         mouseIsDown = false;
                     }
+                }
 
-                    if (mouseIsDown && eventType == EventType.MouseDrag) {
-                        GUIUtility.hotControl = controlID;
-                        PaintOnMaskPosition(hitPoint);
-                    }
+                if (mouseIsDown && e.type == EventType.Repaint) {
+                    PaintOnMaskPosition(hitPoint);
                 }
             }
         }
@@ -66,13 +63,15 @@ namespace VolumetricFogAndMist2 {
         #region Mask Texture support functions
 
         private void CreateNewMaskTexture() {
-            int res = Mathf.Clamp(fog.fogOfWarTextureSize, 256, 8192);
-            Texture2D tex = new Texture2D(res, res, TextureFormat.RGBA32, false, true);
+            int width = Mathf.Clamp(fog.fogOfWarTextureWidth, 256, 8192);
+            int height = Mathf.Clamp(fog.fogOfWarTextureHeight, 256, 8192);
+            Texture2D tex = new Texture2D(width, height, TextureFormat.RGBA32, false, true);
             tex.wrapMode = TextureWrapMode.Clamp;
-            int len = res * res;
+            int len = width * height;
             Color32[] cc = new Color32[len];
             Color32 opaque = new Color32(255, 255, 255, 255);
-            for (int k = 0; k < cc.Length; k++) {
+            int ccLength = cc.Length;
+            for (int k = 0; k < ccLength; k++) {
                 cc[k] = opaque;
             }
             tex.SetPixels32(cc);
@@ -82,14 +81,14 @@ namespace VolumetricFogAndMist2 {
             AssetDatabase.CreateAsset(tex, fileName);
             AssetDatabase.SaveAssets();
             fog.fogOfWarTexture = tex;
-            fog.maskBrushMode = MASK_TEXTURE_BRUSH_MODE.RemoveFog;
+            fog.maskBrushMode = MaskTextureBrushMode.RemoveFog;
             EditorUtility.SetDirty(fog);
             EditorSceneManager.MarkSceneDirty(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
             EditorGUIUtility.PingObject(tex);
         }
 
         void PaintOnMaskPosition(Vector3 pos) {
-            if (maskBrushMode.intValue == (int)MASK_TEXTURE_BRUSH_MODE.ColorFog) {
+            if (maskBrushMode.intValue == (int)MaskTextureBrushMode.ColorFog) {
                 PaintColorOnMaskPosition(pos);
             } else {
                 PaintAlphaOnMaskPosition(pos);
@@ -110,24 +109,26 @@ namespace VolumetricFogAndMist2 {
             Vector3 fogOfWarCenter = fog.anchoredFogOfWarCenter;
             float x = (pos.x - fogOfWarCenter.x) / fog.fogOfWarSize.x + 0.5f;
             float z = (pos.z - fogOfWarCenter.z) / fog.fogOfWarSize.z + 0.5f;
-            int textureSize = fog.fogOfWarTextureSize;
-            int tx = Mathf.Clamp((int)(x * textureSize), 0, textureSize - 1);
-            int ty = Mathf.Clamp((int)(z * textureSize), 0, textureSize - 1);
+            int textureWidth = fog.fogOfWarTextureWidth;
+            int textureHeight = fog.fogOfWarTextureHeight;
+            int tx = Mathf.Clamp((int)(x * textureWidth), 0, textureWidth - 1);
+            int ty = Mathf.Clamp((int)(z * textureHeight), 0, textureHeight - 1);
 
             // Prepare brush data
-            int brushSize = Mathf.FloorToInt(fog.fogOfWarTextureSize * maskBrushWidth.intValue / fog.fogOfWarSize.x);
-            byte color = maskBrushMode.intValue == (int)MASK_TEXTURE_BRUSH_MODE.AddFog ? (byte)255 : (byte)0;
+            int brushWidth = Mathf.FloorToInt(fog.fogOfWarTextureWidth * maskBrushWidth.intValue / fog.fogOfWarSize.x);
+            int brushHeight = Mathf.FloorToInt(fog.fogOfWarTextureHeight * maskBrushWidth.intValue / fog.fogOfWarSize.z);
+            byte color = maskBrushMode.intValue == (int)MaskTextureBrushMode.AddFog ? (byte)255 : (byte)0;
             float brushOpacity = 1f - maskBrushOpacity.floatValue * 0.2f;
             float fuzziness = 1.1f - maskBrushFuzziness.floatValue;
             byte colort = (byte)(color * (1f - brushOpacity));
-            float radiusSqr = brushSize * brushSize;
+            float radiusSqr = brushWidth * brushHeight;
             // Paint!
-            for (int j = ty - brushSize; j < ty + brushSize; j++) {
-                if (j < 0) continue; else if (j >= textureSize) break;
-                int jj = j * textureSize;
+            for (int j = ty - brushHeight; j < ty + brushHeight; j++) {
+                if (j < 0) continue; else if (j >= textureHeight) break;
+                int jj = j * textureWidth;
                 int dj = (j - ty) * (j - ty);
-                for (int k = tx - brushSize; k < tx + brushSize; k++) {
-                    if (k < 0) continue; else if (k >= textureSize) break;
+                for (int k = tx - brushWidth; k < tx + brushWidth; k++) {
+                    if (k < 0) continue; else if (k >= textureWidth) break;
                     int distSqr = dj + (k - tx) * (k - tx);
                     float op = distSqr / radiusSqr;
                     float threshold = UnityEngine.Random.value;
@@ -154,29 +155,40 @@ namespace VolumetricFogAndMist2 {
             Vector3 fogOfWarCenter = fog.anchoredFogOfWarCenter;
             float x = (pos.x - fogOfWarCenter.x) / fog.fogOfWarSize.x + 0.5f;
             float z = (pos.z - fogOfWarCenter.z) / fog.fogOfWarSize.z + 0.5f;
-            int textureSize = fog.fogOfWarTextureSize;
-            int tx = Mathf.Clamp((int)(x * textureSize), 0, textureSize - 1);
-            int ty = Mathf.Clamp((int)(z * textureSize), 0, textureSize - 1);
+            int textureWidth = fog.fogOfWarTextureWidth;
+            int textureHeight = fog.fogOfWarTextureHeight;
+            int tx = Mathf.Clamp((int)(x * textureWidth), 0, textureWidth - 1);
+            int ty = Mathf.Clamp((int)(z * textureHeight), 0, textureHeight - 1);
 
             // Prepare brush data
-            int brushSize = Mathf.FloorToInt(fog.fogOfWarTextureSize * maskBrushWidth.intValue / fog.fogOfWarSize.x);
+            int brushWidth = Mathf.FloorToInt(fog.fogOfWarTextureWidth * maskBrushWidth.intValue / fog.fogOfWarSize.x);
+            int brushHeight = Mathf.FloorToInt(fog.fogOfWarTextureHeight * maskBrushWidth.intValue / fog.fogOfWarSize.z);
             float brushOpacity = 1f - maskBrushOpacity.floatValue * 0.2f;
             float fuzziness = 1.1f - maskBrushFuzziness.floatValue;
             byte rt = (byte)(maskBrushColor.colorValue.r * (1f - brushOpacity) * 255f);
             byte gt = (byte)(maskBrushColor.colorValue.g * (1f - brushOpacity) * 255f);
             byte bt = (byte)(maskBrushColor.colorValue.b * (1f - brushOpacity) * 255f);
             Color32 colort = new Color32(rt, gt, bt, 255);
-            float radiusSqr = brushSize * brushSize;
+            float radiusSqr = brushWidth * brushHeight;
+
+            int j0 = ty - brushHeight;
+            if (j0 < 0) j0 = 0;
+            int j1 = ty + brushHeight;
+            if (j1 >= textureHeight) j1 = textureHeight - 1;
+
+            int k0 = tx - brushWidth;
+            if (k0 < 0) k0 = 0;
+            int k1 = tx + brushWidth;
+            if (k1 >= textureWidth) k1 = textureWidth - 1;
+
             // Paint!
-            for (int j = ty - brushSize; j < ty + brushSize; j++) {
-                if (j < 0) continue; else if (j >= textureSize) break;
-                int jj = j * textureSize;
+            for (int j = j0; j <= j1; j++) {
+                int jj = j * textureWidth;
                 int dj = (j - ty) * (j - ty);
-                for (int k = tx - brushSize; k < tx + brushSize; k++) {
-                    if (k < 0) continue; else if (k >= textureSize) break;
+                for (int k = k0; k <= k1; k++) {
                     int distSqr = dj + (k - tx) * (k - tx);
                     float op = distSqr / radiusSqr;
-                    float threshold = UnityEngine.Random.value;
+                    float threshold = Random.value;
                     if (op <= 1f && threshold * op < fuzziness) {
                         maskColors[jj + k].r = (byte)(colort.r + maskColors[jj + k].r * brushOpacity);
                         maskColors[jj + k].g = (byte)(colort.g + maskColors[jj + k].g * brushOpacity);

@@ -36,7 +36,7 @@
         #endif
         if (depth>_BokehData3.y) return 0;
         float xd     = abs(depth - _BokehData.x) - _BokehData2.x * (depth < _BokehData.x);
-        return 0.5 * _BokehData.y * xd/depth;    // radius of CoC
+        return min(_BokehData3.z, 0.5 * _BokehData.y * xd/depth);    // radius of CoC
     }
                 
     float4 FragCoC (VaryingsSimple i) : SV_Target {

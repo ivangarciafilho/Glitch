@@ -50,21 +50,20 @@ Subshader {
       HLSLPROGRAM
       #pragma vertex VertBeautify
       #pragma fragment FragBeautify
-      #pragma multi_compile_local __ BEAUTIFY_ACES_TONEMAP
-      #pragma multi_compile_local __ BEAUTIFY_LUT BEAUTIFY_3DLUT BEAUTIFY_NIGHT_VISION BEAUTIFY_THERMAL_VISION
-	  #pragma multi_compile_local __ BEAUTIFY_BLOOM
-      #pragma multi_compile_local __ BEAUTIFY_DIRT
-      #pragma multi_compile_local __ BEAUTIFY_DEPTH_OF_FIELD BEAUTIFY_DOF_TRANSPARENT BEAUTIFY_CABERRATION
-      #pragma multi_compile_local __ BEAUTIFY_PURKINJE
-      #pragma multi_compile_local __ BEAUTIFY_VIGNETTING BEAUTIFY_VIGNETTING_MASK
-      #pragma multi_compile_local __ BEAUTIFY_EYE_ADAPTATION
-      #pragma multi_compile_local __ BEAUTIFY_OUTLINE
-      #pragma multi_compile_local __ BEAUTIFY_COLOR_TWEAKS
-      #pragma multi_compile_local __ BEAUTIFY_TURBO
-      #pragma multi_compile_local __ BEAUTIFY_DITHER
-      #pragma multi_compile_local __ BEAUTIFY_SHARPEN
-      #pragma multi_compile_local __ BEAUTIFY_FRAME BEAUTIFY_FRAME_MASK
-      #pragma multi_compile_local __ BEAUTIFY_EDGE_AA
+      #pragma multi_compile_local_fragment __ BEAUTIFY_ACES_TONEMAP BEAUTIFY_ACES_FITTED_TONEMAP BEAUTIFY_AGX_TONEMAP
+      #pragma multi_compile_local_fragment __ BEAUTIFY_LUT BEAUTIFY_3DLUT BEAUTIFY_NIGHT_VISION BEAUTIFY_THERMAL_VISION
+	  #pragma multi_compile_local_fragment __ BEAUTIFY_BLOOM
+      #pragma multi_compile_local_fragment __ BEAUTIFY_DIRT
+      #pragma multi_compile_local_fragment __ BEAUTIFY_DEPTH_OF_FIELD BEAUTIFY_DOF_TRANSPARENT BEAUTIFY_CABERRATION
+      #pragma multi_compile_local_fragment __ BEAUTIFY_PURKINJE
+      #pragma multi_compile_local_fragment __ BEAUTIFY_VIGNETTING BEAUTIFY_VIGNETTING_MASK
+      #pragma multi_compile_local_fragment __ BEAUTIFY_EYE_ADAPTATION
+      #pragma multi_compile_local_fragment __ BEAUTIFY_COLOR_TWEAKS
+      #pragma multi_compile_local_fragment __ BEAUTIFY_TURBO
+      #pragma multi_compile_local_fragment __ BEAUTIFY_DITHER
+      #pragma multi_compile_local_fragment __ BEAUTIFY_SHARPEN
+      #pragma multi_compile_local_fragment __ BEAUTIFY_FRAME BEAUTIFY_FRAME_MASK
+      #pragma multi_compile_local_fragment __ BEAUTIFY_EDGE_AA BEAUTIFY_OUTLINE
       #include "BeautifyCore.hlsl"
       ENDHLSL
   }
@@ -74,10 +73,10 @@ Subshader {
       HLSLPROGRAM
       #pragma vertex VertLum
       #pragma fragment FragLum
-      #pragma multi_compile_local __ BEAUTIFY_TURBO
-	  #pragma multi_compile_local __ BEAUTIFY_BLOOM_USE_DEPTH
-	  #pragma multi_compile_local __ BEAUTIFY_BLOOM_USE_LAYER
-      #pragma multi_compile_local __ BEAUTIFY_BLOOM_PROP_THRESHOLDING
+      #pragma multi_compile_local_fragment __ BEAUTIFY_TURBO
+	  #pragma multi_compile_local_fragment __ BEAUTIFY_BLOOM_USE_DEPTH
+	  #pragma multi_compile_local_fragment __ BEAUTIFY_BLOOM_USE_LAYER BEAUTIFY_BLOOM_USE_LAYER_INCLUSION
+      #pragma multi_compile_local_fragment __ BEAUTIFY_BLOOM_PROP_THRESHOLDING
       #include "BeautifyPPSLum.hlsl"
       ENDHLSL
   }  
@@ -143,10 +142,10 @@ Subshader {
 	  HLSLPROGRAM
       #pragma vertex VertCrossLum
       #pragma fragment FragLumAntiflicker
-      #pragma multi_compile_local __ BEAUTIFY_TURBO
-      #pragma multi_compile_local __ BEAUTIFY_BLOOM_USE_DEPTH
-      #pragma multi_compile_local __ BEAUTIFY_BLOOM_USE_LAYER
-      #pragma multi_compile_local __ BEAUTIFY_BLOOM_PROP_THRESHOLDING
+      #pragma multi_compile_local_fragment __ BEAUTIFY_TURBO
+      #pragma multi_compile_local_fragment __ BEAUTIFY_BLOOM_USE_DEPTH
+      #pragma multi_compile_local_fragment __ BEAUTIFY_BLOOM_USE_LAYER BEAUTIFY_BLOOM_USE_LAYER_INCLUSION
+      #pragma multi_compile_local_fragment __ BEAUTIFY_BLOOM_PROP_THRESHOLDING
       #include "BeautifyPPSLum.hlsl"
       ENDHLSL
   } 
@@ -176,7 +175,8 @@ Subshader {
       HLSLPROGRAM
       #pragma vertex VertOS
       #pragma fragment FragScreenLum
-      #pragma multi_compile_local __ BEAUTIFY_TURBO
+      #pragma multi_compile_local_fragment __ BEAUTIFY_EA_USE_DEPTH BEAUTIFY_EA_USE_MASK
+      #pragma multi_compile_local_fragment __ BEAUTIFY_TURBO
       #include "BeautifyPPSEA.hlsl"
       ENDHLSL
   }      
@@ -186,6 +186,7 @@ Subshader {
       HLSLPROGRAM
       #pragma vertex VertCross
       #pragma fragment FragReduceScreenLum
+      #pragma multi_compile_local_fragment __ BEAUTIFY_EA_USE_DEPTH BEAUTIFY_EA_USE_MASK
       #include "BeautifyPPSEA.hlsl"
       ENDHLSL
   }  
@@ -214,10 +215,10 @@ Subshader {
       HLSLPROGRAM
       #pragma vertex VertLum
       #pragma fragment FragLum
-      #pragma multi_compile_local __ BEAUTIFY_TURBO
-      #pragma multi_compile_local __ BEAUTIFY_ANAMORPHIC_FLARES_USE_DEPTH
-	  #pragma multi_compile_local __ BEAUTIFY_ANAMORPHIC_FLARES_USE_LAYER
-      #pragma multi_compile_local __ BEAUTIFY_ANAMORPHIC_PROP_THRESHOLDING
+      #pragma multi_compile_local_fragment __ BEAUTIFY_TURBO
+      #pragma multi_compile_local_fragment __ BEAUTIFY_ANAMORPHIC_FLARES_USE_DEPTH
+	  #pragma multi_compile_local_fragment __ BEAUTIFY_ANAMORPHIC_FLARES_USE_LAYER BEAUTIFY_ANAMORPHIC_FLARES_USE_LAYER_INCLUSION
+      #pragma multi_compile_local_fragment __ BEAUTIFY_ANAMORPHIC_PROP_THRESHOLDING
       #define USE_AF_THRESHOLD
       #include "BeautifyPPSLum.hlsl"
       ENDHLSL
@@ -228,10 +229,10 @@ Subshader {
       HLSLPROGRAM
       #pragma vertex VertCrossLum
       #pragma fragment FragLumAntiflicker
-      #pragma multi_compile_local __ BEAUTIFY_TURBO
-      #pragma multi_compile_local __ BEAUTIFY_ANAMORPHIC_FLARES_USE_DEPTH
-	  #pragma multi_compile_local __ BEAUTIFY_ANAMORPHIC_FLARES_USE_LAYER
-      #pragma multi_compile_local __ BEAUTIFY_ANAMORPHIC_PROP_THRESHOLDING
+      #pragma multi_compile_local_fragment __ BEAUTIFY_TURBO
+      #pragma multi_compile_local_fragment __ BEAUTIFY_ANAMORPHIC_FLARES_USE_DEPTH
+	  #pragma multi_compile_local_fragment __ BEAUTIFY_ANAMORPHIC_FLARES_USE_LAYER BEAUTIFY_ANAMORPHIC_FLARES_USE_LAYER_INCLUSION
+      #pragma multi_compile_local_fragment __ BEAUTIFY_ANAMORPHIC_PROP_THRESHOLDING
       #define USE_AF_THRESHOLD
       #include "BeautifyPPSLum.hlsl"
       ENDHLSL
@@ -243,8 +244,8 @@ Subshader {
       #pragma vertex VertSF
       #pragma fragment FragSF
       #pragma fragmentoption ARB_precision_hint_fastest
-      #pragma multi_compile_local __ BEAUTIFY_SF_USE_GHOSTS
-      #pragma multi_compile_local __ BEAUTIFY_SF_OCCLUSION_SIMPLE BEAUTIFY_SF_OCCLUSION_SMOOTH
+      #pragma multi_compile_local_fragment __ BEAUTIFY_SF_USE_GHOSTS
+      #pragma multi_compile_local_fragment __ BEAUTIFY_SF_OCCLUSION_SIMPLE BEAUTIFY_SF_OCCLUSION_SMOOTH
       #include "BeautifyPPSSF.hlsl"
       ENDHLSL
   }
@@ -255,8 +256,8 @@ Subshader {
       #pragma vertex VertSF
       #pragma fragment FragSFAdditive
       #pragma fragmentoption ARB_precision_hint_fastest
-      #pragma multi_compile_local __ BEAUTIFY_SF_USE_GHOSTS
-      #pragma multi_compile_local __ BEAUTIFY_SF_OCCLUSION_SIMPLE BEAUTIFY_SF_OCCLUSION_SMOOTH
+      #pragma multi_compile_local_fragment __ BEAUTIFY_SF_USE_GHOSTS
+      #pragma multi_compile_local_fragment __ BEAUTIFY_SF_OCCLUSION_SIMPLE BEAUTIFY_SF_OCCLUSION_SMOOTH
       #include "BeautifyPPSSF.hlsl"
       ENDHLSL
   }
@@ -267,7 +268,7 @@ Subshader {
       #pragma vertex VertOS
       #pragma fragment FragCoC
       #pragma fragmentoption ARB_precision_hint_fastest
-      #pragma multi_compile_local __ BEAUTIFY_DOF_TRANSPARENT
+      #pragma multi_compile_local_fragment __ BEAUTIFY_DOF_TRANSPARENT
       #include "BeautifyPPSDoF.hlsl"
       ENDHLSL
   } 
@@ -278,7 +279,7 @@ Subshader {
       #pragma vertex VertOS
       #pragma fragment FragCoCDebug
       #pragma fragmentoption ARB_precision_hint_fastest
-      #pragma multi_compile_local __ BEAUTIFY_DOF_TRANSPARENT
+      #pragma multi_compile_local_fragment __ BEAUTIFY_DOF_TRANSPARENT
       #include "BeautifyPPSDoF.hlsl"
       ENDHLSL
   } 
@@ -349,7 +350,7 @@ Subshader {
       #pragma vertex VertOS
       #pragma fragment FragDoFDebugTransparent
       #pragma fragmentoption ARB_precision_hint_fastest
-      #pragma multi_compile_local __ BEAUTIFY_DOF_TRANSPARENT
+      #pragma multi_compile_local_fragment __ BEAUTIFY_DOF_TRANSPARENT
       #include "BeautifyPPSDoF.hlsl"
       ENDHLSL
   } 
@@ -360,7 +361,7 @@ Subshader {
       #pragma vertex VertOS
       #pragma fragment fragChromaticAberration
       #pragma fragmentoption ARB_precision_hint_fastest
-      #pragma multi_compile_local __ BEAUTIFY_TURBO
+      #pragma multi_compile_local_fragment __ BEAUTIFY_TURBO
       #define BEAUTIFY_CABERRATION 1
       #include "BeautifyCAberration.hlsl"
       ENDHLSL
@@ -372,7 +373,9 @@ Subshader {
       #pragma vertex VertOutline
       #pragma fragment fragOutline
       #pragma fragmentoption ARB_precision_hint_fastest
-      #pragma multi_compile_local _ BEAUTIFY_DEPTH_FADE
+      #pragma multi_compile_local_fragment _ BEAUTIFY_DEPTH_FADE
+      #pragma multi_compile_local_fragment _ BEAUTIFY_OUTLINE_CUSTOM_DEPTH BEAUTIFY_OUTLINE_OBJECT_ID
+      #pragma multi_compile_local_fragment _ BEAUTIFY_OUTLINE_MIN_SEPARATION
       #include "BeautifyPPSOutline.hlsl"
       ENDHLSL
   }
@@ -471,7 +474,7 @@ Subshader {
       HLSLPROGRAM
       #pragma vertex VertSF
       #pragma fragment FragSFOcclusion
-      #pragma multi_compile_local _ BEAUTIFY_SF_OCCLUSION_INIT
+      #pragma multi_compile_local_fragment _ BEAUTIFY_SF_OCCLUSION_INIT
       #include "BeautifyPPSSF.hlsl"
       ENDHLSL
   }

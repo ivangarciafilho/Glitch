@@ -35,7 +35,7 @@ namespace Beautify.Universal {
         public override bool hasAdvancedMode => false;
 #endif
 
-        public override void OnEnable() {
+        public override void OnEnable () {
             base.OnEnable();
 
             headerTex = Resources.Load<Texture2D>("beautifyHeader");
@@ -86,9 +86,7 @@ namespace Beautify.Universal {
         }
 
 
-        public override void OnInspectorGUI() {
-
-            BeautifySettings.ManageBuildOptimizationStatus(false);
+        public override void OnInspectorGUI () {
 
             serializedObject.Update();
 
@@ -154,8 +152,8 @@ namespace Beautify.Universal {
                         EditorUtility.SetDirty(beautify);
                     }
                 }
-                if (GUILayout.Button("Contact Us", EditorStyles.miniButton)) {
-                    Application.OpenURL("https://kronnect.com");
+                if (GUILayout.Button("Online Resources & Support")) {
+                    ContactUsWindow.ShowScreen();
                 }
                 EditorGUILayout.EndHorizontal();
 
@@ -183,14 +181,17 @@ namespace Beautify.Universal {
                     EditorGUILayout.HelpBox("Universal Rendering Pipeline asset is not set in 'Project Settings / Graphics' !", MessageType.Error);
                     EditorGUILayout.Separator();
                     GUI.enabled = false;
-                } else if (!BeautifyRendererFeature.installed) {
+                }
+                else if (!BeautifyRendererFeature.installed) {
                     EditorGUILayout.HelpBox("Beautify Render Feature must be added to the rendering pipeline renderer.", MessageType.Error);
                     if (GUILayout.Button("Go to Universal Rendering Pipeline Asset")) {
                         Selection.activeObject = pipe;
                     }
                     EditorGUILayout.Separator();
                     GUI.enabled = false;
-                } else if (beautify.RequiresDepthTexture()) {
+                }
+                else if (beautify.RequiresDepthTexture()) {
+#if !UNITY_2021_3_OR_NEWER
                     if (!pipe.supportsCameraDepthTexture) {
                         EditorGUILayout.HelpBox("Depth Texture option may be required for certain effects. Check Universal Rendering Pipeline asset!", MessageType.Warning);
                         if (GUILayout.Button("Go to Universal Rendering Pipeline Asset")) {
@@ -198,6 +199,7 @@ namespace Beautify.Universal {
                         }
                         EditorGUILayout.Separator();
                     }
+#endif
                 }
 
                 bool usesHDREffect = beautify.tonemap.value != Beautify.TonemapOperator.Linear;
@@ -205,11 +207,16 @@ namespace Beautify.Universal {
                     EditorGUILayout.HelpBox("Some effects, like bloom or tonemapping, works better with Linear Color Space and HDR enabled. Enable Linear color space in Player Settings and check your camera and pipeline HDR setting.", MessageType.Warning);
                 }
 
-                if (UnityEngine.XR.XRSettings.enabled && ((bool)beautify.directWrite)) {
-                    EditorGUILayout.HelpBox("Direct Write To Camera option is not compatible with VR.", MessageType.Warning);
+                if ((bool)beautify.directWrite) {
+#if !UNITY_2022_3_OR_NEWER
+                    if (UnityEngine.XR.XRSettings.enabled) {
+                        EditorGUILayout.HelpBox("Direct Write To Camera option is not compatible with VR.", MessageType.Warning);
+                    }
+#endif
                 }
 
                 // sections
+                bool firstSectionDrawn = false;
                 foreach (var section in sections) {
                     bool printSectionHeader = true;
 
@@ -230,7 +237,7 @@ namespace Beautify.Universal {
                                 EditorGUILayout.BeginHorizontal();
                                 GUI.enabled = false;
                                 DrawPropertyField(parameter, field, indent);
-                                GUILayout.Label("(Disabled by Stripping Option above)");
+                                GUILayout.Label("(Not available - Check General Options)");
                                 GUI.enabled = true;
                                 EditorGUILayout.EndHorizontal();
                             }
@@ -274,9 +281,10 @@ namespace Beautify.Universal {
                                         GUI.enabled = false;
                                         EditorGUILayout.Foldout(false, groupName, true, foldoutStyle);
                                         GUILayout.FlexibleSpace();
-                                        GUILayout.Label("(Disabled by Stripping Option above)");
+                                        GUILayout.Label("(Not available - Check General Options)");
                                         GUI.enabled = true;
                                         EditorGUILayout.EndHorizontal();
+                                        GUILayout.Space(6.0f);
                                     }
                                     break;
                                 }
@@ -300,7 +308,8 @@ namespace Beautify.Universal {
                                     var hasToggleSectionBegin = field.GetCustomAttributes(typeof(Beautify.ToggleAllFields)).Any();
                                     if (hasToggleSectionBegin) break;
                                 }
-                            } else if (field.Name.Equals("depthOfFieldFocusMode")) {
+                            }
+                            else if (field.Name.Equals("depthOfFieldFocusMode")) {
                                 if (BeautifySettings.instance != null && BeautifySettings.instance.depthOfFieldTarget == null) {
                                     SerializedProperty prop = serializedObject.FindProperty(field.Name);
                                     if (prop != null) {
@@ -316,6 +325,18 @@ namespace Beautify.Universal {
                             GUILayout.Space(6.0f);
                         }
                     }
+
+                    // Add "Configure Build Settings" button after the first section is fully drawn
+                    if (!firstSectionDrawn) {
+                        string strippedKeywords = PlayerPrefs.GetString(BeautifyRendererFeature.PLAYER_PREF_KEYNAME, "");
+                        if (string.IsNullOrEmpty(strippedKeywords)) {
+                            EditorGUILayout.HelpBox("All features are currently included in the build, which may significantly increase compilation time. Click the button below to configure and exclude unnecessary features from the build.", MessageType.Warning);
+                        }
+                        if (GUILayout.Button("Configure Build Settings >")) {
+                            SelectActiveURPRendererAsset();
+                        }
+                        firstSectionDrawn = true;
+                    }
                 }
             }
             EditorGUILayout.EndVertical();
@@ -330,15 +351,13 @@ namespace Beautify.Universal {
 
 
             if (serializedObject.ApplyModifiedProperties()) {
-                BeautifySettings.ManageBuildOptimizationStatus(true);
-
-                if (beautify.directWrite.value != prevDirectWrite || beautify.bloomExclusionLayerMask != prevBloomExclusionLayerMask || beautify.anamorphicFlaresExclusionLayerMask != prevAnamorphicFlaresExclusionLayerMask) {
+                if (beautify.directWrite.value != prevDirectWrite || beautify.bloomExclusionLayerMask != prevBloomExclusionLayerMask || beautify.anamorphicFlaresExclusionLayerMask != prevAnamorphicFlaresExclusionLayerMask || beautify.outline.value) {
                     EditorApplication.delayCall += () =>
     UnityEditorInternal.InternalEditorUtility.RepaintAllViews();
                 }
             }
 
-            if (prevTonemap != beautify.tonemap.value && beautify.tonemap.value == Beautify.TonemapOperator.ACES) {
+            if (prevTonemap != beautify.tonemap.value && beautify.tonemap.value != Beautify.TonemapOperator.Linear) {
                 beautify.saturate.value = 0;
                 beautify.saturate.overrideState = true;
                 beautify.contrast.value = 1f;
@@ -347,7 +366,7 @@ namespace Beautify.Universal {
 
         }
 
-        bool IsVisible(SerializedDataParameter property, MemberInfo field, out bool indent) {
+        bool IsVisible (SerializedDataParameter property, MemberInfo field, out bool indent) {
             bool visible = true;
             indent = false;
 
@@ -368,7 +387,8 @@ namespace Beautify.Universal {
                                 indent = canIndent;
                                 return true;
                             }
-                        } else if (value.enumValueIndex != enumCondition.enumValueIndex) {
+                        }
+                        else if (value.enumValueIndex != enumCondition.enumValueIndex) {
                             indent = canIndent;
                             return true;
                         }
@@ -405,7 +425,7 @@ namespace Beautify.Universal {
             return visible;
         }
 
-        void DrawPropertyField(SerializedDataParameter property, MemberInfo field, bool indent) {
+        void DrawPropertyField (SerializedDataParameter property, MemberInfo field, bool indent) {
 
             if (indent) {
                 EditorGUI.indentLevel++;
@@ -457,16 +477,15 @@ namespace Beautify.Universal {
                                     }
                                 }
                             }
-                            if (field.GetCustomAttribute(typeof(Beautify.BuildToggle)) != null) {
-                                BeautifySettings.SetStripShaderKeywords(beautify);
-                            }
                         }
                     }
 
-                } else {
+                }
+                else {
                     PropertyField(property, new GUIContent(displayName));
                 }
-            } else {
+            }
+            else {
                 PropertyField(property, new GUIContent(displayName));
             }
 
@@ -474,9 +493,83 @@ namespace Beautify.Universal {
                 EditorGUI.indentLevel--;
             }
 
+            // Add warning messages for stripped features
+            if (field.GetCustomAttribute<Beautify.ShowStrippedLabel>() != null) {
+
+                string strippedKeywords = PlayerPrefs.GetString(BeautifyRendererFeature.PLAYER_PREF_KEYNAME, "");
+                bool isEnabled = false;
+                bool isOverridden = property.overrideState.boolValue;
+                if (isOverridden) {
+                    if (property.value.propertyType == SerializedPropertyType.Boolean) {
+                        isEnabled = property.value.boolValue;
+                    }
+                    else if (property.value.propertyType == SerializedPropertyType.Float) {
+                        isEnabled = property.value.floatValue > 0;
+                    }
+                    else if (property.value.propertyType == SerializedPropertyType.Enum) {
+                        isEnabled = property.value.enumValueIndex > 0;
+                    }
+                }
+
+                if (isEnabled) {
+                    string warningMessage = null;
+                    string fieldName = field.Name;
+
+                    // Check each stripped feature against the keywords in PlayerPrefs
+                    if ((fieldName == "sharpenIntensity" && strippedKeywords.Contains(ShaderParams.SKW_SHARPEN)) ||
+                        (fieldName == "ditherIntensity" && strippedKeywords.Contains(ShaderParams.SKW_DITHER)) ||
+                        (fieldName == "tonemap" &&
+                            ((property.value.enumValueIndex == (int)Beautify.TonemapOperator.ACES && strippedKeywords.Contains(ShaderParams.SKW_TONEMAP_ACES)) ||
+                             (property.value.enumValueIndex == (int)Beautify.TonemapOperator.ACESFitted && strippedKeywords.Contains(ShaderParams.SKW_TONEMAP_ACES_FITTED)) ||
+                             (property.value.enumValueIndex == (int)Beautify.TonemapOperator.AGX && strippedKeywords.Contains(ShaderParams.SKW_TONEMAP_AGX)))) ||
+                        (fieldName == "lut" && strippedKeywords.Contains(ShaderParams.SKW_LUT3D) && strippedKeywords.Contains(ShaderParams.SKW_LUT)) ||
+                        ((fieldName == "bloomIntensity" || fieldName == "anamorphicFlaresIntensity" || fieldName == "sunFlaresIntensity") && strippedKeywords.Contains(ShaderParams.SKW_BLOOM)) ||
+                        (fieldName == "outline" && strippedKeywords.Contains(ShaderParams.SKW_OUTLINE)) ||
+                        (fieldName == "nightVision" && strippedKeywords.Contains(ShaderParams.SKW_NIGHT_VISION)) ||
+                        (fieldName == "thermalVision" && strippedKeywords.Contains(ShaderParams.SKW_THERMAL_VISION)) ||
+                        (fieldName == "chromaticAberrationIntensity" && strippedKeywords.Contains(ShaderParams.SKW_CHROMATIC_ABERRATION)) ||
+                        (fieldName == "depthOfField" && strippedKeywords.Contains(ShaderParams.SKW_DEPTH_OF_FIELD)) ||
+                        (fieldName == "depthOfFieldTransparentSupport" && strippedKeywords.Contains(ShaderParams.SKW_DEPTH_OF_FIELD_TRANSPARENT)) ||
+                        (fieldName == "depthOfFieldAlphaTestSupport" && strippedKeywords.Contains(ShaderParams.SKW_DEPTH_OF_FIELD_TRANSPARENT)) ||
+                        (fieldName == "eyeAdaptation" && strippedKeywords.Contains(ShaderParams.SKW_EYE_ADAPTATION)) ||
+                        (fieldName == "purkinje" && strippedKeywords.Contains(ShaderParams.SKW_PURKINJE)) ||
+                        (fieldName == "vignettingOuterRing" && strippedKeywords.Contains(ShaderParams.SKW_VIGNETTING)) ||
+                        (fieldName == "frame" && strippedKeywords.Contains(ShaderParams.SKW_FRAME)) ||
+                        (fieldName == "lensDirtIntensity" && strippedKeywords.Contains(ShaderParams.SKW_DIRT)) ||
+                        (fieldName == "antialiasStrength" && strippedKeywords.Contains(ShaderParams.SKW_EDGE_ANTIALIASING)) ||
+                        ((fieldName == "sepia" || fieldName == "daltonize" || fieldName == "colorTemp") && strippedKeywords.Contains(ShaderParams.SKW_COLOR_TWEAKS))) {
+                        warningMessage = "This feature is stripped in the build.";
+                    }
+
+                    if (warningMessage != null) {
+                        var linkContent = new GUIContent("(click to configure)");
+                        var linkSize = EditorStyles.linkLabel.CalcSize(linkContent);
+                        var height = EditorGUIUtility.singleLineHeight + 8;
+
+                        var warningRect = EditorGUILayout.GetControlRect(false, height);
+                        warningRect.xMin += 8;
+                        warningRect.xMax -= 8;
+                        EditorGUI.HelpBox(warningRect, "", MessageType.Warning);
+
+                        var textRect = warningRect;
+                        textRect.xMin += 24f;
+                        textRect.xMax -= linkSize.x + 8;
+                        EditorGUI.LabelField(textRect, warningMessage);
+
+                        var linkRect = warningRect;
+                        linkRect.xMin = textRect.xMax;
+                        linkRect.y = textRect.y + 3;
+
+                        if (GUI.Button(linkRect, linkContent, EditorStyles.linkLabel)) {
+                            SelectActiveURPRendererAsset();
+                        }
+                    }
+                }
+            }
+
         }
 
-        void SetStyles() {
+        void SetStyles () {
 
             // section header style
             Color titleColor = EditorGUIUtility.isProSkin ? new Color(0.52f, 0.66f, 0.9f) : new Color(0.12f, 0.16f, 0.4f);
@@ -495,8 +588,8 @@ namespace Beautify.Universal {
         }
 
         [VolumeParameterDrawer(typeof(Beautify.MinMaxFloatParameter))]
-        public class MaxFloatParameterDrawer : VolumeParameterDrawer {
-            public override bool OnGUI(SerializedDataParameter parameter, GUIContent title) {
+        public class MinMaxFloatParameterDrawer : VolumeParameterDrawer {
+            public override bool OnGUI (SerializedDataParameter parameter, GUIContent title) {
                 if (parameter.value.propertyType == SerializedPropertyType.Vector2) {
                     var o = parameter.GetObjectRef<Beautify.MinMaxFloatParameter>();
                     var range = o.value;
@@ -504,25 +597,24 @@ namespace Beautify.Universal {
                     float y = range.y;
 
                     EditorGUI.BeginChangeCheck();
-                    EditorGUILayout.BeginHorizontal();
                     EditorGUILayout.MinMaxSlider(title, ref x, ref y, o.min, o.max);
                     x = EditorGUILayout.FloatField(x, GUILayout.Width(40));
                     y = EditorGUILayout.FloatField(y, GUILayout.Width(40));
-                    EditorGUILayout.EndHorizontal();
                     if (EditorGUI.EndChangeCheck()) {
                         range.x = x;
                         range.y = y;
                         o.SetValue(new Beautify.MinMaxFloatParameter(range, o.min, o.max));
                     }
                     return true;
-                } else {
+                }
+                else {
                     EditorGUILayout.PropertyField(parameter.value);
                     return false;
                 }
             }
         }
 
-        Texture2D MakeTex(int width, int height, Color col) {
+        Texture2D MakeTex (int width, int height, Color col) {
             Color[] pix = new Color[width * height];
 
             for (int i = 0; i < pix.Length; i++)
@@ -535,6 +627,17 @@ namespace Beautify.Universal {
             result.Apply();
 
             return result;
+        }
+
+        void SelectActiveURPRendererAsset () {
+            var urpAsset = UniversalRenderPipeline.asset;
+            if (urpAsset != null && urpAsset.scriptableRenderer is UniversalRenderer urpRenderer) {
+                var rendererDataField = typeof(UniversalRenderPipelineAsset).GetField("m_RendererDataList", BindingFlags.NonPublic | BindingFlags.Instance);
+                var rendererDataList = rendererDataField?.GetValue(urpAsset) as ScriptableRendererData[];
+                if (rendererDataList?.Length > 0) {
+                    Selection.activeObject = rendererDataList[0];
+                }
+            }
         }
 
     }

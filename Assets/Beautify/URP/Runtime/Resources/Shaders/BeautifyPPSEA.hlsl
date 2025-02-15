@@ -7,9 +7,11 @@
 	TEXTURE2D_X(_MainTex);
 	TEXTURE2D_X(_EALumSrc);
     TEXTURE2D_X(_EAHist);
+    TEXTURE2D(_EAMask);
 	float4    _MainTex_TexelSize;
 	float4    _MainTex_ST;
 	float4    _EyeAdaptation;
+    float     _EyeAdaptationMinCameraDistance;
 
 	struct VaryingsCross {
 	    float4 positionCS : SV_POSITION;
@@ -23,7 +25,7 @@
         UNITY_SETUP_INSTANCE_ID(v);
         UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
-	o.positionCS = v.positionOS;
+	    o.positionCS = v.positionOS;
         o.positionCS.y *= _ProjectionParams.x * _FlipY;
         o.uv = v.uv;
 
@@ -33,12 +35,25 @@
 
     float4 FragScreenLum (VaryingsSimple i) : SV_Target {
         UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
-        i.uv = UnityStereoTransformScreenSpaceTex(i.uv);
+        float2 uv = UnityStereoTransformScreenSpaceTex(i.uv);
 
-        float4 c = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, i.uv);
+        #if BEAUTIFY_EA_USE_DEPTH
+            float eyeDepth = BEAUTIFY_GET_SCENE_DEPTH_EYE(uv);
+            if (eyeDepth < _EyeAdaptationMinCameraDistance) {
+                return 0;
+            }
+        #endif
+
+        float4 c = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, uv);
         #if UNITY_COLORSPACE_GAMMA
             c.rgb = GAMMA_TO_LINEAR(c.rgb);
         #endif
+
+        #if BEAUTIFY_EA_USE_MASK
+            float mask = SAMPLE_TEXTURE2D(_EAMask, sampler_LinearClamp, i.uv).a;
+            c.rgb *= mask;
+        #endif
+
         c.r = log(1.0 + getLuma(c.rgb));
         return c.rrrr;
     }  
@@ -47,11 +62,12 @@
         UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
         i.uv = UnityStereoTransformScreenSpaceTex(i.uv);
         BEAUTIFY_FRAG_SETUP_CROSS_UV(i);
-
+    
         float4 c1 = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, uv1);
         float4 c2 = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, uv2);
         float4 c3 = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, uv3);
         float4 c4 = SAMPLE_TEXTURE2D_X(_MainTex, sampler_LinearClamp, uv4);
+    
         c1.g = max( c1.g, max( c2.g, max( c3.g, c4.g )));
         c1.r = (c1.r + c2.r + c3.r + c4.r) * 0.25;
         return c1;

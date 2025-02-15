@@ -1,8 +1,6 @@
 ﻿#ifndef VOLUMETRIC_FOG_2_COMMONS_URP
 #define VOLUMETRIC_FOG_2_COMMONS_URP
 
-#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
-
 // ***** Custom options ************
 
 //#define ORTHO_SUPPORT
@@ -10,9 +8,9 @@
 
 #define MAX_ITERATIONS 500
 
-#define FOG_BLUE_NOISE
+//#define FOG_BLUE_NOISE
 
-#define WEBGL_COMPATIBILITY_MODE
+//#define WEBGL_COMPATIBILITY_MODE
 
 //#define FOG_VOID_ROTATION
 
@@ -20,19 +18,29 @@
 
 //#define FOG_ROTATION
 
-#define FOG_BORDER
+//#define FOG_BORDER
 
-#define FOG_SHADOW_CANCELLATION
+//#define FOG_MAX_DISTANCE_XZ
 
-#define V2F_LIGHT_COOKIE_CANCELLATION
+//#define FOG_SHADOW_CANCELLATION
+
+//#define V2F_LIGHT_COOKIE_CANCELLATION
+
+//#define FOG_FORWARD_PLUS_IGNORE_CLUSTERING
+
+//#define FOG_FORWARD_PLUS_ADDITIONAL_DIRECTIONAL_LIGHTS
+
+//#define FOG_LIGHT_LAYERS
 
 // ***** Common URP code ***********
 
 #if defined(USE_ALTERNATE_RECONSTRUCT_API)
-   #define CLAMP_RAY_DEPTH(rayStart, scrPos, t1) ClampRayDepthAlt(rayStart, scrPos, t1)
+   #define CLAMP_RAY_DEPTH(rayStart, uv, t1) ClampRayDepthAlt(rayStart, uv, t1)
 #else
-   #define CLAMP_RAY_DEPTH(rayStart, scrPos, t1) ClampRayDepth(rayStart, scrPos, t1)
+   #define CLAMP_RAY_DEPTH(rayStart, uv, t1) ClampRayDepth(rayStart, uv, t1)
 #endif
+
+#define CLAMP_RAY_START(rayStart, uv, t0) ClampRayStart(rayStart, uv, t0)
 
 TEXTURE2D_X_FLOAT(_CustomDepthTexture);
 SAMPLER(sampler_CustomDepthTexture);
@@ -53,18 +61,65 @@ inline float GetRawDepth(float2 uv) {
 }
 
 
-void ClampRayDepth(float3 rayStart, float4 scrPos, inout float t1) {
+void ClampRayDepth(float3 rayStart, float2 uv, inout float t1) {
 
-    float2 uv =  scrPos.xy / scrPos.w;
+    #if UNITY_REVERSED_Z
+        float depth = GetRawDepth(uv);
+    #else
+        float depth = GetRawDepth(uv);
+        depth = depth * 2.0 - 1.0;
+    #endif
 
-    // World position reconstruction
+    float3 wpos = ComputeWorldSpacePosition(uv, depth, unity_MatrixInvVP);
+
+    // World position reconstruction (old code)
+/*
     float depth  = GetRawDepth(uv);
     float4 raw   = mul(UNITY_MATRIX_I_VP, float4(uv * 2.0 - 1.0, depth, 1.0));
-    float3 worldPos  = raw.xyz / raw.w;
+    float3 wpos  = raw.xyz / raw.w;
+*/
 
-    float z = distance(rayStart, worldPos.xyz);
+    float z = distance(rayStart, wpos);
+
+    #if defined(ORTHO_SUPPORT)
+        #if defined(UNITY_REVERSED_Z)
+            depth = 1.0 - depth;
+        #endif
+        z = lerp(z, lerp(_ProjectionParams.y, _ProjectionParams.z, depth), unity_OrthoParams.w);
+    #else
+
+    #endif
+
     t1 = min(t1, z);
 }
+
+void ClampRayStart(float3 rayStart, float2 uv, inout float t0) {
+
+    float customDepth = SAMPLE_TEXTURE2D_X(_CustomDepthTexture, sampler_CustomDepthTexture, uv ).r;
+    #if UNITY_REVERSED_Z
+        float depth = customDepth;
+    #else
+        float depth = customDepth;
+        depth = depth * 2.0 - 1.0;
+    #endif
+
+    float3 wpos = ComputeWorldSpacePosition(uv, depth, unity_MatrixInvVP);
+
+    float z = distance(rayStart, wpos);
+
+    #if defined(ORTHO_SUPPORT)
+        #if defined(UNITY_REVERSED_Z)
+            depth = 1.0 - depth;
+        #endif
+        z = lerp(z, lerp(_ProjectionParams.y, _ProjectionParams.z, depth), unity_OrthoParams.w);
+    #else
+
+    #endif
+
+    t0 = max(t0, z);
+}
+
+
 
 
 // Alternate reconstruct API; URP 7.4 doesn't set UNITY_MATRIX_I_VP correctly in VR, so we need to use this alternate method
@@ -95,8 +150,8 @@ inline float GetLinearEyeDepth(float2 uv) {
 }
 
 
-void ClampRayDepthAlt(float3 rayStart, float4 scrPos, inout float t1) {
-    float2 uv =  scrPos.xy / scrPos.w;
+void ClampRayDepthAlt(float3 rayStart, float2 uv, inout float t1) {
+
     float vz = GetLinearEyeDepth(uv);
 
     #if defined(ORTHO_SUPPORT)

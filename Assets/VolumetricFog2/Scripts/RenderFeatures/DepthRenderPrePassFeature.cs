@@ -2,39 +2,52 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using System.Collections.Generic;
+using System;
+#if UNITY_2023_3_OR_NEWER
+using UnityEngine.Rendering.RenderGraphModule;
+#endif
 
 namespace VolumetricFogAndMist2 {
     public class DepthRenderPrePassFeature : ScriptableRendererFeature {
 
         public class DepthRenderPass : ScriptableRenderPass {
 
+            const string m_ProfilerTag = "CustomDepthPrePass";
+            const string m_DepthOnlyShader = "Hidden/VolumetricFog2/DepthOnly";
+
             public static readonly List<Renderer> cutOutRenderers = new List<Renderer>();
             public static int transparentLayerMask;
             public static int alphaCutoutLayerMask;
 
-            const string m_ProfilerTag = "CustomDepthPrePass";
-            const string m_DepthOnlyShader = "Hidden/VolumetricFog2/DepthOnly";
-
-            FilteringSettings m_FilteringSettings;
-            int currentCutoutLayerMask;
-            readonly List<ShaderTagId> m_ShaderTagIdList = new List<ShaderTagId>();
+            static FilteringSettings filterSettings;
+            static int currentCutoutLayerMask;
+            static readonly List<ShaderTagId> shaderTagIdList = new List<ShaderTagId>();
 
             RTHandle m_Depth;
-            Material depthOnlyMaterial, depthOnlyMaterialCutOff;
-            Material[] depthOverrideMaterials;
+            static Material depthOnlyMaterial, depthOnlyMaterialCutOff;
+            static Material[] depthOverrideMaterials;
+            static Shader fogShader;
+            static DepthRenderPrePassFeature options;
 
-            public DepthRenderPass() {
+            public DepthRenderPass () {
                 RenderTargetIdentifier rti = new RenderTargetIdentifier(ShaderParams.CustomDepthTexture, 0, CubemapFace.Unknown, -1);
                 m_Depth = RTHandles.Alloc(rti, name: ShaderParams.CustomDepthTextureName);
-                m_ShaderTagIdList.Add(new ShaderTagId("SRPDefaultUnlit"));
-                m_ShaderTagIdList.Add(new ShaderTagId("UniversalForward"));
-                m_ShaderTagIdList.Add(new ShaderTagId("LightweightForward"));
-                m_FilteringSettings = new FilteringSettings(RenderQueueRange.transparent, 0);
+                shaderTagIdList.Clear();
+                shaderTagIdList.Add(new ShaderTagId("SRPDefaultUnlit"));
+                shaderTagIdList.Add(new ShaderTagId("UniversalForward"));
+                shaderTagIdList.Add(new ShaderTagId("LightweightForward"));
+                filterSettings = new FilteringSettings(RenderQueueRange.transparent, 0);
                 SetupKeywords();
+                currentCutoutLayerMask = 0;
+                fogShader = Shader.Find("VolumetricFog2/VolumetricFog2DURP");
                 FindAlphaClippingRenderers();
             }
 
-            void SetupKeywords() {
+            public void Setup (DepthRenderPrePassFeature options) {
+                DepthRenderPass.options = options;
+            }
+
+            void SetupKeywords () {
                 if (transparentLayerMask != 0 || alphaCutoutLayerMask != 0) {
                     Shader.EnableKeyword(ShaderParams.SKW_DEPTH_PREPASS);
                 } else {
@@ -42,7 +55,7 @@ namespace VolumetricFogAndMist2 {
                 }
             }
 
-            public static void SetupLayerMasks(int transparentLayerMask, int alphaCutoutLayerMask) {
+            public static void SetupLayerMasks (int transparentLayerMask, int alphaCutoutLayerMask) {
                 DepthRenderPass.transparentLayerMask = transparentLayerMask;
                 DepthRenderPass.alphaCutoutLayerMask = alphaCutoutLayerMask;
                 if (alphaCutoutLayerMask != 0) {
@@ -50,10 +63,10 @@ namespace VolumetricFogAndMist2 {
                 }
             }
 
-            public static void FindAlphaClippingRenderers() {
+            public static void FindAlphaClippingRenderers () {
                 cutOutRenderers.Clear();
                 if (alphaCutoutLayerMask == 0) return;
-                Renderer[] rr = FindObjectsOfType<Renderer>();
+                Renderer[] rr = Misc.FindObjectsOfType<Renderer>();
                 for (int r = 0; r < rr.Length; r++) {
                     if (((1 << rr[r].gameObject.layer) & alphaCutoutLayerMask) != 0) {
                         cutOutRenderers.Add(rr[r]);
@@ -61,9 +74,21 @@ namespace VolumetricFogAndMist2 {
                 }
             }
 
-            public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor) {
-                if (transparentLayerMask != m_FilteringSettings.layerMask || alphaCutoutLayerMask != currentCutoutLayerMask) {
-                    m_FilteringSettings = new FilteringSettings(RenderQueueRange.transparent, transparentLayerMask);
+            public static void AddAlphaClippingObject (Renderer renderer) {
+                if (!cutOutRenderers.Contains(renderer)) cutOutRenderers.Add(renderer);
+            }
+
+            public static void RemoveAlphaClippingObject (Renderer renderer) {
+                if (cutOutRenderers.Contains(renderer)) cutOutRenderers.Remove(renderer);
+            }
+
+
+#if UNITY_2023_3_OR_NEWER
+            [Obsolete]
+#endif
+            public override void Configure (CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor) {
+                if (transparentLayerMask != filterSettings.layerMask || alphaCutoutLayerMask != currentCutoutLayerMask) {
+                    filterSettings = new FilteringSettings(RenderQueueRange.transparent, transparentLayerMask);
                     currentCutoutLayerMask = alphaCutoutLayerMask;
                     SetupKeywords();
                 }
@@ -83,14 +108,18 @@ namespace VolumetricFogAndMist2 {
                 ConfigureClear(ClearFlag.All, Color.black);
             }
 
-            public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData) {
+#if UNITY_2023_3_OR_NEWER
+            [Obsolete]
+#endif
+            public override void Execute (ScriptableRenderContext context, ref RenderingData renderingData) {
                 if (transparentLayerMask == 0 && alphaCutoutLayerMask == 0) return;
                 CommandBuffer cmd = CommandBufferPool.Get(m_ProfilerTag);
                 context.ExecuteCommandBuffer(cmd);
                 cmd.Clear();
 
+                VolumetricFogManager manager = VolumetricFogManager.GetManagerIfExists();
+
                 if (alphaCutoutLayerMask != 0) {
-                    VolumetricFogManager manager = VolumetricFogManager.GetManagerIfExists();
                     if (manager != null) {
                         if (depthOnlyMaterialCutOff == null) {
                             Shader depthOnlyCutOff = Shader.Find(m_DepthOnlyShader);
@@ -100,11 +129,14 @@ namespace VolumetricFogAndMist2 {
                         if (depthOverrideMaterials == null || depthOverrideMaterials.Length < renderersCount) {
                             depthOverrideMaterials = new Material[renderersCount];
                         }
+                        bool listNeedsPacking = false;
                         for (int k = 0; k < renderersCount; k++) {
                             Renderer renderer = cutOutRenderers[k];
-                            if (renderer != null && renderer.isVisible) {
+                            if (renderer == null) {
+                                listNeedsPacking = true;
+                            } else if (renderer.isVisible) {
                                 Material mat = renderer.sharedMaterial;
-                                if (mat != null) {
+                                if (mat != null && mat.shader != fogShader) {
                                     if (depthOverrideMaterials[k] == null) {
                                         depthOverrideMaterials[k] = Instantiate(depthOnlyMaterialCutOff);
                                         depthOverrideMaterials[k].EnableKeyword(ShaderParams.SKW_CUSTOM_DEPTH_ALPHA_TEST);
@@ -112,27 +144,48 @@ namespace VolumetricFogAndMist2 {
                                     Material overrideMaterial = depthOverrideMaterials[k];
                                     overrideMaterial.SetFloat(ShaderParams.CustomDepthAlphaCutoff, manager.alphaCutOff);
                                     if (mat.HasProperty(ShaderParams.CustomDepthBaseMap)) {
-                                        overrideMaterial.SetTexture(ShaderParams.MainTex, mat.GetTexture(ShaderParams.CustomDepthBaseMap));
+                                        overrideMaterial.SetTexture(ShaderParams.CustomDepthBaseMap, mat.GetTexture(ShaderParams.CustomDepthBaseMap));
                                     } else if (mat.HasProperty(ShaderParams.MainTex)) {
-                                        overrideMaterial.SetTexture(ShaderParams.MainTex, mat.GetTexture(ShaderParams.MainTex));
+                                        overrideMaterial.SetTexture(ShaderParams.CustomDepthBaseMap, mat.GetTexture(ShaderParams.MainTex));
+                                    }
+                                    if (mat.HasProperty(ShaderParams.CullMode)) {
+                                        overrideMaterial.SetInt(ShaderParams.CullMode, mat.GetInt(ShaderParams.CullMode));
+                                    } else {
+                                        overrideMaterial.SetInt(ShaderParams.CullMode, (int)manager.semiTransparentCullMode);
                                     }
                                     cmd.DrawRenderer(renderer, overrideMaterial);
                                 }
                             }
                         }
+                        if (listNeedsPacking) {
+                            cutOutRenderers.RemoveAll(item => item == null);
+                        }
                     }
                 }
 
                 if (transparentLayerMask != 0) {
-                    SortingCriteria sortingCriteria = SortingCriteria.CommonTransparent;
-                    var drawSettings = CreateDrawingSettings(m_ShaderTagIdList, ref renderingData, sortingCriteria);
-                    drawSettings.perObjectData = PerObjectData.None;
-                    if (depthOnlyMaterial == null) {
-                        Shader depthOnly = Shader.Find(m_DepthOnlyShader);
-                        depthOnlyMaterial = new Material(depthOnly);
+
+                    foreach (VolumetricFog vg in VolumetricFog.volumetricFogs) {
+                        if (vg != null) {
+                            vg.meshRenderer.renderingLayerMask = VolumetricFogManager.FOG_VOLUMES_RENDERING_LAYER;
+                        }
                     }
-                    drawSettings.overrideMaterial = depthOnlyMaterial;
-                    context.DrawRenderers(renderingData.cullResults, ref drawSettings, ref m_FilteringSettings);
+                    filterSettings.renderingLayerMask = ~VolumetricFogManager.FOG_VOLUMES_RENDERING_LAYER;
+
+                    SortingCriteria sortingCriteria = SortingCriteria.CommonTransparent;
+                    var drawSettings = CreateDrawingSettings(shaderTagIdList, ref renderingData, sortingCriteria);
+                    drawSettings.perObjectData = PerObjectData.None;
+                    if (options.useOptimizedDepthOnlyShader) {
+                        if (depthOnlyMaterial == null) {
+                            Shader depthOnly = Shader.Find(m_DepthOnlyShader);
+                            depthOnlyMaterial = new Material(depthOnly);
+                        }
+                        if (manager != null) {
+                            depthOnlyMaterial.SetInt(ShaderParams.CullMode, (int)manager.transparentCullMode);
+                        }
+                        drawSettings.overrideMaterial = depthOnlyMaterial;
+                    }
+                    context.DrawRenderers(renderingData.cullResults, ref drawSettings, ref filterSettings);
                 }
 
                 context.ExecuteCommandBuffer(cmd);
@@ -140,13 +193,137 @@ namespace VolumetricFogAndMist2 {
                 CommandBufferPool.Release(cmd);
             }
 
-            /// Cleanup any allocated resources that were created during the execution of this render pass.
-            public override void FrameCleanup(CommandBuffer cmd) {
+#if UNITY_2023_3_OR_NEWER
+
+            class PassData {
+                public RendererListHandle rendererListHandle;
+                public UniversalCameraData cameraData;
+            }
+
+            public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData) {
+
+                if (transparentLayerMask == 0 && alphaCutoutLayerMask == 0) {
+                    SetupKeywords();
+                    return;
+                }
+
+                using (var builder = renderGraph.AddUnsafePass<PassData>(m_ProfilerTag, out var passData)) {
+
+                    builder.AllowPassCulling(false);
+
+                    UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
+                    UniversalRenderingData renderingData = frameData.Get<UniversalRenderingData>();
+                    UniversalLightData lightData = frameData.Get<UniversalLightData>();
+                    UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
+                    passData.cameraData = cameraData;
+
+                    SortingCriteria sortingCriteria = SortingCriteria.CommonTransparent;
+                    var drawingSettings = CreateDrawingSettings(shaderTagIdList, renderingData, cameraData, lightData, sortingCriteria);
+                    drawingSettings.perObjectData = PerObjectData.None;
+                    if (options.useOptimizedDepthOnlyShader) {
+                        if (depthOnlyMaterial == null) {
+                            Shader depthOnly = Shader.Find(m_DepthOnlyShader);
+                            depthOnlyMaterial = new Material(depthOnly);
+                        }
+                        VolumetricFogManager manager = VolumetricFogManager.GetManagerIfExists();
+                        if (manager != null) {
+                            depthOnlyMaterial.SetInt(ShaderParams.CullMode, (int)manager.transparentCullMode);
+                        }
+                        drawingSettings.overrideMaterial = depthOnlyMaterial;
+                    }
+                    
+                    if (transparentLayerMask != filterSettings.layerMask || alphaCutoutLayerMask != currentCutoutLayerMask) {
+                        filterSettings = new FilteringSettings(RenderQueueRange.transparent, transparentLayerMask);
+                        currentCutoutLayerMask = alphaCutoutLayerMask;
+                        SetupKeywords();
+                    }
+                    filterSettings.renderingLayerMask = ~VolumetricFogManager.FOG_VOLUMES_RENDERING_LAYER;
+
+                    RendererListParams listParams = new RendererListParams(renderingData.cullResults, drawingSettings, filterSettings);
+                    passData.rendererListHandle = renderGraph.CreateRendererList(listParams);
+                    builder.UseRendererList(passData.rendererListHandle);
+
+                    builder.SetRenderFunc((PassData passData, UnsafeGraphContext context) => {
+
+                        CommandBuffer cmd = CommandBufferHelpers.GetNativeCommandBuffer(context.cmd);
+
+                        RenderTextureDescriptor depthDesc = passData.cameraData.cameraTargetDescriptor;
+                        VolumetricFogManager manager = VolumetricFogManager.GetManagerIfExists();
+                        if (manager != null) {
+                            depthDesc.width = VolumetricFogRenderFeature.GetScaledSize(depthDesc.width, manager.downscaling);
+                            depthDesc.height = VolumetricFogRenderFeature.GetScaledSize(depthDesc.height, manager.downscaling);
+                        }
+                        depthDesc.colorFormat = RenderTextureFormat.Depth;
+                        depthDesc.depthBufferBits = 24;
+                        depthDesc.msaaSamples = 1;
+
+                        cmd.GetTemporaryRT(ShaderParams.CustomDepthTexture, depthDesc, FilterMode.Point);
+                        RenderTargetIdentifier rti = new RenderTargetIdentifier(ShaderParams.CustomDepthTexture, 0, CubemapFace.Unknown, -1);
+                        cmd.SetRenderTarget(rti);
+                        cmd.ClearRenderTarget(true, true, Color.black);
+
+                        if (alphaCutoutLayerMask != 0) {
+                            if (manager != null) {
+                                if (depthOnlyMaterialCutOff == null) {
+                                    Shader depthOnlyCutOff = Shader.Find(m_DepthOnlyShader);
+                                    depthOnlyMaterialCutOff = new Material(depthOnlyCutOff);
+                                }
+                                int renderersCount = cutOutRenderers.Count;
+                                if (depthOverrideMaterials == null || depthOverrideMaterials.Length < renderersCount) {
+                                    depthOverrideMaterials = new Material[renderersCount];
+                                }
+                                for (int k = 0; k < renderersCount; k++) {
+                                    Renderer renderer = cutOutRenderers[k];
+                                    if (renderer != null && renderer.isVisible) {
+                                        Material mat = renderer.sharedMaterial;
+                                        if (mat != null && mat.shader != fogShader) {
+                                            if (depthOverrideMaterials[k] == null) {
+                                                depthOverrideMaterials[k] = Instantiate(depthOnlyMaterialCutOff);
+                                                depthOverrideMaterials[k].EnableKeyword(ShaderParams.SKW_CUSTOM_DEPTH_ALPHA_TEST);
+                                            }
+                                            Material overrideMaterial = depthOverrideMaterials[k];
+                                            overrideMaterial.SetFloat(ShaderParams.CustomDepthAlphaCutoff, manager.alphaCutOff);
+                                            if (mat.HasProperty(ShaderParams.CustomDepthBaseMap)) {
+                                                overrideMaterial.SetTexture(ShaderParams.MainTex, mat.GetTexture(ShaderParams.CustomDepthBaseMap));
+                                            } else if (mat.HasProperty(ShaderParams.MainTex)) {
+                                                overrideMaterial.SetTexture(ShaderParams.MainTex, mat.GetTexture(ShaderParams.MainTex));
+                                            }
+                                            if (mat.HasProperty(ShaderParams.CullMode)) {
+                                                overrideMaterial.SetInt(ShaderParams.CullMode, mat.GetInt(ShaderParams.CullMode));
+                                            } else {
+                                                overrideMaterial.SetInt(ShaderParams.CullMode, (int)manager.semiTransparentCullMode);
+                                            }
+                                            cmd.DrawRenderer(renderer, overrideMaterial);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (transparentLayerMask != 0) {
+
+                            foreach (VolumetricFog vg in VolumetricFog.volumetricFogs) {
+                                if (vg != null) {
+                                    vg.meshRenderer.renderingLayerMask = VolumetricFogManager.FOG_VOLUMES_RENDERING_LAYER;
+                                }
+                            }
+                            context.cmd.DrawRendererList(passData.rendererListHandle);
+                        }
+
+                    });
+                }
+            }
+
+#endif
+
+
+            // Cleanup any allocated resources that were created during the execution of this render pass.
+            public override void FrameCleanup (CommandBuffer cmd) {
                 if (cmd == null) return;
                 cmd.ReleaseTemporaryRT(ShaderParams.CustomDepthTexture);
             }
 
-            public void CleanUp() {
+            public void CleanUp () {
                 Shader.DisableKeyword(ShaderParams.SKW_DEPTH_PREPASS);
                 RTHandles.Release(m_Depth);
             }
@@ -161,14 +338,17 @@ namespace VolumetricFogAndMist2 {
         [Tooltip("Ignores reflection probes from executing this render feature")]
         public bool ignoreReflectionProbes = true;
 
-        public override void Create() {
+        [Tooltip("Uses an optimized shader to compute depth for the objects included in the transparent pass. If this option is disabled, the original shader of the objects will be used instead (this can be useful if the original shaders include vertex transformations).")]
+        public bool useOptimizedDepthOnlyShader = true;
+
+        public override void Create () {
             m_ScriptablePass = new DepthRenderPass() {
                 // Configures where the render pass should be injected.
                 renderPassEvent = RenderPassEvent.AfterRenderingOpaques
             };
         }
 
-        void OnDestroy() {
+        void OnDestroy () {
             installed = false;
             if (m_ScriptablePass != null) {
                 m_ScriptablePass.CleanUp();
@@ -177,13 +357,14 @@ namespace VolumetricFogAndMist2 {
 
         // Here you can inject one or multiple render passes in the renderer.
         // This method is called when setting up the renderer once per-camera.
-        public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData) {
+        public override void AddRenderPasses (ScriptableRenderer renderer, ref RenderingData renderingData) {
             Camera cam = renderingData.cameraData.camera;
             if ((cameraLayerMask & (1 << cam.gameObject.layer)) == 0) return;
             if (ignoreReflectionProbes && cam.cameraType == CameraType.Reflection) return;
             if (cam.targetTexture != null && cam.targetTexture.format == RenderTextureFormat.Depth) return; // ignore occlusion cams!
 
             installed = true;
+            m_ScriptablePass.Setup(this);
             renderer.EnqueuePass(m_ScriptablePass);
         }
 

@@ -17,6 +17,7 @@ SubShader
     #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Filtering.hlsl"
     #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
     #include "Packages/com.unity.render-pipelines.universal/Shaders/PostProcessing/Common.hlsl"
+    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"    
     ENDHLSL
 
   Pass { // 0
@@ -25,6 +26,7 @@ SubShader
       #pragma vertex VertBlur
       #pragma fragment FragBlur
       #pragma multi_compile_local _ EDGE_PRESERVE EDGE_PRESERVE_UPSCALING
+      #pragma multi_compile _ VF2_DEPTH_PEELING
       #define BLUR_HORIZ
       #include "Blur.hlsl"
       ENDHLSL
@@ -36,6 +38,7 @@ SubShader
       #pragma vertex VertBlur
       #pragma fragment FragBlur
       #pragma multi_compile_local _ EDGE_PRESERVE EDGE_PRESERVE_UPSCALING
+      #pragma multi_compile _ VF2_DEPTH_PEELING
       #define BLUR_VERT
       #include "Blur.hlsl"
       ENDHLSL
@@ -49,6 +52,7 @@ SubShader
       #pragma fragment FragBlur
       #pragma multi_compile_local _ EDGE_PRESERVE EDGE_PRESERVE_UPSCALING
       #pragma multi_compile_local _ DITHER
+      #pragma multi_compile _ VF2_DEPTH_PEELING
       #define BLUR_VERT
       #define FINAL_BLEND
       #include "Blur.hlsl"
@@ -62,6 +66,7 @@ SubShader
       #pragma vertex VertSimple
       #pragma fragment FragUpscalingBlend
       #pragma multi_compile_local _ DITHER
+      #pragma multi_compile _ VF2_DEPTH_PEELING
       #include "Blur.hlsl"
       ENDHLSL
   }
@@ -122,6 +127,18 @@ SubShader
       #pragma vertex VertSimple
       #pragma fragment FragScatteringBlend
       #pragma multi_compile_local _ SCATTERING_HQ
+      #pragma multi_compile _ VF2_DEPTH_PEELING
+      #include "Blur.hlsl"
+      ENDHLSL
+  }
+
+  Pass { // 10
+      Name "Fog Blend"
+      Blend One OneMinusSrcAlpha
+	  HLSLPROGRAM
+      #pragma vertex VertSimple
+      #pragma fragment FragBlend
+      #pragma multi_compile_local _ DITHER
       #include "Blur.hlsl"
       ENDHLSL
   }

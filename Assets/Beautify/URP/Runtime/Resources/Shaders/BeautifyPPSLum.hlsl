@@ -78,7 +78,11 @@
 	}
 
 	half Included(half4 c) {
-		return Brightness(c.rgb) < 0.01;
+		#if BEAUTIFY_BLOOM_USE_LAYER_INCLUSION || BEAUTIFY_ANAMORPHIC_FLARES_USE_LAYER_INCLUSION
+			return Brightness(c.rgb) >= 0.01;
+		#else
+			return Brightness(c.rgb) < 0.01;
+		#endif
 	}
 
 	half3 ColorAboveThreshold(half3 c, half brightness) {
@@ -124,12 +128,12 @@
 			c.rgb *= min(1.0, depth01 / _AFNearThreshold);
 		#endif
         
-		#if BEAUTIFY_BLOOM_USE_LAYER
+		#if BEAUTIFY_BLOOM_USE_LAYER || BEAUTIFY_BLOOM_USE_LAYER_INCLUSION
 			half included = Included(SAMPLE_TEXTURE2D_X(_BloomSourceDepth, sampler_LinearClamp, i.uv));
 			c.rgb *= included;
 		#endif
 
-		#if BEAUTIFY_ANAMORPHIC_FLARES_USE_LAYER
+		#if BEAUTIFY_ANAMORPHIC_FLARES_USE_LAYER || BEAUTIFY_ANAMORPHIC_FLARES_USE_LAYER_INCLUSION
 			half included = Included(SAMPLE_TEXTURE2D_X(_AFSourceDepth, sampler_LinearClamp, i.uv));
 			c.rgb *= included;
 		#endif
@@ -210,7 +214,7 @@
 			c4.rgb *= nearAtten;
         #endif
                         
-		#if BEAUTIFY_BLOOM_USE_LAYER
+		#if BEAUTIFY_BLOOM_USE_LAYER || BEAUTIFY_BLOOM_USE_LAYER_INCLUSION
 			half included = Included(SAMPLE_TEXTURE2D_X(_BloomSourceDepth, sampler_LinearClamp, i.uv));
 			c1.rgb *= included;
 			c2.rgb *= included;
@@ -218,7 +222,7 @@
 			c4.rgb *= included;
 		#endif
 
-		#if BEAUTIFY_ANAMORPHIC_FLARES_USE_LAYER
+		#if BEAUTIFY_ANAMORPHIC_FLARES_USE_LAYER || BEAUTIFY_ANAMORPHIC_FLARES_USE_LAYER_INCLUSION
 			half included = Included(SAMPLE_TEXTURE2D_X(_AFSourceDepth, sampler_LinearClamp, i.uv));
 			c1.rgb *= included;
 			c2.rgb *= included;

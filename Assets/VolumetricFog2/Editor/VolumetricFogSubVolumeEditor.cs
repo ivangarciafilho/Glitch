@@ -2,24 +2,20 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
-namespace VolumetricFogAndMist2
-{
+namespace VolumetricFogAndMist2 {
 
     [CustomEditor(typeof(VolumetricFogSubVolume))]
-    public class VolumetricFogSubVolumeEditor : Editor
-    {
+    public class VolumetricFogSubVolumeEditor : Editor {
 
         SerializedProperty profile, fadeDistance;
 
-        private void OnEnable()
-        {
+        private void OnEnable() {
             profile = serializedObject.FindProperty("profile");
             fadeDistance = serializedObject.FindProperty("fadeDistance");
         }
 
 
-        public override void OnInspectorGUI()
-        {
+        public override void OnInspectorGUI() {
 
             serializedObject.Update();
 

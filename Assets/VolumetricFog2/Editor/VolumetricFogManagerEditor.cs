@@ -1,27 +1,30 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.Rendering;
 
 namespace VolumetricFogAndMist2 {
 
     [CustomEditor(typeof(VolumetricFogManager))]
     public class VolumetricFogManagerEditor : Editor {
 
-        SerializedProperty sun, moon, fogLayer, includeTransparent, includeSemiTransparent, alphaCutOff, flipDepthTexture, mainManager;
+        SerializedProperty sun, moon, includeTransparent, depthPeeling, transparentCullMode, includeSemiTransparent, alphaCutOff, semiTransparentCullMode, flipDepthTexture, mainManager;
         SerializedProperty scattering, scatteringThreshold, scatteringIntensity, scatteringAbsorption, scatteringTint, scatteringHighQuality;
-        SerializedProperty downscaling, blurPasses, blurDownscaling, blurSpread, blurHDR, blurEdgePreserve, blurEdgeDepthThreshold, ditherStrength;
+        SerializedProperty downscaling, downscalingEdgeDepthThreshold, blurPasses, blurDownscaling, blurSpread, blurHDR, blurEdgePreserve, blurEdgeDepthThreshold, ditherStrength;
 
         bool toggleOptimizeBuild;
         VolumetricFogShaderOptions shaderAdvancedOptionsInfo;
         int maxIterations;
 
-        private void OnEnable() {
+        private void OnEnable () {
             sun = serializedObject.FindProperty("sun");
             moon = serializedObject.FindProperty("moon");
-            fogLayer = serializedObject.FindProperty("fogLayer");
             includeTransparent = serializedObject.FindProperty("includeTransparent");
+            depthPeeling = serializedObject.FindProperty("depthPeeling");
+            transparentCullMode = serializedObject.FindProperty("transparentCullMode");
             includeSemiTransparent = serializedObject.FindProperty("includeSemiTransparent");
             alphaCutOff = serializedObject.FindProperty("alphaCutOff");
+            semiTransparentCullMode = serializedObject.FindProperty("semiTransparentCullMode");
             flipDepthTexture = serializedObject.FindProperty("flipDepthTexture");
             mainManager = serializedObject.FindProperty("mainManager");
             scattering = serializedObject.FindProperty("scattering");
@@ -31,6 +34,7 @@ namespace VolumetricFogAndMist2 {
             scatteringTint = serializedObject.FindProperty("scatteringTint");
             scatteringHighQuality = serializedObject.FindProperty("scatteringHighQuality");
             downscaling = serializedObject.FindProperty("downscaling");
+            downscalingEdgeDepthThreshold = serializedObject.FindProperty("downscalingEdgeDepthThreshold");
             blurPasses = serializedObject.FindProperty("blurPasses");
             blurDownscaling = serializedObject.FindProperty("blurDownscaling");
             blurSpread = serializedObject.FindProperty("blurSpread");
@@ -42,11 +46,11 @@ namespace VolumetricFogAndMist2 {
         }
 
 
-        public override void OnInspectorGUI() {
+        public override void OnInspectorGUI () {
 
             EditorGUILayout.Separator();
 
-            UniversalRenderPipelineAsset pipe = UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset as UniversalRenderPipelineAsset;
+            var pipe = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
             if (pipe == null) {
                 EditorGUILayout.HelpBox("Please assign the Universal Rendering Pipeline asset (go to Project Settings -> Graphics). You can use the UniversalRenderPipelineAsset included in the demo folder or create a new pipeline asset (check documentation for step by step setup).", MessageType.Error);
                 return;
@@ -78,8 +82,13 @@ namespace VolumetricFogAndMist2 {
             EditorGUILayout.LabelField("General Settings", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(sun);
             EditorGUILayout.PropertyField(moon);
-            fogLayer.intValue = EditorGUILayout.LayerField("Fog Layer", fogLayer.intValue);
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PropertyField(flipDepthTexture);
+            if (flipDepthTexture.boolValue) {
+                GUILayout.Label("(Applies only in build)");
+            }
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.PropertyField(mainManager);
 
             EditorGUILayout.EndVertical();
@@ -89,17 +98,18 @@ namespace VolumetricFogAndMist2 {
 
             int transparentLayerMask = includeTransparent.intValue;
             DrawSectionField(includeTransparent, new GUIContent("Transparent Objects", "Specify which layers contain transparent objects that should be covered by fog"), transparentLayerMask != 0);
-            if ((transparentLayerMask & (1 << fogLayer.intValue)) != 0) {
-                EditorGUILayout.HelpBox("Do not include the layer used for fog volumes (Fog Layer).", MessageType.Warning);
+            if (transparentLayerMask != 0) {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(transparentCullMode, new GUIContent("Cull Mode"));
+                EditorGUILayout.PropertyField(depthPeeling);
+                EditorGUI.indentLevel--;
             }
             int includeSemiTransparentMask = includeSemiTransparent.intValue;
             DrawSectionField(includeSemiTransparent, new GUIContent("Alpha Clipping", "Specify which smi-transparent objects (cutout materials) should be covered by fog."), includeSemiTransparentMask != 0);
             if (includeSemiTransparentMask != 0) {
-                if ((includeSemiTransparentMask & (1 << fogLayer.intValue)) != 0) {
-                    EditorGUILayout.HelpBox("Do not include the layer used for fog volumes (Fog Layer).", MessageType.Warning);
-                }
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(alphaCutOff, new GUIContent("Alpha CutOff"), true);
+                EditorGUILayout.PropertyField(semiTransparentCullMode, new GUIContent("Cull Mode"));
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField(new GUIContent(""), GUIContent.none);
                 if (GUILayout.Button("Refresh")) {
@@ -113,6 +123,9 @@ namespace VolumetricFogAndMist2 {
                 if (!DepthRenderPrePassFeature.installed) {
                     EditorGUILayout.HelpBox("Transparent option requires 'DepthRendererPrePass Feature' added to the Universal Rendering Pipeline asset. Check the documentation for instructions.", MessageType.Warning);
                     if (pipe != null && GUILayout.Button("Show Pipeline Asset")) Selection.activeObject = pipe;
+                }
+                if ((includeTransparent.intValue & includeSemiTransparent.intValue) != 0) {
+                    EditorGUILayout.HelpBox("The options 'Transparent Objects' and 'Alpha Clipping' should not overlap and include same objects. Make sure the specified layers are different in each option.", MessageType.Warning);
                 }
             } else if (DepthRenderPrePassFeature.installed) {
                 EditorGUILayout.HelpBox("No transparent objects included. Remove 'DepthRendererPrePass Feature' from the Universal Rendering Pipeline asset to save performance.", MessageType.Warning);
@@ -136,6 +149,11 @@ namespace VolumetricFogAndMist2 {
                 EditorGUI.indentLevel--;
             }
             DrawSectionField(downscaling, new GUIContent(downscaling.displayName, downscaling.tooltip), downscaling.floatValue > 1);
+            if (downscaling.floatValue > 1f) {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(downscalingEdgeDepthThreshold, new GUIContent("Edge Threshold"));
+                EditorGUI.indentLevel--;
+            }
             DrawSectionField(blurPasses, new GUIContent(blurPasses.displayName, blurPasses.tooltip), blurPasses.intValue > 0);
             if (blurPasses.intValue > 0) {
                 EditorGUI.indentLevel++;
@@ -154,14 +172,14 @@ namespace VolumetricFogAndMist2 {
             }
             EditorGUILayout.PropertyField(ditherStrength);
 
-            if (blurPasses.intValue > 0 || downscaling.floatValue > 1 || scattering.floatValue > 0) {
+            if (blurPasses.intValue > 0 || downscaling.floatValue > 1 || scattering.floatValue > 0 || (includeTransparent.intValue != 0 && depthPeeling.boolValue)) {
                 if (!VolumetricFogRenderFeature.installed) {
                     EditorGUILayout.HelpBox("These options require 'Volumetric Fog Render Feature' added to the Universal Rendering Pipeline asset. Check the documentation for instructions.", MessageType.Warning);
                     if (pipe != null && GUILayout.Button("Show Pipeline Asset")) Selection.activeObject = pipe;
                 }
                 EditorGUILayout.HelpBox("When downscaling, blur or scattering options are enabled, fog volumes ignore render queue value. Select the render pass event in the Volumetric Fog Render Feature.", MessageType.Info);
             } else if (VolumetricFogRenderFeature.installed) {
-                EditorGUILayout.HelpBox("No final composition options used (downscaling/blur/scattering). Consider removing 'Volumetric Fog Render Feature' from the Universal Rendering Pipeline asset to save performance.", MessageType.Warning);
+                EditorGUILayout.HelpBox("No final composition options used (downscaling/blur/scattering/depth peeling). Consider removing 'Volumetric Fog Render Feature' from the Universal Rendering Pipeline asset to save performance.", MessageType.Warning);
                 if (pipe != null && GUILayout.Button("Show Pipeline Asset")) Selection.activeObject = pipe;
             }
 
@@ -279,7 +297,7 @@ namespace VolumetricFogAndMist2 {
             serializedObject.ApplyModifiedProperties();
         }
 
-        void ScanAdvancedOptions() {
+        void ScanAdvancedOptions () {
             if (shaderAdvancedOptionsInfo == null) {
                 shaderAdvancedOptionsInfo = new VolumetricFogShaderOptions();
             }
@@ -287,7 +305,7 @@ namespace VolumetricFogAndMist2 {
             maxIterations = shaderAdvancedOptionsInfo.GetOptionValue("MAX_ITERATIONS");
         }
 
-        void DrawSectionField(SerializedProperty property, GUIContent content, bool active) {
+        void DrawSectionField (SerializedProperty property, GUIContent content, bool active) {
             EditorGUILayout.PropertyField(property, new GUIContent(active ? content.text + " •" : content.text, content.tooltip));
         }
 

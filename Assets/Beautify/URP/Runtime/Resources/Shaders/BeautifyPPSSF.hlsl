@@ -149,7 +149,7 @@
 		halo *= _SunHalo.z / atten;
 		flare += halo; 
 		
-		return saturate(flare * SUN_TINT_COLOR * occlusion);
+		return max(0, flare * SUN_TINT_COLOR * occlusion);
    	}  
    	
   	float4 FragSF (VaryingsSF i) : SV_Target {

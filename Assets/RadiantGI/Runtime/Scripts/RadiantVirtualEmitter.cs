@@ -25,6 +25,7 @@ namespace RadiantGI.Universal {
         public Vector3 boxCenter;
         public Vector3 boxSize = new Vector3(25, 25, 25);
         public bool boundsInLocalSpace = true;
+        public float fadeDistance;
 
         int emissionNameId;
         Renderer thisRenderer;
@@ -34,6 +35,7 @@ namespace RadiantGI.Universal {
         private void OnValidate() {
             intensity = Mathf.Max(0, intensity);
             range = Mathf.Max(0, range);
+            fadeDistance = Mathf.Max(0, fadeDistance);
         }
 
         void OnEnable() {
@@ -44,11 +46,6 @@ namespace RadiantGI.Universal {
 
         void OnDisable() {
             RadiantRenderFeature.UnregisterVirtualEmitter(this);
-        }
-
-        void OnDrawGizmosSelected() {
-            Gizmos.color = new Color(0, 1f, 0, 0.75F);
-            Gizmos.DrawWireSphere(transform.position, range);
         }
 
 

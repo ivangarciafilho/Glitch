@@ -7,10 +7,10 @@ namespace VolumetricFogAndMist2 {
         public static int DetailColor = Shader.PropertyToID("_DetailColor");
         public static int DetailData = Shader.PropertyToID("_DetailData");
         public static int Density = Shader.PropertyToID("_Density");
-        public static int ShadowIntensity = Shader.PropertyToID("_ShadowIntensity");
-        public static int ShadowCancellation = Shader.PropertyToID("_ShadowCancellation");
-        public static int LightDiffusionIntensity = Shader.PropertyToID("_LightDiffusionIntensity");
-        public static int LightDiffusionPower = Shader.PropertyToID("_LightDiffusionPower");
+        public static int NativeLightsMultiplier = Shader.PropertyToID("_NativeLightsMultiplier");
+        public static int APVIntensityMultiplier = Shader.PropertyToID("_APVIntensityMultiplier");
+        public static int ShadowData = Shader.PropertyToID("_ShadowData");
+        public static int LightDiffusionData = Shader.PropertyToID("_LightDiffusionData");
         public static int DeepObscurance = Shader.PropertyToID("_DeepObscurance");
         public static int NoiseScale = Shader.PropertyToID("_NoiseScale");
         public static int SpecularThreshold = Shader.PropertyToID("_SpecularThreshold");
@@ -61,6 +61,9 @@ namespace VolumetricFogAndMist2 {
         public static int SpotLightDirections = Shader.PropertyToID("_VF2_FogSpotLightDirection");
         public static int SpotLightColors = Shader.PropertyToID("_VF2_SpotLightColor");
         public static int BlueNoiseTexture = Shader.PropertyToID("_BlueNoise");
+        public static int DistantFogData = Shader.PropertyToID("_DistantFogData");
+        public static int DistantFogData2 = Shader.PropertyToID("_DistantFogData2");
+        public static int CullMode = Shader.PropertyToID("_Cull");
 
         public const string SKW_CUSTOM_DEPTH_ALPHA_TEST = "DEPTH_PREPASS_ALPHA_TEST";
 
@@ -72,13 +75,16 @@ namespace VolumetricFogAndMist2 {
         public const string SKW_FOW = "VF2_FOW";
         public const string SKW_RECEIVE_SHADOWS = "VF2_RECEIVE_SHADOWS";
         public const string SKW_DISTANCE = "VF2_DISTANCE";
+        public const string SKW_CONSTANT_DENSITY = "VF2_CONSTANT_DENSITY";
         public const string SKW_DETAIL_NOISE = "VF2_DETAIL_NOISE";
         public const string SKW_SURFACE = "VF2_SURFACE";
         public const string SKW_DEPTH_PREPASS = "VF2_DEPTH_PREPASS";
         public const string SKW_DEPTH_GRADIENT = "VF2_DEPTH_GRADIENT";
         public const string SKW_HEIGHT_GRADIENT = "VF2_HEIGHT_GRADIENT";
         public const string SKW_DIRECTIONAL_COOKIE = "VF2_LIGHT_COOKIE";
-
+        public const string SKW_APV = "VF2_APV";
+        public const string SKW_DIFFUSION_SMOOTH = "VF2_DIFFUSION_SMOOTH";
+        public const string SKW_DIFFUSION_STRONG = "VF2_DIFFUSION_STRONG";
     }
 
 }

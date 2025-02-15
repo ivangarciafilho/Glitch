@@ -1,5 +1,5 @@
-﻿#define FOG_BORDER
-#define FOG_SHADOW_CANCELLATION
+﻿//#define FOG_BORDER
+//#define FOG_SHADOW_CANCELLATION
 
 using UnityEngine;
 using UnityEditor;
@@ -11,10 +11,10 @@ namespace VolumetricFogAndMist2 {
 
         SerializedProperty raymarchQuality, raymarchMinStep, jittering, dithering;
         SerializedProperty renderQueue, sortingLayerID, sortingOrder;
-        SerializedProperty noiseTexture, noiseStrength, noiseScale, noiseFinalMultiplier;
+        SerializedProperty constantDensity, noiseTexture, noiseStrength, noiseScale, noiseFinalMultiplier, noiseTextureOptimizedSize;
         SerializedProperty useDetailNoise, detailTexture, detailScale, detailStrength, detailOffset;
         SerializedProperty density;
-        SerializedProperty shape, border, verticalOffset, distance, distanceFallOff, maxDistance, maxDistanceFallOff;
+        SerializedProperty shape, customMesh, scaleNoiseWithHeight, border, customHeight, height, verticalOffset, distance, distanceFallOff, maxDistance, maxDistanceFallOff;
         SerializedProperty terrainFit, terrainFitResolution, terrainLayerMask, terrainFogHeight, terrainFogMinAltitude, terrainFogMaxAltitude;
 
         SerializedProperty albedo, enableDepthGradient, depthGradient, depthGradientMaxDistance, enableHeightGradient, heightGradient;
@@ -22,79 +22,106 @@ namespace VolumetricFogAndMist2 {
 
         SerializedProperty turbulence, windDirection, useCustomDetailNoiseWindDirection, detailNoiseWindDirection;
 
-        SerializedProperty dayNightCycle, sunDirection, sunColor, sunIntensity, lightDiffusionPower, lightDiffusionIntensity;
-        SerializedProperty receiveShadows, shadowIntensity, shadowCancellation;
+        SerializedProperty dayNightCycle, sunDirection, sunColor, sunIntensity, lightDiffusionModel, lightDiffusionPower, lightDiffusionIntensity, lightDiffusionNearDepthAtten;
+        SerializedProperty receiveShadows, shadowIntensity, shadowCancellation, shadowMaxDistance;
         SerializedProperty cookie;
 
+        SerializedProperty distantFog, distantFogColor, distantFogStartDistance, distantFogDistanceDensity, distantFogMaxHeight, distantFogBaseAltitude, distantFogHeightDensity, distantFogDiffusionIntensity, distantFogRenderQueue, distantFogSymmetrical;
+
         private void OnEnable() {
-            raymarchQuality = serializedObject.FindProperty("raymarchQuality");
-            raymarchMinStep = serializedObject.FindProperty("raymarchMinStep");
-            jittering = serializedObject.FindProperty("jittering");
-            dithering = serializedObject.FindProperty("dithering");
+            try {
+                raymarchQuality = serializedObject.FindProperty("raymarchQuality");
+                raymarchMinStep = serializedObject.FindProperty("raymarchMinStep");
+                jittering = serializedObject.FindProperty("jittering");
+                dithering = serializedObject.FindProperty("dithering");
 
-            renderQueue = serializedObject.FindProperty("renderQueue");
-            sortingLayerID = serializedObject.FindProperty("sortingLayerID");
-            sortingOrder = serializedObject.FindProperty("sortingOrder");
+                renderQueue = serializedObject.FindProperty("renderQueue");
+                sortingLayerID = serializedObject.FindProperty("sortingLayerID");
+                sortingOrder = serializedObject.FindProperty("sortingOrder");
 
-            noiseTexture = serializedObject.FindProperty("noiseTexture");
-            noiseStrength = serializedObject.FindProperty("noiseStrength");
-            noiseScale = serializedObject.FindProperty("noiseScale");
-            noiseFinalMultiplier = serializedObject.FindProperty("noiseFinalMultiplier");
+                constantDensity = serializedObject.FindProperty("constantDensity");
 
-            useDetailNoise = serializedObject.FindProperty("useDetailNoise");
-            detailTexture = serializedObject.FindProperty("detailTexture");
-            detailScale = serializedObject.FindProperty("detailScale");
-            detailStrength = serializedObject.FindProperty("detailStrength");
-            detailOffset = serializedObject.FindProperty("detailOffset");
+                noiseTexture = serializedObject.FindProperty("noiseTexture");
+                noiseStrength = serializedObject.FindProperty("noiseStrength");
+                noiseScale = serializedObject.FindProperty("noiseScale");
+                noiseFinalMultiplier = serializedObject.FindProperty("noiseFinalMultiplier");
+                noiseTextureOptimizedSize = serializedObject.FindProperty("noiseTextureOptimizedSize");
 
-            density = serializedObject.FindProperty("density");
-            shape = serializedObject.FindProperty("shape");
-            border = serializedObject.FindProperty("border");
-            verticalOffset = serializedObject.FindProperty("verticalOffset");
+                useDetailNoise = serializedObject.FindProperty("useDetailNoise");
+                detailTexture = serializedObject.FindProperty("detailTexture");
+                detailScale = serializedObject.FindProperty("detailScale");
+                detailStrength = serializedObject.FindProperty("detailStrength");
+                detailOffset = serializedObject.FindProperty("detailOffset");
 
-            distance = serializedObject.FindProperty("distance");
-            distanceFallOff = serializedObject.FindProperty("distanceFallOff");
-            maxDistance = serializedObject.FindProperty("maxDistance");
-            maxDistanceFallOff = serializedObject.FindProperty("maxDistanceFallOff");
-            terrainFit = serializedObject.FindProperty("terrainFit");
-            terrainFitResolution = serializedObject.FindProperty("terrainFitResolution");
-            terrainLayerMask = serializedObject.FindProperty("terrainLayerMask");
-            terrainFogHeight = serializedObject.FindProperty("terrainFogHeight");
-            terrainFogMinAltitude = serializedObject.FindProperty("terrainFogMinAltitude");
-            terrainFogMaxAltitude = serializedObject.FindProperty("terrainFogMaxAltitude");
+                density = serializedObject.FindProperty("density");
+                shape = serializedObject.FindProperty("shape");
+                customMesh = serializedObject.FindProperty("customMesh");
+                scaleNoiseWithHeight = serializedObject.FindProperty("scaleNoiseWithHeight");
+                border = serializedObject.FindProperty("border");
 
-            albedo = serializedObject.FindProperty("albedo");
-            enableDepthGradient = serializedObject.FindProperty("enableDepthGradient");
-            depthGradient = serializedObject.FindProperty("depthGradient");
-            depthGradientMaxDistance = serializedObject.FindProperty("depthGradientMaxDistance");
-            enableHeightGradient = serializedObject.FindProperty("enableHeightGradient");
-            heightGradient = serializedObject.FindProperty("heightGradient");
+                customHeight = serializedObject.FindProperty("customHeight");
+                height = serializedObject.FindProperty("height");
+                verticalOffset = serializedObject.FindProperty("verticalOffset");
 
-            brightness = serializedObject.FindProperty("brightness");
-            deepObscurance = serializedObject.FindProperty("deepObscurance");
-            specularColor = serializedObject.FindProperty("specularColor");
-            specularThreshold = serializedObject.FindProperty("specularThreshold");
-            specularIntensity = serializedObject.FindProperty("specularIntensity");
-            ambientLightMultiplier = serializedObject.FindProperty("ambientLightMultiplier");
+                distance = serializedObject.FindProperty("distance");
+                distanceFallOff = serializedObject.FindProperty("distanceFallOff");
+                maxDistance = serializedObject.FindProperty("maxDistance");
+                maxDistanceFallOff = serializedObject.FindProperty("maxDistanceFallOff");
 
-            turbulence = serializedObject.FindProperty("turbulence");
-            windDirection = serializedObject.FindProperty("windDirection");
-            useCustomDetailNoiseWindDirection = serializedObject.FindProperty("useCustomDetailNoiseWindDirection");
-            detailNoiseWindDirection = serializedObject.FindProperty("detailNoiseWindDirection");
+                terrainFit = serializedObject.FindProperty("terrainFit");
+                terrainFitResolution = serializedObject.FindProperty("terrainFitResolution");
+                terrainLayerMask = serializedObject.FindProperty("terrainLayerMask");
+                terrainFogHeight = serializedObject.FindProperty("terrainFogHeight");
+                terrainFogMinAltitude = serializedObject.FindProperty("terrainFogMinAltitude");
+                terrainFogMaxAltitude = serializedObject.FindProperty("terrainFogMaxAltitude");
 
-            dayNightCycle = serializedObject.FindProperty("dayNightCycle");
-            sunDirection = serializedObject.FindProperty("sunDirection");
-            sunColor = serializedObject.FindProperty("sunColor");
-            sunIntensity = serializedObject.FindProperty("sunIntensity");
+                albedo = serializedObject.FindProperty("albedo");
+                enableDepthGradient = serializedObject.FindProperty("enableDepthGradient");
+                depthGradient = serializedObject.FindProperty("depthGradient");
+                depthGradientMaxDistance = serializedObject.FindProperty("depthGradientMaxDistance");
+                enableHeightGradient = serializedObject.FindProperty("enableHeightGradient");
+                heightGradient = serializedObject.FindProperty("heightGradient");
 
-            lightDiffusionPower = serializedObject.FindProperty("lightDiffusionPower");
-            lightDiffusionIntensity = serializedObject.FindProperty("lightDiffusionIntensity");
+                brightness = serializedObject.FindProperty("brightness");
+                deepObscurance = serializedObject.FindProperty("deepObscurance");
+                specularColor = serializedObject.FindProperty("specularColor");
+                specularThreshold = serializedObject.FindProperty("specularThreshold");
+                specularIntensity = serializedObject.FindProperty("specularIntensity");
+                ambientLightMultiplier = serializedObject.FindProperty("ambientLightMultiplier");
 
-            receiveShadows = serializedObject.FindProperty("receiveShadows");
-            shadowIntensity = serializedObject.FindProperty("shadowIntensity");
-            shadowCancellation = serializedObject.FindProperty("shadowCancellation");
+                turbulence = serializedObject.FindProperty("turbulence");
+                windDirection = serializedObject.FindProperty("windDirection");
+                useCustomDetailNoiseWindDirection = serializedObject.FindProperty("useCustomDetailNoiseWindDirection");
+                detailNoiseWindDirection = serializedObject.FindProperty("detailNoiseWindDirection");
 
-            cookie = serializedObject.FindProperty("cookie");
+                dayNightCycle = serializedObject.FindProperty("dayNightCycle");
+                sunDirection = serializedObject.FindProperty("sunDirection");
+                sunColor = serializedObject.FindProperty("sunColor");
+                sunIntensity = serializedObject.FindProperty("sunIntensity");
+
+                lightDiffusionModel = serializedObject.FindProperty("lightDiffusionModel");
+                lightDiffusionPower = serializedObject.FindProperty("lightDiffusionPower");
+                lightDiffusionIntensity = serializedObject.FindProperty("lightDiffusionIntensity");
+                lightDiffusionNearDepthAtten = serializedObject.FindProperty("lightDiffusionNearDepthAtten");
+
+                receiveShadows = serializedObject.FindProperty("receiveShadows");
+                shadowIntensity = serializedObject.FindProperty("shadowIntensity");
+                shadowCancellation = serializedObject.FindProperty("shadowCancellation");
+                shadowMaxDistance = serializedObject.FindProperty("shadowMaxDistance");
+
+                cookie = serializedObject.FindProperty("cookie");
+
+                distantFog = serializedObject.FindProperty("distantFog");
+                distantFogColor = serializedObject.FindProperty("distantFogColor");
+                distantFogStartDistance = serializedObject.FindProperty("distantFogStartDistance");
+                distantFogDistanceDensity = serializedObject.FindProperty("distantFogDistanceDensity");
+                distantFogMaxHeight = serializedObject.FindProperty("distantFogMaxHeight");
+                distantFogBaseAltitude = serializedObject.FindProperty("distantFogBaseAltitude");
+                distantFogSymmetrical = serializedObject.FindProperty("distantFogSymmetrical");
+                distantFogHeightDensity = serializedObject.FindProperty("distantFogHeightDensity");
+                distantFogDiffusionIntensity = serializedObject.FindProperty("distantFogDiffusionIntensity");
+                distantFogRenderQueue = serializedObject.FindProperty("distantFogRenderQueue");
+            } catch { }
         }
 
 
@@ -109,22 +136,36 @@ namespace VolumetricFogAndMist2 {
             EditorGUILayout.PropertyField(renderQueue);
             EditorGUILayout.PropertyField(sortingLayerID);
             EditorGUILayout.PropertyField(sortingOrder);
-            EditorGUILayout.PropertyField(noiseTexture);
-            EditorGUILayout.PropertyField(noiseStrength);
-            EditorGUILayout.PropertyField(noiseScale);
-            EditorGUILayout.PropertyField(noiseFinalMultiplier);
-            EditorGUILayout.PropertyField(useDetailNoise);
-            if (useDetailNoise.boolValue) {
+
+            EditorGUILayout.PropertyField(constantDensity);
+            if (!constantDensity.boolValue) {
+                EditorGUILayout.PropertyField(noiseTexture);
                 EditorGUI.indentLevel++;
-                EditorGUILayout.PropertyField(detailTexture);
-                EditorGUILayout.PropertyField(detailScale);
-                EditorGUILayout.PropertyField(detailStrength);
-                EditorGUILayout.PropertyField(detailOffset);
+                EditorGUILayout.PropertyField(noiseStrength, new GUIContent("Strength"));
+                EditorGUILayout.PropertyField(noiseScale, new GUIContent("Scale"));
+                EditorGUILayout.PropertyField(scaleNoiseWithHeight);
+                EditorGUILayout.PropertyField(noiseFinalMultiplier, new GUIContent("Multiplier"));
+                EditorGUILayout.PropertyField(noiseTextureOptimizedSize, new GUIContent("Final Texture Size"));
                 EditorGUI.indentLevel--;
+                EditorGUILayout.PropertyField(useDetailNoise, new GUIContent("Detail Noise"));
+                if (useDetailNoise.boolValue) {
+                    EditorGUI.indentLevel++;
+                    EditorGUILayout.PropertyField(detailTexture);
+                    EditorGUILayout.PropertyField(detailStrength, new GUIContent("Strength"));
+                    EditorGUILayout.PropertyField(detailScale, new GUIContent("Scale"));
+                    EditorGUILayout.PropertyField(detailOffset, new GUIContent("Offset"));
+                    EditorGUI.indentLevel--;
+                }
             }
 
             EditorGUILayout.PropertyField(density);
             EditorGUILayout.PropertyField(shape);
+            if (shape.enumValueIndex == (int)VolumetricFogShape.Custom)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(customMesh);
+                EditorGUI.indentLevel--;
+            }
 #if FOG_BORDER
             EditorGUILayout.PropertyField(border);
 #else
@@ -132,10 +173,18 @@ namespace VolumetricFogAndMist2 {
             EditorGUILayout.LabelField("Border", "(Disabled in Volumetric Fog Manager)");
             GUI.enabled = true;
 #endif
+            EditorGUILayout.PropertyField(customHeight, new GUIContent("Custom Volume Height"));
+            if (customHeight.boolValue) {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(height);
+                EditorGUI.indentLevel--;
+            }
             EditorGUILayout.PropertyField(verticalOffset);
             EditorGUILayout.PropertyField(distance);
             if (distance.floatValue > 0) {
+                EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(distanceFallOff);
+                EditorGUI.indentLevel--;
             }
             EditorGUILayout.PropertyField(maxDistance);
             EditorGUILayout.PropertyField(maxDistanceFallOff);
@@ -145,6 +194,12 @@ namespace VolumetricFogAndMist2 {
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(terrainFitResolution, new GUIContent("Resolution"));
                 EditorGUILayout.PropertyField(terrainLayerMask, new GUIContent("Layer Mask"));
+                if (Terrain.activeTerrain != null) {
+                    int terrainLayer = Terrain.activeTerrain.gameObject.layer;
+                    if ((terrainLayerMask.intValue & (1 << terrainLayer)) == 0) {
+                        EditorGUILayout.HelpBox("Current terrain layer is not included in this layer mask. Terrain fit may not work properly.", MessageType.Warning);
+                    }
+                }
                 EditorGUILayout.PropertyField(terrainFogHeight, new GUIContent("Fog Height"));
                 EditorGUILayout.PropertyField(terrainFogMinAltitude, new GUIContent("Min Altitude"));
                 EditorGUILayout.PropertyField(terrainFogMaxAltitude, new GUIContent("Max Altitude"));
@@ -152,6 +207,9 @@ namespace VolumetricFogAndMist2 {
             }
 
             EditorGUILayout.PropertyField(albedo);
+            Color albedoColor = albedo.colorValue;
+            albedoColor.a = EditorGUILayout.Slider(new GUIContent("Alpha"), albedoColor.a, 0, 1f);
+            albedo.colorValue = albedoColor;
             EditorGUILayout.PropertyField(enableDepthGradient);
             if (enableDepthGradient.boolValue) {
                 EditorGUI.indentLevel++;
@@ -195,8 +253,13 @@ namespace VolumetricFogAndMist2 {
                 EditorGUILayout.PropertyField(sunIntensity);
             }
             EditorGUILayout.PropertyField(ambientLightMultiplier, new GUIContent("Ambient Light", "Amount of ambient light that influences fog colors"));
-            EditorGUILayout.PropertyField(lightDiffusionPower);
-            EditorGUILayout.PropertyField(lightDiffusionIntensity);
+            EditorGUILayout.PropertyField(lightDiffusionModel);
+            EditorGUI.indentLevel++;
+            EditorGUILayout.PropertyField(lightDiffusionPower, new GUIContent("Spread"));
+            EditorGUILayout.PropertyField(lightDiffusionIntensity, new GUIContent("Intensity"));
+            EditorGUILayout.PropertyField(lightDiffusionNearDepthAtten, new GUIContent("Near Depth Attenuation", "Reduces the intensity of the sun light diffusion effect at distances below this threshold"));
+
+            EditorGUI.indentLevel--;
 #if UNITY_2021_3_OR_NEWER
                 EditorGUILayout.PropertyField(cookie);
 #endif
@@ -208,7 +271,24 @@ namespace VolumetricFogAndMist2 {
 #if FOG_SHADOW_CANCELLATION
                 EditorGUILayout.PropertyField(shadowCancellation);
 #endif
+                EditorGUILayout.PropertyField(shadowMaxDistance);
                 EditorGUI.indentLevel--;
+            }
+
+            EditorGUILayout.PropertyField(distantFog, new GUIContent("Enable Distant Fog"));
+            if (distantFog.boolValue) {
+                EditorGUILayout.PropertyField(distantFogColor, new GUIContent("Color"));
+                EditorGUILayout.PropertyField(distantFogStartDistance, new GUIContent("Start Distance"));
+                EditorGUILayout.PropertyField(distantFogDistanceDensity, new GUIContent("Distance Density"));
+                EditorGUILayout.PropertyField(distantFogBaseAltitude, new GUIContent("Base Altitude"));
+                EditorGUILayout.PropertyField(distantFogMaxHeight, new GUIContent("Max Height"));
+                EditorGUILayout.PropertyField(distantFogSymmetrical, new GUIContent("Symmetrical"));
+                EditorGUILayout.PropertyField(distantFogHeightDensity, new GUIContent("Height Density"));
+                EditorGUILayout.PropertyField(distantFogDiffusionIntensity, new GUIContent("Diffusion Intensity Multiplier"));
+                EditorGUILayout.PropertyField(distantFogRenderQueue, new GUIContent("Render Queue"));
+                if (VolumetricFogRenderFeature.isRenderingBeforeTransparents && distantFogRenderQueue.intValue > 2500) {
+                    EditorGUILayout.HelpBox("Please make sure the render queue is 2500 or less if Volumetric Fog Renderer Feature runs 'Before Transparent Objects'.", MessageType.Warning);
+                }
             }
 
             serializedObject.ApplyModifiedProperties();

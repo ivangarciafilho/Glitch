@@ -20,21 +20,21 @@ MonoBehaviour:
   cameraLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  stripBeautifyTonemappingACES: 0
+  stripBeautifyTonemappingACES: 1
   stripBeautifyTonemappingACESFitted: 0
-  stripBeautifyTonemappingAGX: 0
+  stripBeautifyTonemappingAGX: 1
   stripBeautifySharpen: 0
-  stripBeautifyDithering: 0
-  stripBeautifyEdgeAA: 0
+  stripBeautifyDithering: 1
+  stripBeautifyEdgeAA: 1
   stripBeautifyLUT: 0
   stripBeautifyLUT3D: 1
-  stripBeautifyColorTweaks: 0
+  stripBeautifyColorTweaks: 1
   stripBeautifyBloom: 0
-  stripBeautifyLensDirt: 0
-  stripBeautifyChromaticAberration: 0
-  stripBeautifyDoF: 0
+  stripBeautifyLensDirt: 1
+  stripBeautifyChromaticAberration: 1
+  stripBeautifyDoF: 1
   stripBeautifyDoFTransparentSupport: 1
-  stripBeautifyEyeAdaptation: 1
+  stripBeautifyEyeAdaptation: 0
   stripBeautifyPurkinje: 1
   stripBeautifyVignetting: 0
   stripBeautifyOutline: 1

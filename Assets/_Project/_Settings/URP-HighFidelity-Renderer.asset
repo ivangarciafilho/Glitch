@@ -1,5 +1,19 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8962251033694935000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7c2c2c3c19808149a4d3454e1019255, type: 3}
+  m_Name: HBAO
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  shader: {fileID: 4800000, guid: bf610497676b34e4dbe0f14fe3fe311c, type: 3}
 --- !u!114 &-6714098951570309889
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -119,11 +133,12 @@ MonoBehaviour:
     hdrDebugViewPS: {fileID: 4800000, guid: 573620ae32aec764abd4d728906d2587, type: 3}
   m_RendererFeatures:
   - {fileID: -3268258117757201520}
-  - {fileID: -3916990986462862093}
   - {fileID: 2739469083557036929}
+  - {fileID: -3916990986462862093}
+  - {fileID: -8962251033694935000}
   - {fileID: -1517232506616618911}
   - {fileID: -6714098951570309889}
-  m_RendererFeatureMap: 9093cbd08ed0a4d2f364796f730da4c9810395fe9d8c042661e070e912b5f1eaff3cd48c93bad2a2
+  m_RendererFeatureMap: 9093cbd08ed0a4d2810395fe9d8c0426f364796f730da4c92868bc3c2bb09f8361e070e912b5f1eaff3cd48c93bad2a2
   m_UseNativeRenderPass: 0
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}

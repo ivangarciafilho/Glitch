@@ -24,7 +24,7 @@ MonoBehaviour:
     m_Value: 1
   quality:
     m_OverrideState: 1
-    m_Value: 4
+    m_Value: 0
   deinterleaving:
     m_OverrideState: 1
     m_Value: 0
@@ -36,16 +36,16 @@ MonoBehaviour:
     m_Value: 1
   debugMode:
     m_OverrideState: 0
-    m_Value: 0
+    m_Value: 1
   radius:
     m_OverrideState: 1
-    m_Value: 3
+    m_Value: 0.5
   maxRadiusPixels:
     m_OverrideState: 1
-    m_Value: 256
+    m_Value: 64
   bias:
     m_OverrideState: 1
-    m_Value: 0.1
+    m_Value: 0.05
   intensity:
     m_OverrideState: 1
     m_Value: 1
@@ -68,8 +68,8 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 16
   perPixelNormals:
-    m_OverrideState: 0
-    m_Value: 2
+    m_OverrideState: 1
+    m_Value: 1
   baseColor:
     m_OverrideState: 0
     m_Value: {r: 0, g: 0, b: 0, a: 1}
@@ -77,8 +77,8 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 1
   varianceClipping:
-    m_OverrideState: 0
-    m_Value: 1
+    m_OverrideState: 1
+    m_Value: 2
   blurType:
     m_OverrideState: 1
     m_Value: 4
@@ -908,7 +908,7 @@ MonoBehaviour:
     m_Value: {r: 1, g: 1, b: 1, a: 1}
   organicLightAnimationSpeed:
     m_OverrideState: 1
-    m_Value: {x: 0, y: 0, z: 1}
+    m_Value: {x: 0, y: 0, z: 0.1}
   organicLightDistanceScaling:
     m_OverrideState: 1
     m_Value: 1
@@ -926,7 +926,7 @@ MonoBehaviour:
     m_Value: 1
   thickness:
     m_OverrideState: 1
-    m_Value: 0.5
+    m_Value: 1
   rayBinarySearch:
     m_OverrideState: 1
     m_Value: 1
@@ -937,8 +937,8 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 0.1
   fallbackReflectionProbes:
-    m_OverrideState: 1
-    m_Value: 1
+    m_OverrideState: 0
+    m_Value: 0
   probesIntensity:
     m_OverrideState: 1
     m_Value: 1
@@ -989,7 +989,7 @@ MonoBehaviour:
     m_Value: 0.75
   sourceBrightness:
     m_OverrideState: 1
-    m_Value: 0.5
+    m_Value: 1
   giWeight:
     m_OverrideState: 0
     m_Value: 16

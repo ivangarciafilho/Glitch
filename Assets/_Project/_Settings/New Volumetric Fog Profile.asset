@@ -128,8 +128,8 @@ MonoBehaviour:
   sunIntensity: 0.5
   ambientLightMultiplier: 1
   lightDiffusionModel: 1
-  lightDiffusionPower: 32
-  lightDiffusionIntensity: 1
+  lightDiffusionPower: 128
+  lightDiffusionIntensity: 0.5
   lightDiffusionNearDepthAtten: 4
   receiveShadows: 1
   shadowIntensity: 0.75

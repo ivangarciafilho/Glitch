@@ -14,6 +14,7 @@ What's New to RealToon V5.0.11 (February 2025)
 
 - Support URP Dynamic Lightmap. (Unity 6.0 to Latest)
 - Support URP Deferred+. (Unity 6.1 to Latest)
+- Support Unity 6.1
 - Early add support for the later Unity 6.2.
 
 

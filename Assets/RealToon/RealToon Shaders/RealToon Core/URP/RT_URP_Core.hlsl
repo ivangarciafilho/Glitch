@@ -9,11 +9,10 @@
 
 half RTD_LVLC_F(float3 Light_Color_f3)
 {
-
 	#ifdef SHADER_API_MOBILE
-
+	
 		return saturate(dot(Light_Color_f3.rgb, float3(0.3, 0.59, 0.11)));
-
+	
 	#else
 
 		float4 node_3149_k = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
@@ -26,7 +25,6 @@ half RTD_LVLC_F(float3 Light_Color_f3)
 		return saturate(node_3149.b);
 
 	#endif
-
 }
 
 half3 AL_GI(float3 N)
@@ -34,14 +32,6 @@ half3 AL_GI(float3 N)
 
 	return SampleSH(N);
 
-}
-
-float3 calcNorm(float3 pos)
-{
-	float3 vecTan = normalize(cross(pos, float3(1.01, 1.0, 1.0)));
-	float3 vecBitan = normalize(cross(vecTan, pos));
-
-	return normalize(cross(vecTan, vecBitan));
 }
 
 float2 PixPos(float2 positionCS)
@@ -54,7 +44,7 @@ float2 PixPos(float2 positionCS)
 }
 
 //RT_Tripl_Default
-half4 RT_Tripl_Default(TEXTURE2D_PARAM( tex, samp), float3 positionWS, float3 normalWS)
+half4 RT_Tripl_Default(TEXTURE2D_PARAM(tex, samp), float3 positionWS, float3 normalWS)
 {
 	float3 UV = positionWS * _TriPlaTile;
     
@@ -112,8 +102,8 @@ float3 RT_ViewVecWorl(float3 WorldSpacePosition)
 
 //=========================
 
+
 //EdgDet/SSOL
-//Most of the lines are based on unity hdrp example
 float EdgDet(float2 uv)
 {
 
@@ -149,21 +139,35 @@ float EdgDet(float2 uv)
 }
 
 //DOTS_LinBlenSki
-uniform StructuredBuffer<float3x4> _SkinMatrices; 
+uniform ByteAddressBuffer _SkinMatrices;
+
+float3x4 LoadSkinMatrix(uint index)
+{
+    uint offset = index * 48;
+    float4 p1 = asfloat(_SkinMatrices.Load4(offset + 0 * 16));
+    float4 p2 = asfloat(_SkinMatrices.Load4(offset + 1 * 16));
+    float4 p3 = asfloat(_SkinMatrices.Load4(offset + 2 * 16));
+    return float3x4(p1.x, p1.w, p2.z, p3.y, p1.y, p2.x, p2.w, p3.z, p1.z, p2.y, p3.x, p3.w);
+}
 
 void DOTS_LiBleSki(uint4 indices, float4 weights, float3 positionIn, float3 normalIn, float3 tangentIn, out float3 positionOut, out float3 normalOut, out float3 tangentOut)
 {
-	for (int i = 0; i < 4; ++i)
-	{
-		float3x4 skinMatrix = _SkinMatrices[indices[i] + asint(UNITY_ACCESS_HYBRID_INSTANCED_PROP(_SkinMatrixIndex, float))];
-		float3 vtransformed = mul(skinMatrix, float4(positionIn, 1));
-		float3 ntransformed = mul(skinMatrix, float4(normalIn, 0));
-		float3 ttransformed = mul(skinMatrix, float4(tangentIn, 0));
+    positionOut = 0;
+    normalOut = 0;
+    tangentOut = 0;
+	
+    for (int i = 0; i < 4; ++i)
+    {
+        uint skinMatrixIndex = indices[i] + asint(UNITY_ACCESS_HYBRID_INSTANCED_PROP(_SkinMatrixIndex, float));
+        float3x4 skinMatrix = LoadSkinMatrix(skinMatrixIndex);
+        float3 vtransformed = mul(skinMatrix, float4(positionIn, 1));
+        float3 ntransformed = mul(skinMatrix, float4(normalIn, 0));
+        float3 ttransformed = mul(skinMatrix, float4(tangentIn, 0));
 
-		positionOut += vtransformed * weights[i];
-		normalOut += ntransformed * weights[i];
-		tangentOut += ttransformed * weights[i];
-	}
+        positionOut += vtransformed * weights[i];
+        normalOut += ntransformed * weights[i];
+        tangentOut += ttransformed * weights[i];
+    }
 }
 
 //DOTS_Compdef
@@ -470,15 +474,12 @@ float3 RT_SON(float4 vertexColor, float3 calNorm, float3 normalDirection, out fl
 		}
 
 		RTD_SON_CHE_1 = RTD_SNorm_OO;
-
 		float3 RTD_SON = RTD_SON_ON_OTHERS;
-
 		return RTD_SON;
 
 	#else
 
 		float3 RTD_SON = normalDirection;
-
 		return RTD_SON;
 
 	#endif
@@ -502,7 +503,7 @@ float3 RT_RELGI( float3 RTD_SON )
 		else
 		{
 			RTD_GI_FS_OO = half3(smoothstep(0.0, 0.01, RTD_SON.r * _GIShadeThreshold), 0.0, smoothstep(0.0, 0.01, RTD_SON.b * _GIShadeThreshold));
-			//RTD_GI_FS_OO = half3(smoothstep(float2(0.0, 0.0), float2(0.01, 0.01), (RTD_SON.rb * _GIShadeThreshold)), 0.0); //old
+			//RTD_GI_FS_OO = half3(smoothstep(float2(0.0, 0.0), float2(0.01, 0.01), (RTD_SON.rb * _GIShadeThreshold)), 0.0); //Old
 		}
 
 
@@ -753,7 +754,7 @@ void RT_GLO( float2 uv, float2 RTD_VD_Cal, float3 halfDirection, float3 normalDi
 //
 
 //RT_RL
-half RT_RL(float3 viewDirection , float3 normalDirection , half3 lightColor , out half3 RTD_RL_LARL_OO , out half RTD_RL_MAIN)
+half RT_RL(float3 viewDirection , float3 normalDirection , half3 lightColor, out half3 RTD_RL_LARL_OO , out half RTD_RL_MAIN)
 {
 
 	RTD_RL_MAIN = 0.0;
@@ -836,7 +837,7 @@ half RT_ST ( float2 uv, float3 positionWS, float3 normalDirection, half RTD_NDOT
 			#else
 				half2 Bran_uv = uv;
 			#endif
-
+	
 	
 			#if USE_FORWARD_PLUS
 				#ifdef N_F_TP_ON
@@ -861,7 +862,7 @@ half RT_ST ( float2 uv, float3 positionWS, float3 normalDirection, half RTD_NDOT
 			RTD_SHAT_COL = lerp( RTD_PT_COL, (_ShadowTColor.rgb*_ShadowTColorPower) * RTD_SCT * RTD_OSC, RTD_PT);
 			//
 	
-
+	
 			if (!_LightAffectShadow)
 			{
 				RTD_ST_LAF = RTD_SHAT_COL * RTD_LVLC;
@@ -870,34 +871,28 @@ half RT_ST ( float2 uv, float3 positionWS, float3 normalDirection, half RTD_NDOT
 			{
 				RTD_ST_LAF = RTD_SHAT_COL * lightColint;
 			}
-
+	
+	
 			#if !defined(N_F_STSDFM_ON)
 				half RTD_ST_H_Sli = lerp(0.0,0.22,_ShadowTHardness);
 				half RTD_ST_IS_ON = (half)smoothstep( RTD_ST_H_Sli, 0.22, (_ShowInAmbientLightShadowThreshold*_ShadowT_var.rgb) );
 
 				#if N_F_STIAL_ON
-
 					half RTD_ST_ALI_Sli = lerp(1.0,RTD_ST_IS_ON,_ShowInAmbientLightShadowIntensity);
 					half RTD_STIAL_ON = (half)lerp(RTD_ST_ALI_Sli,half3(1.0,1.0,1.0),clamp((RTD_LVLC*8.0),0.0,1.0));
 
 					RTD_STIAL = RTD_STIAL_ON;
-            
 				#else
-            
 					RTD_STIAL = 1.0;
-            
 				#endif
 
 				#if N_F_STIS_ON
-            
 					RTD_ST_IS = lerp(1.0,RTD_ST_IS_ON,_ShowInAmbientLightShadowIntensity);
-            
 				#else
-            
 					RTD_ST_IS = 1.0;
-            
 				#endif
 
+	
 				half RT_LFOAST_OO;
 				if (!_TexturePatternStyle)
 				{
@@ -907,7 +902,8 @@ half RT_ST ( float2 uv, float3 positionWS, float3 normalDirection, half RTD_NDOT
 				{
 					RT_LFOAST_OO = attenuation * RTD_NDOTL;
 				}
-
+	
+	
 				half RTD_ST_LFAST_OO;
 				if (!_STIL)
 				{
@@ -918,9 +914,10 @@ half RT_ST ( float2 uv, float3 positionWS, float3 normalDirection, half RTD_NDOT
 					RTD_ST_LFAST_OO = 1.0;
 				}
 
-				half RTD_ST_In_Sli = lerp( 1.0 ,smoothstep( RTD_ST_H_Sli, 0.22, ((_ShadowT_var.r*(1.0 - _ShadowTShadowThreshold))*(RTD_ST_LFAST_OO *_ShadowTLightThreshold*0.01)) ),_ShadowTIntensity);
-			#endif
 	
+				half RTD_ST_In_Sli = lerp( 1.0 ,smoothstep( RTD_ST_H_Sli, 0.22, ((_ShadowT_var.r*(1.0 - _ShadowTShadowThreshold))*(RTD_ST_LFAST_OO *_ShadowTLightThreshold*0.01)) ),_ShadowTIntensity);	
+			#endif
+
 			#ifdef N_F_STSDFM_ON
 				float Pi_Cons = 3.141593;
 				float DirLig_HR_Dot_acos = acos(DirLig_HR_Dot);
@@ -939,15 +936,15 @@ half RT_ST ( float2 uv, float3 positionWS, float3 normalDirection, half RTD_NDOT
 				half RTD_ST_In_Sli = lerp( 1.0 , SDF_Final ,_ShadowTIntensity);
 			#endif
 	
-			half RTD_ST_ON = RTD_ST_In_Sli;
-			half RTD_ST = RTD_ST_ON;
+			float RTD_ST_ON = RTD_ST_In_Sli;
+			float RTD_ST = RTD_ST_ON;
 			return RTD_ST;
             
 		#else
             
 			half RTD_ST = 1.0;
 			RTD_SHAT_COL = (half3)1.0;
-			RTD_ST_LAF = (half3)1.0;
+			RTD_ST_LAF = (half3) 1.0;
 			RTD_STIAL = 1.0;
 			RTD_ST_IS = 1.0;
 
@@ -1022,17 +1019,18 @@ half RT_SS( float4 vertexColor , float3 RTD_NDOTL , half attenuation , float dim
 //
 
 //RT_RELGI_SUB1
-half3 RT_RELGI_SUB1(float2 uv, half3 RTD_GI_FS_OO , half3 RTD_SHAT_COL , half3 RTD_MCIALO , half RTD_STIAL, Light mainLight, float3 normalDirection)
+half3 RT_RELGI_SUB1(float2 uv, half3 RTD_GI_FS_OO , half3 RTD_SHAT_COL , half3 RTD_MCIALO , half RTD_STIAL, Light mainLight, float3 normalDirection, float3 positionWS, float3 viewDirection, float2 positionCS) //
 {
 	half3 RTD_SL_OFF_OTHERS = float3(1.0, 1.0, 1.0);
+	half3 RTD_B_GI_AND_AL_GI = half3(1.0, 1.0, 1.0);
 
 	#if N_F_RELGI_ON 
 
-		#if defined(LIGHTMAP_ON)//
+		#if defined(LIGHTMAP_ON)
 
-			half3 baked_GI = SampleLightmap(uv, lerp(float3(0.0, 0.0, 0.0), float3(1.0, 1.0, 1.0), RTD_GI_FS_OO));
+			half3 baked_GI = SampleLightmap(uv, 0, lerp(float3(0.0, 0.0, 0.0), float3(1.0, 1.0, 1.0), RTD_GI_FS_OO) );
 			MixRealtimeAndBakedGI(mainLight, normalDirection, baked_GI, half4(0, 0, 0, 0));
-			half3 RTD_B_GI_AND_AL_GI = baked_GI * 2; //
+			RTD_B_GI_AND_AL_GI = baked_GI * 2; 
 
 			MixRealtimeAndBakedGI(mainLight, normalDirection, baked_GI , half4(0, 0, 0, 0));
 
@@ -1042,7 +1040,15 @@ half3 RT_RELGI_SUB1(float2 uv, half3 RTD_GI_FS_OO , half3 RTD_SHAT_COL , half3 R
 
 		#else
 
-			half3 RTD_B_GI_AND_AL_GI = (AL_GI(lerp(float3(0.0, 0.0, 0.0), float3(1.0, 1.0, 1.0), RTD_GI_FS_OO)));
+			#if defined(PROBE_VOLUMES_L1) || defined(PROBE_VOLUMES_L2)
+
+				EvaluateAdaptiveProbeVolume(GetAbsolutePositionWS(positionWS), lerp(float3(0.0, 0.0, 0.0), float3(1.0, 1.0, 1.0), RTD_GI_FS_OO), viewDirection, positionCS, RTD_B_GI_AND_AL_GI);
+				
+			#else
+				
+				RTD_B_GI_AND_AL_GI = (AL_GI(lerp(float3(0.0, 0.0, 0.0), float3(1.0, 1.0, 1.0), RTD_GI_FS_OO))); 
+
+			#endif
 
 		#endif
 
@@ -1142,7 +1148,6 @@ half3 RT_SL( float2 uv, float3 positionWS, float3 normalDirection, half3 RTD_SL_
 			half4 _MaskSelfLit_var = RT_Tripl_Default(_MaskSelfLit, sampler_MaskSelfLit, positionWS, normalDirection); 
 		#else
 			half4 _MaskSelfLit_var = SAMPLE_TEXTURE2D_LOD(_MaskSelfLit, sampler_MaskSelfLit, TRANSFORM_TEX(uv, _MaskSelfLit), 0.0);
-			//half4 _MaskSelfLit_var = SAMPLE_TEXTURE2D(_MaskSelfLit, sampler_MaskSelfLit ,TRANSFORM_TEX(uv, _MaskSelfLit)); 
 		#endif
 	
 
@@ -1273,7 +1278,6 @@ void RT_NFD(float2 positionCS)
     float distanceFromCamera = distance(GetAbsolutePositionWS(UNITY_MATRIX_M._m03_m13_m23), _WorldSpaceCameraPos);
     clip(-(RT_Dither_Out(positionCS) - saturate((distanceFromCamera - _MinFadDistance) / _MaxFadDistance)));
 }
-//
 
 //RT_PA
 float4x4 RT_PA(float3 positionRWS)
@@ -1289,10 +1293,7 @@ float4x4 RT_PA(float3 positionRWS)
 //
 
 //RT_SE
-float haS(float n)
-{
-    return frac(sin(n) * 43758.5453);
-}
+float haS(float n) { return frac(sin(n) * 43758.5453); }
 float4 RT_SE(float3 positionWS, float4 positionOS)
 {
     float4 WSPos = float4(positionWS, 1.0);
@@ -1306,7 +1307,7 @@ float4 RT_SE(float3 positionWS, float4 positionOS)
     f = f * f * (3.0 - 2.0 * f);
     float Noi = lerp(lerp(lerp(haS(n + 0.0), haS(n + 1.0), f.x), lerp(haS(n + 57.0), haS(n + 58.0), f.x), f.y), lerp(lerp(haS(n + 113.0), haS(n + 114.0), f.x), lerp(haS(n + 170.0), haS(n + 171.0), f.x), f.y), f.z);
     float DirDotComp = dot(normalize(WSOff), normalize(OSOff));
-    float3 NoiSizAdj = (float3) _TrailSize;
+    float3 NoiSizAdj = (float3)_TrailSize;
 	
     WSOff = clamp(WSOff, NoiSizAdj * -1, NoiSizAdj);
     WSOff *= -clamp(DirDotComp, -1, 0) * lerp(1, 0, step(length(WSOff), 0));
@@ -1331,9 +1332,6 @@ float3 RT_ADD_LI(Light light, float3 viewDirection, float3 viewReflectDirection,
 		half3 lightColor = light.color.rgb;
 	#endif
 
-	half RTD_LVLC = RTD_LVLC_F(lightColor.rgb);
-	float3 halfDirection = normalize(viewDirection+lightDirection);
-
 	#if N_F_HPSS_ON
 		half attenuation = 1.0; 
 	#else
@@ -1348,10 +1346,13 @@ float3 RT_ADD_LI(Light light, float3 viewDirection, float3 viewReflectDirection,
 		half attenuation = smoothstep(dlshmin, dlshmax ,FB_Check);
 	#endif
 
+    half RTD_LVLC = RTD_LVLC_F(lightColor.rgb);
 	half lightfos = smoothstep( 0.0 , _LightFalloffSoftness ,light.distanceAttenuation);
-
 	half3 lig_col_int = (_LightIntensity * lightColor.rgb);
+    float3 halfDirection = normalize(viewDirection + lightDirection);
 
+	
+	//**
 	half3 RTD_LAS;
 	if (!_LightAffectShadow)
 	{
@@ -1361,10 +1362,13 @@ float3 RT_ADD_LI(Light light, float3 viewDirection, float3 viewReflectDirection,
 	{
 		RTD_LAS = ss_col * lig_col_int;
 	}
-
+	//**
+	
 
 	half3 RTD_HL = (_HighlightColor.rgb*_HighlightColorPower+_PointSpotlightIntensity);
 
+	
+	//**
 	half3 RTD_MC_SM_TC_OO;
 	if (!_SPECMODE)
 	{
@@ -1374,7 +1378,10 @@ float3 RT_ADD_LI(Light light, float3 viewDirection, float3 viewReflectDirection,
 	{
 		RTD_MC_SM_TC_OO = RTD_TEX_COL + _MC_MCP;
 	}
-
+	//**
+	
+	
+	//**
 	half3 RTD_MCIALO_OO;
 	if (!_MCIALO)
 	{
@@ -1384,23 +1391,33 @@ float3 RT_ADD_LI(Light light, float3 viewDirection, float3 viewReflectDirection,
 	{
 		RTD_MCIALO_OO = lerp(RTD_MC_SM_TC_OO, _MainTex_var.rgb * MCapOutP * _RTD_MVCOL * 0.7, clamp((RTD_LVLC * 1.0), 0.0, 1.0));
 	}
-
+	//**
+	
+	
 	half3 RTD_MCIALO = RTD_MCIALO_OO;
 
+	
 	//RT_GLO
 	half RTD_GLO;
 	half3 RTD_GLO_COL;
     RT_GLO(uv, RTD_VD_Cal, halfDirection, normalDirection, viewDirection, positionWS, RTD_GLO, RTD_GLO_COL);
 	half3 RTD_GLO_OTHERS = RTD_GLO;
-
+	//==
+	
+	
 	//RT_RL
 	half3 RTD_RL_LARL_OO;
 	half RTD_RL_MAIN;
 	half RTD_RL_CHE_1 = RT_RL(viewDirection, normalDirection, lightColor, RTD_RL_LARL_OO, RTD_RL_MAIN);
-
+	//==
+	
+	
 	//RT_CLD
 	float3 RTD_CLD = RT_CLD(lightDirection);
-
+	//==
+	
+	
+	//**
 	half3 RTD_ST_SS_AVD_OO;
 	if (!_SelfShadowShadowTAtViewDirection)
 	{
@@ -1410,33 +1427,47 @@ float3 RT_ADD_LI(Light light, float3 viewDirection, float3 viewReflectDirection,
 	{
 		RTD_ST_SS_AVD_OO = viewDirection;
 	}
-
+	//**
+	
+	
 	half RTD_NDOTL = 0.5*dot(RTD_ST_SS_AVD_OO, float3(RTD_SON.x, RTD_SON.y * (1 - _LigIgnoYNorDir), RTD_SON.z))+0.5;
 
+	
 	//RT_ST
 	half3 RTD_SHAT_COL;
 	half RTD_STIAL;
 	half RTD_ST_IS;
 	half3 RTD_ST_LAF;
-    half RTD_ST = RT_ST(uv, positionWS, normalDirection, RTD_NDOTL, lightfos, lightDirection, RTD_LVLC, RTD_PT_COL, lig_col_int, RTD_SCT, RTD_OSC, RTD_PT, RTD_SHAT_COL, RTD_STIAL, RTD_ST_IS, RTD_ST_LAF);
-
+	half RTD_ST = RT_ST(uv, positionWS, normalDirection, RTD_NDOTL, lightfos, lightDirection, RTD_LVLC, RTD_PT_COL, lig_col_int, RTD_SCT, RTD_OSC, RTD_PT, RTD_SHAT_COL, RTD_STIAL, RTD_ST_IS, RTD_ST_LAF);
+	
+	//==
+	
+	
 	//RT_SS
 	half RTD_SS = RT_SS(vertexColor, RTD_NDOTL, attenuation, GetAdditionalLightShadowParams(lightIndex).x);
-
+	//==
+	
+	
 	half3 RTD_R_OFF_OTHERS = lerp(lerp(RTD_ST_LAF, RTD_LAS, RTD_ST_IS), lerp(RTD_ST_LAF, lerp(lerp(RTD_MCIALO_IL * RTD_HL, RTD_GLO_COL, RTD_GLO_OTHERS), RTD_RL_LARL_OO, RTD_RL_CHE_1) * lightColor.rgb, RTD_ST), RTD_SS);
 
+	
 	//RT_R
-    half3 RTD_R = RT_R(uv, viewReflectDirection, viewDirection, normalDirection, RTD_TEX_COL, RTD_R_OFF_OTHERS, positionWS);
-
+	half3 RTD_R = RT_R(uv, viewReflectDirection, viewDirection, normalDirection, RTD_TEX_COL, RTD_R_OFF_OTHERS, positionWS);
+	//==
+	
+	
 	//RT_SL
 	half3 RTD_SL_CHE_1;
-    half3 RTD_SL = RT_SL(uv, positionWS, normalDirection, (half3) 0.0, RTD_TEX_COL, RTD_R, RTD_SL_CHE_1);
-
+	half3 RTD_SL = RT_SL(uv, positionWS, normalDirection, (half3)0.0, RTD_TEX_COL, RTD_R, RTD_SL_CHE_1);
+	//==
+	
+	
 	//RT_RL_SUB1
 	half3 RTD_RL = RT_RL_SUB1(RTD_SL_CHE_1, RTD_RL_LARL_OO, RTD_RL_MAIN);
-
+	//==
+	
+	
 	half3 RTD_CA_OFF_OTHERS = (RTD_RL + RTD_SL);
-
 	half3 add_light_output = RTD_CA_OFF_OTHERS * lightfos;
 
 	return add_light_output;

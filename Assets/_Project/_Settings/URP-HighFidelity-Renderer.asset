@@ -1,19 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-8962251033694935000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f7c2c2c3c19808149a4d3454e1019255, type: 3}
-  m_Name: HBAO
-  m_EditorClassIdentifier: 
-  m_Active: 1
-  shader: {fileID: 4800000, guid: bf610497676b34e4dbe0f14fe3fe311c, type: 3}
 --- !u!114 &-6714098951570309889
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -46,8 +32,8 @@ MonoBehaviour:
   stripBeautifyBloom: 0
   stripBeautifyLensDirt: 1
   stripBeautifyChromaticAberration: 1
-  stripBeautifyDoF: 1
-  stripBeautifyDoFTransparentSupport: 1
+  stripBeautifyDoF: 0
+  stripBeautifyDoFTransparentSupport: 0
   stripBeautifyEyeAdaptation: 0
   stripBeautifyPurkinje: 1
   stripBeautifyVignetting: 0
@@ -76,7 +62,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Active: 1
   blurShader: {fileID: 4800000, guid: c9391e295126842e589edc35e6cfa61a, type: 3}
-  renderPassEvent: 450
+  renderPassEvent: 500
   fogLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -84,37 +70,6 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   ignoreReflectionProbes: 1
---- !u!114 &-3268258117757201520
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 03b4ec73907ff472f811959d3cd1919c, type: 3}
-  m_Name: DepthRenderPrePassFeature
-  m_EditorClassIdentifier: 
-  m_Active: 1
-  cameraLayerMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  ignoreReflectionProbes: 1
-  useOptimizedDepthOnlyShader: 1
---- !u!114 &-1517232506616618911
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3e6b9910358046a1a7a6e84c3169447, type: 3}
-  m_Name: VolumetricLightsTranslucentShadowMapFeature
-  m_EditorClassIdentifier: 
-  m_Active: 1
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -131,36 +86,24 @@ MonoBehaviour:
     debugReplacementPS: {fileID: 4800000, guid: cf852408f2e174538bcd9b7fda1c5ae7,
       type: 3}
     hdrDebugViewPS: {fileID: 4800000, guid: 573620ae32aec764abd4d728906d2587, type: 3}
+    probeVolumeSamplingDebugComputeShader: {fileID: 7200000, guid: 53626a513ea68ce47b59dc1299fe3959,
+      type: 3}
+  probeVolumeResources:
+    probeVolumeDebugShader: {fileID: 0}
+    probeVolumeFragmentationDebugShader: {fileID: 0}
+    probeVolumeOffsetDebugShader: {fileID: 0}
+    probeVolumeSamplingDebugShader: {fileID: 0}
+    probeSamplingDebugMesh: {fileID: 0}
+    probeSamplingDebugTexture: {fileID: 0}
+    probeVolumeBlendStatesCS: {fileID: 0}
   m_RendererFeatures:
-  - {fileID: -3268258117757201520}
   - {fileID: 2739469083557036929}
   - {fileID: -3916990986462862093}
-  - {fileID: -8962251033694935000}
-  - {fileID: -1517232506616618911}
   - {fileID: -6714098951570309889}
-  m_RendererFeatureMap: 9093cbd08ed0a4d2810395fe9d8c0426f364796f730da4c92868bc3c2bb09f8361e070e912b5f1eaff3cd48c93bad2a2
+  m_RendererFeatureMap: 810395fe9d8c0426f364796f730da4c9ff3cd48c93bad2a2
   m_UseNativeRenderPass: 0
-  postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}
-  shaders:
-    blitPS: {fileID: 4800000, guid: c17132b1f77d20942aa75f8429c0f8bc, type: 3}
-    copyDepthPS: {fileID: 4800000, guid: d6dae50ee9e1bfa4db75f19f99355220, type: 3}
-    screenSpaceShadowPS: {fileID: 0}
-    samplingPS: {fileID: 4800000, guid: 04c410c9937594faa893a11dceb85f7e, type: 3}
-    stencilDeferredPS: {fileID: 4800000, guid: e9155b26e1bc55942a41e518703fe304, type: 3}
-    fallbackErrorPS: {fileID: 4800000, guid: e6e9a19c3678ded42a3bc431ebef7dbd, type: 3}
-    fallbackLoadingPS: {fileID: 4800000, guid: 7f888aff2ac86494babad1c2c5daeee2, type: 3}
-    materialErrorPS: {fileID: 4800000, guid: 5fd9a8feb75a4b5894c241777f519d4e, type: 3}
-    coreBlitPS: {fileID: 4800000, guid: 93446b5c5339d4f00b85c159e1159b7c, type: 3}
-    coreBlitColorAndDepthPS: {fileID: 4800000, guid: d104b2fc1ca6445babb8e90b0758136b,
-      type: 3}
-    blitHDROverlay: {fileID: 4800000, guid: a89bee29cffa951418fc1e2da94d1959, type: 3}
-    cameraMotionVector: {fileID: 4800000, guid: c56b7e0d4c7cb484e959caeeedae9bbf,
-      type: 3}
-    objectMotionVector: {fileID: 4800000, guid: 7b3ede40266cd49a395def176e1bc486,
-      type: 3}
-    dataDrivenLensFlare: {fileID: 4800000, guid: 6cda457ac28612740adb23da5d39ea92,
-      type: 3}
+  postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   m_AssetVersion: 2
   m_OpaqueLayerMask:
     serializedVersion: 2
@@ -175,11 +118,13 @@ MonoBehaviour:
     passOperation: 2
     failOperation: 0
     zFailOperation: 0
-  m_ShadowTransparentReceive: 1
+  m_ShadowTransparentReceive: 0
   m_RenderingMode: 1
   m_DepthPrimingMode: 1
   m_CopyDepthMode: 0
-  m_AccurateGbufferNormals: 1
+  m_DepthAttachmentFormat: 0
+  m_DepthTextureFormat: 0
+  m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 0
 --- !u!114 &2739469083557036929
 MonoBehaviour:

@@ -1,6 +1,6 @@
 //RealToon V5.0.11 (URP)
 //MJQStudioWorks
-//�2025
+//©2025
 
 Shader "Universal Render Pipeline/RealToon/Version 5/Default/Default"
 {
@@ -123,7 +123,7 @@ Shader "Universal Render Pipeline/RealToon/Version 5/Default/Default"
 
         _SmoothObjectNormal ("Smooth Object Normal", Range(0, 1)) = 0.0
         [ToggleOff] _VertexColorRedControlSmoothObjectNormal ("Vertex Color Red Control Smooth Object Normal", Float ) = 0.0
-        [HideInInspector]_XYZPosition ("XYZ Position", Vector) = (0.0,0.0,0.0,0.0)
+        [HideInInspector] _XYZPosition ("XYZ Position", Vector) = (0.0,0.0,0.0,0.0)
         [ToggleOff] _ShowNormal ("Show Normal", Float ) = 0.0
 
         _ShadowColorTexture ("Shadow Color Texture", 2D) = "white" {}
@@ -188,6 +188,9 @@ Shader "Universal Render Pipeline/RealToon/Version 5/Default/Default"
         [ToggleOff] _RimLightInLight ("Rim Light In Light", Float ) = 1.0
         [ToggleOff] _LightAffectRimLightColor ("Light Affect Rim Light Color", Float ) = 0.0
 
+		_MinFadDistance("Min Distance", Float) = 0.0
+		_MaxFadDistance("Max Distance", Float) = 2.0
+
 		_TriPlaTile("Tile", Float) = 1.0
         _TriPlaBlend("Blend", Float) = 4.0
 
@@ -199,9 +202,6 @@ Shader "Universal Render Pipeline/RealToon/Version 5/Default/Default"
 
 		[HideInInspector]_NoiseSize("Noise Size", Float) = 100
 		[HideInInspector]_TrailSize("Trail Size", Float) = 1.5
-
-		_MinFadDistance("Min Distance", Float) = 0.0
-		_MaxFadDistance("Max Distance", Float) = 2.0
 
 		_RefVal ("ID", int ) = 0
         [Enum(Blank,8,A,0,B,2)] _Oper("Set 1", int) = 0
@@ -241,7 +241,7 @@ Shader "Universal Render Pipeline/RealToon/Version 5/Default/Default"
 		[Toggle(N_F_RDC_ON)] _N_F_RDC("Receive Decal", Float) = 1.0
 		[Toggle(N_F_OFLMB_ON)] _N_F_OFLMB("Optimize for [Light Mode: Baked]", Float) = 0.0
 
-		[Toggle(N_F_DDMD_ON)] _N_F_DDMD("Disable DOTS Mesh Deformation", Float) = 0.0
+		[Toggle(N_F_DDMD_ON)] _N_F_DDMD("Disable DOTS Mesh Deformation", Float) = 1.0
 
 		[Enum(On, 1, Off, 0)] _ZWrite("ZWrite", int) = 1
 
@@ -253,12 +253,20 @@ Shader "Universal Render Pipeline/RealToon/Version 5/Default/Default"
 		[HideInInspector]_ObjectForward("Object Forward", Vector) = (0, 0, 0, 0)
 		[HideInInspector]_ObjectRight("Object Right", Vector) = (0, 0, 0, 0)
 
+
     }
 
 SubShader
 {
 
-    Tags{"Queue" = "Geometry" "RenderType" = "Opaque" "RenderPipeline" = "UniversalPipeline" "UniversalMaterialType" = "Lit" "IgnoreProjector" = "True"}
+    Tags
+	{
+		"Queue" = "Geometry" 
+		"RenderType" = "Opaque"
+		"RenderPipeline" = "UniversalPipeline"
+		"UniversalMaterialType" = "Lit"
+		"IgnoreProjector" = "True"
+	}
     LOD 300
 
 	Pass {
@@ -288,14 +296,15 @@ Pass Invert//O_PI
 
 		#pragma multi_compile _ _ADDITIONAL_LIGHTS
 		#pragma multi_compile _ _FORWARD_PLUS
-		#pragma multi_compile_fragment _ _WRITE_RENDERING_LAYERS
+
+		#include_with_pragmas "Packages/com.unity.render-pipelines.core/ShaderLibrary/FoveatedRenderingKeywords.hlsl"
+		#include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/RenderingLayers.hlsl"
 		#pragma multi_compile_fragment _ _LIGHT_LAYERS
         #pragma multi_compile_fog
         #pragma multi_compile_instancing
-
 		#pragma instancing_options renderinglayer
-		#pragma multi_compile _ DOTS_INSTANCING_ON
 
+		#pragma multi_compile _ DOTS_INSTANCING_ON
 		#pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
 
         #pragma vertex LitPassVertex
@@ -398,16 +407,23 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 
 			VertexPositionInputs vertexInput = GetVertexPositionInputs(_LBS_CD_Position.xyz);
 
+			output.normalWS = TransformObjectToWorldNormal(input.normalOS);
+			output.posWorld = float4(vertexInput.positionWS, 1.0);
+
 			float4 objPos = mul ( GetObjectToWorldMatrix(), float4(0.0,0.0,0.0,1.0) );
+
 
 			//RT_SE
 			#if N_F_SE_ON
 				input.positionOS = RT_SE(vertexInput.positionWS, input.positionOS);
 				_LBS_CD_Position = input.positionOS;
 			#endif
+			//==
+
 
 			half RTD_OB_VP_CAL = distance(objPos.rgb,_WorldSpaceCameraPos);
 
+			//**
 			half RTD_OL_VCRAOW_OO;
 			if (!_VertexColorBlueAffectOutlineWitdh)
 			{
@@ -417,7 +433,10 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			{
 				RTD_OL_VCRAOW_OO = _OutlineWidth * (1.0 - output.vertexColor.b);
 			}
+			//**
 
+
+			//**
 			half RTD_OL_OLWABVD_OO;
 			if (!_OutlineWidthAffectedByViewDistance)
 			{
@@ -427,6 +446,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			{
 				RTD_OL_OLWABVD_OO = clamp(RTD_OL_VCRAOW_OO * RTD_OB_VP_CAL, RTD_OL_VCRAOW_OO, _FarDistanceMaxWidth);
 			}
+			//**
+
 
 			#if defined(SHADER_API_GLES) 
 				half4 _OutlineWidthControl_var = tex2Dlod(_OutlineWidthControl, float4(TRANSFORM_TEX(output.uv, _OutlineWidthControl), 0.0, 0)); //replace soon
@@ -454,11 +475,12 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 
 
 			half2 _8743 = RTD_OL_DNOL_OO;
-
             float2 _1283_skew = _8743 + 0.2127+_8743.x*0.3713*_8743.y;
             float2 _1283_rnd = 4.789*sin(489.123*(_1283_skew));
             half _1283 = frac(_1283_rnd.x*_1283_rnd.y*(1+_1283_skew.x));
 
+
+			//**
 			float3 _OEM = float3(0.0, 0.0, 0.0);
 			if (!_OutlineExtrudeMethod)
 			{
@@ -468,8 +490,11 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			{
 				_OEM = normalize(_LBS_CD_Position.xyz);
 			}
+			//**
+
 
 			half RTD_OL = ( RTD_OL_OLWABVD_OO*0.01 ) * _OutlineWidthControl_var.r * lerp(1.0,_1283,_NoisyOutlineIntensity);
+
 
 			//RT_PA
 			#if N_F_PA_ON
@@ -477,6 +502,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			#else
 				output.positionCS = mul(GetWorldToHClipMatrix(), mul(GetObjectToWorldMatrix(), float4( (_LBS_CD_Position.xyz + _OutlineOffset.xyz * 0.01) + _OEM * RTD_OL,1.0) ) );
 			#endif
+			//==
+
 
 			#if defined(SHADER_API_GLCORE) || defined(SHADER_API_GLES) || defined(SHADER_API_GLES3)
 				output.positionCS.z += _OutlineZPostionInCamera * 0.0005;
@@ -484,11 +511,9 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 				output.positionCS.z -= _OutlineZPostionInCamera * 0.0005;
 			#endif
 
-			output.normalWS = TransformObjectToWorldNormal(input.normalOS);
-			output.posWorld = float4(vertexInput.positionWS, 1.0);
-            output.projPos = ComputeScreenPos (output.positionCS);
 			float fogFactor = ComputeFogFactor(vertexInput.positionCS.z);
 			output.positionWSAndFogFactor = float4(vertexInput.positionWS, fogFactor);
+			output.projPos = ComputeScreenPos (output.positionCS);
 
             return output;
 
@@ -507,13 +532,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
             float3 positionWS = input.positionWSAndFogFactor.xyz;
-
-            Light mainLight = GetMainLight();
-			half3 color = (half3)1.0;
-
 			float4 objPos = mul ( GetObjectToWorldMatrix(), float4(0.0,0.0,0.0,1.0) );
             float2 sceneUVs = (input.projPos.xy / input.projPos.w);
-
 			half RTD_OB_VP_CAL = distance(objPos.rgb,_WorldSpaceCameraPos);
 			half2 RTD_VD_Cal = (float2((sceneUVs.x * 2.0 - 1.0)*(_ScreenParams.r/_ScreenParams.g), sceneUVs.y * 2.0 - 1.0).rg*RTD_OB_VP_CAL);
 
@@ -521,6 +541,9 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 				LODFadeCrossFade(input.positionCS);
 			#endif
 
+			half3 color = (half3)1.0;
+
+			//**
 			half2 RTD_TC_TP_OO;
 			if (!_TexturePatternStyle)
 			{
@@ -530,12 +553,15 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			{
 				RTD_TC_TP_OO = RTD_VD_Cal;
 			}
+			//**
+
 
 			#ifdef N_F_TP_ON
 				half4 _MainTex_var = RT_Tripl_Default(_MainTex, sampler_MainTex, positionWS, input.normalWS);
 			#else
 				half4 _MainTex_var = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, TRANSFORM_TEX(RTD_TC_TP_OO, _MainTex));
 			#endif
+
 
 			//RT_TRANS_CO
 			half RTD_TRAN_OPA_Sli;
@@ -548,24 +574,33 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 					clip(RTD_TRAN_OPA_Sli - 0.5);
 				#endif
 			#endif
+			//
 
 
+			//========/
+			//========/
+			Light mainLight = GetMainLight();
 
 			#ifndef N_F_OFLMB_ON
 				half3 lightColor = mainLight.color.rgb;
 			#else
 				half3 lightColor = (half3)1.0;
 			#endif
+			//========/
+			//========/
 
-			uint meshRenderingLayers = GetMeshRenderingLayer();//
 
+			uint meshRenderingLayers = GetMeshRenderingLayer();
+
+
+			//========/
+			//========/
 			#ifndef N_F_OFLMB_ON
 				#ifdef _ADDITIONAL_LIGHTS
 					#if N_F_EAL_ON
 
 						uint pixelLightCount = GetAdditionalLightsCount();
 
-						//
 						#if USE_FORWARD_PLUS
 
 							InputData inputData = (InputData)0;
@@ -584,14 +619,13 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 								}
 							}
 						#endif
-						//
 
 						LIGHT_LOOP_BEGIN(pixelLightCount)
 							Light light = GetAdditionalLight(lightIndex, positionWS);
 
-							#ifdef _LIGHT_LAYERS//
+							#ifdef _LIGHT_LAYERS
 								if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
-							#endif//
+							#endif
 							{
 								lightColor += light.color * light.distanceAttenuation;
 							}
@@ -600,7 +634,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 					#endif
 				#endif
 			#endif
-
+			//========/
+			//========/
 
 
             float fogFactor = input.positionWSAndFogFactor.w;
@@ -610,7 +645,10 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			#ifdef UNITY_COLORSPACE_GAMMA
 				_OutlineColor = float4(LinearToGamma22(_OutlineColor.rgb), _OutlineColor.a);
 			#endif
+			//
 
+
+			//**
 			half3 RTD_MMTTO_OO;
 			if (!_MixMainTexToOutline)
 			{
@@ -621,7 +659,10 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 
 				RTD_MMTTO_OO = _OutlineColor.rgb * _MainTex_var.rgb;
 			}
+			//**
 
+
+			//**
 			half3 RTD_OL_LAOC_OO;
 			if (!_LightAffectOutlineColor)
 			{
@@ -632,16 +673,18 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 
 				RTD_OL_LAOC_OO = lerp(half3(0.0, 0.0, 0.0), RTD_MMTTO_OO, lightColor.rgb);
 			}
-				
-			//
+			//**
 
 
 			half3 finalRGBA = RTD_OL_LAOC_OO;
+
 
 			//RT_NFD
 			#ifdef N_F_NFD_ON
 				RT_NFD(input.positionCS.xy);
 			#endif
+			//==
+
 
 			color = MixFog(finalRGBA, fogFactor);
 
@@ -687,28 +730,34 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 
 		#pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
 		#pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
+		#pragma multi_compile _ EVALUATE_SH_MIXED EVALUATE_SH_VERTEX
 		#pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
 		#pragma multi_compile_fragment _ _REFLECTION_PROBE_BLENDING
 		#pragma multi_compile_fragment _ _REFLECTION_PROBE_BOX_PROJECTION
-		#pragma multi_compile_fragment _ _DBUFFER_MRT1 _DBUFFER_MRT2 _DBUFFER_MRT3
-        #pragma multi_compile_fragment _ _SHADOWS_SOFT
+		#pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
 		#pragma multi_compile_fragment _ _SCREEN_SPACE_OCCLUSION
+		#pragma multi_compile_fragment _ _DBUFFER_MRT1 _DBUFFER_MRT2 _DBUFFER_MRT3
 		#pragma multi_compile_fragment _ _LIGHT_COOKIES
-		#pragma multi_compile_fragment _ _LIGHT_LAYERS
+		#pragma multi_compile _ _LIGHT_LAYERS
 		#pragma multi_compile _ _FORWARD_PLUS
-		#pragma multi_compile_fragment _ _WRITE_RENDERING_LAYERS
+
+		#include_with_pragmas "Packages/com.unity.render-pipelines.core/ShaderLibrary/FoveatedRenderingKeywords.hlsl"
+		#include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/RenderingLayers.hlsl"
+		#include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ProbeVolumeVariants.hlsl"
 
 		#pragma multi_compile _ LIGHTMAP_SHADOW_MIXING
 		#pragma multi_compile _ SHADOWS_SHADOWMASK
 		#pragma multi_compile _ DIRLIGHTMAP_COMBINED
 		#pragma multi_compile _ LIGHTMAP_ON
-		#pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
+		#pragma multi_compile _ DYNAMICLIGHTMAP_ON
+        #pragma multi_compile _ USE_LEGACY_LIGHTMAPS
+		#pragma multi_compile _ LOD_FADE_CROSSFADE
 
         #pragma multi_compile_fog
-
         #pragma multi_compile_instancing
 		#pragma instancing_options renderinglayer
-		#pragma multi_compile _ DOTS_INSTANCING_ON
+
+		#include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
 
         #pragma vertex LitPassVertex
         #pragma fragment LitPassFragment
@@ -755,7 +804,7 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 		#pragma shader_feature_local_fragment N_F_RDC_ON
 		#pragma shader_feature_local_fragment N_F_COEDGL_ON
 		#pragma shader_feature_local_fragment N_F_NFD_ON
-		#pragma shader_feature_local_fragment N_F_TP_ON 
+		#pragma shader_feature_local_fragment N_F_TP_ON
 		#pragma shader_feature_local_vertex N_F_PA_ON
 		#pragma shader_feature_local_vertex N_F_SE_ON
 		#pragma shader_feature_local_fragment N_F_SCO_ON
@@ -765,21 +814,25 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 
         struct Attributes
         {
+
             float4 positionOS   : POSITION;
             float3 normalOS     : NORMAL;
             float4 tangentOS    : TANGENT;
             float2 uv           : TEXCOORD0;
-			float2 lightmapUV   : TEXCOORD1;
+			float2 staticLightmapUV   : TEXCOORD1;
+			float2 dynamicLightmapUV  : TEXCOORD2;
 			float4 vertexColor	: COLOR;
-		#if defined(UNITY_DOTS_INSTANCING_ENABLED)
 
-		#ifndef	N_F_DDMD_ON
+			#if defined(UNITY_DOTS_INSTANCING_ENABLED)
+
+			#ifndef	N_F_DDMD_ON
 float4 weights : BLENDWEIGHTS;//DOTS_LiBleSki_FL
 uint4 indices : BLENDINDICES;//DOTS_LiBleSki_FL
 //uint vertexID : SV_VertexID;//DOTS_CompDef_FL
-		#endif
+			#endif
 
-		#endif
+			#endif
+
             UNITY_VERTEX_INPUT_INSTANCE_ID
 
         };
@@ -788,18 +841,24 @@ uint4 indices : BLENDINDICES;//DOTS_LiBleSki_FL
         {
 
             float2 uv						: TEXCOORD0;
-			float2 lightmapUV				: TEXCOORD1;
-            float4 positionWSAndFogFactor   : TEXCOORD2; 
-            half3  normalWS                 : TEXCOORD3;
-            half3 tangentWS                 : TEXCOORD4;
-            half3 bitangentWS               : TEXCOORD5;
+            float4 positionWSAndFogFactor   : TEXCOORD1; 
+            float3 normalWS                 : TEXCOORD2;
+            float3 tangentWS                : TEXCOORD3;
+            float3 bitangentWS              : TEXCOORD4;
+			float4 posWorld					: TEXCOORD5;
 
-#if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
-            float4 shadowCoord              : TEXCOORD6; 
-#endif
+		#if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
+			float4 shadowCoord              : TEXCOORD6; 
+		#endif
+
 			float4 projPos					: TEXCOORD7;
-			float4 posWorld					: TEXCOORD8;
-			float3 smoNorm					: TEXCOORD9;
+
+			float2 staticLightmapUV : TEXCOORD8;
+		#ifdef DYNAMICLIGHTMAP_ON
+			float2 dynamicLightmapUV : TEXCOORD9;
+		#endif
+
+			float3 smoNorm					: TEXCOORD10;
 			float4 vertexColor				: COLOR;
             float4 positionCS               : SV_POSITION;
 			UNITY_VERTEX_INPUT_INSTANCE_ID
@@ -844,11 +903,14 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
             VertexPositionInputs vertexInput = GetVertexPositionInputs(_LBS_CD_Position.xyz);
 			VertexNormalInputs vertexNormalInput = GetVertexNormalInputs(_LBS_CD_Normal, _LBS_CD_Tangent);
 
+
 			//RT_SE
 			#if N_F_SE_ON
 				input.positionOS = RT_SE(vertexInput.positionWS, input.positionOS);
 				_LBS_CD_Position = input.positionOS;
 			#endif
+			//==
+
 
 			//RT_PA
 			#if N_F_PA_ON
@@ -856,10 +918,12 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			#else
 				output.positionCS = vertexInput.positionCS;
 			#endif
+			//
+			
 
 			output.uv = input.uv;
             output.vertexColor = input.vertexColor;
-				
+
             output.normalWS = vertexNormalInput.normalWS;
             output.tangentWS = vertexNormalInput.tangentWS;
             output.bitangentWS = vertexNormalInput.bitangentWS;
@@ -870,12 +934,17 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			output.posWorld = float4(vertexInput.positionWS, 1.0);
 			output.projPos = ComputeScreenPos (output.positionCS);
 
-			OUTPUT_LIGHTMAP_UV(input.lightmapUV, unity_LightmapST, output.lightmapUV);
+			OUTPUT_LIGHTMAP_UV(input.staticLightmapUV, unity_LightmapST, output.staticLightmapUV);
+			#ifdef DYNAMICLIGHTMAP_ON
+				output.dynamicLightmapUV = input.dynamicLightmapUV.xy * unity_DynamicLightmapST.xy + unity_DynamicLightmapST.zw;
+			#endif
 
 			//RT_SON
 			#if N_F_SON_ON
 				output.smoNorm = GetAbsolutePositionWS(vertexInput.positionWS);
 			#endif
+			//==
+
 
 #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
 
@@ -885,29 +954,32 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
             return output;
         }
 
-        void LitPassFragment(
-			Varyings input
-			, out half4 outColor : SV_Target0
-			, float facing : VFACE
-		#ifdef _WRITE_RENDERING_LAYERS
-			, out float4 outRenderingLayers : SV_Target1
-		#endif
+        void LitPassFragment(Varyings input
+							, out half4 outColor : SV_Target0
+							, float facing : VFACE
+						#ifdef _WRITE_RENDERING_LAYERS
+							, out float4 outRenderingLayers : SV_Target1
+						#endif
 		) 
         {
 
 			UNITY_SETUP_INSTANCE_ID (input);
 			UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
-			float3 positionWS = input.positionWSAndFogFactor.xyz;
+			#if defined(DYNAMICLIGHTMAP_ON)
+				float2 RTD_LIG_UV = input.dynamicLightmapUV;
+			#else
+				float2 RTD_LIG_UV = input.staticLightmapUV;
+			#endif
 
 			//=========
 
-			float4 shadow_mask = SAMPLE_SHADOWMASK(input.lightmapUV);
+			float4 shadow_mask = SAMPLE_SHADOWMASK(RTD_LIG_UV);
 
 			#if defined(SHADOWS_SHADOWMASK) && defined(LIGHTMAP_ON)
 				half4 shadowMask = shadow_mask;
-			//#elif !defined (LIGHTMAP_ON)
-				//half4 shadowMask = unity_ProbesOcclusion;
+			#elif !defined (LIGHTMAP_ON)
+				half4 shadowMask = unity_ProbesOcclusion;
 			#else
 				half4 shadowMask = half4(1.0, 1.0, 1.0, 1.0);
 			#endif
@@ -916,7 +988,6 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 
 			half3 color = (half3)0.0;
 			float3 A_L_O = (float3)0.0;
-			float3 baked_GI = (float3)1.0;
 
 			half isFrontFace = ( facing >= 0 ? 1 : 0 );
 			float4 objPos = mul ( GetObjectToWorldMatrix(), float4(0.0,0.0,0.0,1.0) );
@@ -924,16 +995,22 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			half RTD_OB_VP_CAL = distance(objPos.rgb, _WorldSpaceCameraPos);
 			half2 RTD_VD_Cal = (float2((sceneUVs.x * 2.0 - 1.0) * (_ScreenParams.r / _ScreenParams.g), sceneUVs.y * 2.0 - 1.0).rg * RTD_OB_VP_CAL);
 
+			float3 positionWS = input.positionWSAndFogFactor.xyz;
 			input.normalWS = normalize(input.normalWS);
 			float3x3 tangentTransform = float3x3( input.tangentWS, input.bitangentWS, input.normalWS);
-			float3 viewDirection = normalize(_WorldSpaceCameraPos.xyz - input.posWorld.xyz);
+
 
 			//RT_NM
 			float3 normalLocal = RT_NM(input.uv, positionWS, tangentTransform, input.normalWS);
+			//==
 
+
+			float3 viewDirection = normalize(_WorldSpaceCameraPos.xyz - input.posWorld.xyz);
 			float3 normalDirection = normalize(mul( normalLocal, tangentTransform ));
 			float3 viewReflectDirection = reflect( -viewDirection, normalDirection );
 
+
+			//**
 			half2 RTD_TC_TP_OO;
 			if (!_TexturePatternStyle)
 			{
@@ -943,6 +1020,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			{
 				RTD_TC_TP_OO = RTD_VD_Cal;
 			}
+			//**
+
 
 			#ifdef N_F_TP_ON
 				half4 _MainTex_var = RT_Tripl_Default(_MainTex, sampler_MainTex, positionWS, normalDirection);
@@ -960,6 +1039,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 				LODFadeCrossFade(input.positionCS);
 			#endif
 
+
+			//**
 			half3 _RTD_MVCOL;
 			if (!_MVCOL)
 			{
@@ -970,8 +1051,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 				_RTD_MVCOL = input.vertexColor.rgb;
 			}
 
-			uint meshRenderingLayers = GetMeshRenderingLayer();//
-
+			uint meshRenderingLayers = GetMeshRenderingLayer();
+			//**
 
 
 			//
@@ -990,7 +1071,7 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 
 			//RT_MCAP
 			half3 MCapOutP = RT_MCAP(input.uv, normalDirection);
-
+			//==
 
 
 			//
@@ -998,39 +1079,50 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 				_MainColor = float4(LinearToGamma22(_MainColor.rgb),_MainColor.a);
 			#endif
 			//
-			half3 _MC_MCP = (_MainColor.rgb * _MaiColPo);
 
+
+			half3 _MC_MCP = (_MainColor.rgb * _MaiColPo);
 
 
 			//RT_SSAO
 			half3 SSAmOc = RT_SSAO(input.positionCS);
+			//==
 
 
 			//RT_MCAP_SUB1
 			half3 RTD_TEX_COL;
 			half3 RTD_MCIALO_IL = RT_MCAP_SUB1(MCapOutP, _MainTex_var, _RTD_MVCOL, RTD_TEX_COL);
-			//
+			//==
+
 
 			//RT_TRANS_CO
 			half RTD_TRAN_OPA_Sli;
 			half RTD_CO;
 			half3 GLO_OUT = (half3)0.0;
 			RT_TRANS_CO(input.uv, _MainTex_var, RTD_TRAN_OPA_Sli, RTD_CO, positionWS, normalDirection, input.positionCS.xy, GLO_OUT);
+			//==
+
 
 			//RT_SON
 			float3 RTD_SON_CHE_1;
 			float3 RTD_SON = RT_SON(input.vertexColor, input.smoNorm, normalDirection, RTD_SON_CHE_1);
+			//==
+
 
 			//RT_RELGI
 			float3 RTD_GI_FS_OO = RT_RELGI(RTD_SON);
+			//==
+
 
 			//RT_SCT
 			half3 RTD_SCT = RT_SCT(input.uv, positionWS, normalDirection, RTD_MCIALO_IL);
+			//==
+
 
 			//RT_PT
 			half3 RTD_PT_COL;
 			half RTD_PT = RT_PT(RTD_VD_Cal, RTD_PT_COL);
-
+			//==
 
 
 			//
@@ -1046,7 +1138,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			//
 
 
-
+			//========/
+			//========/
 			#if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
 				Light mainLight = GetMainLight(input.shadowCoord, positionWS, shadowMask);
 			#elif defined(MAIN_LIGHT_CALCULATE_SHADOWS)
@@ -1059,13 +1152,16 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			half mainliSAtt = 0.0;
 			float3 mainliDir = float3(0.0,0.0,0.0);
 
-			if (IsMatchingLightLayer(mainLight.layerMask, meshRenderingLayers))
-			{
-				mainliCol = mainLight.color.rgb;
-				mainliSAtt = mainLight.shadowAttenuation;
-				mainliDir = mainLight.direction;
-			}
-
+			#ifdef _LIGHT_LAYERS
+				if (IsMatchingLightLayer(mainLight.layerMask, meshRenderingLayers))
+			#endif
+				{
+					mainliCol = mainLight.color.rgb;
+					mainliSAtt = mainLight.shadowAttenuation;
+					mainliDir = mainLight.direction;
+				}
+			//========/
+			//========/
 
 
 			#ifndef N_F_OFLMB_ON
@@ -1113,11 +1209,13 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 
 			//RT_CLD
 			float3 RTD_CLD = RT_CLD(lightDirection);
-
+			//==
 
 
 			#ifndef N_F_OFLMB_ON
 
+
+				//**
 				half3 RTD_ST_SS_AVD_OO;
 				if (!_SelfShadowShadowTAtViewDirection)
 				{
@@ -1127,11 +1225,15 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 				{
 					RTD_ST_SS_AVD_OO = viewDirection;
 				}
+				//**
+
 
 				half RTD_NDOTL = 0.5 * dot(RTD_ST_SS_AVD_OO, float3(RTD_SON.x, RTD_SON.y * (1-_LigIgnoYNorDir), RTD_SON.z)) + 0.5;
 				half RTD_LVLC = RTD_LVLC_F(lightColor.rgb);
 				half3 lig_col_int = (_LightIntensity * lightColor.rgb);
 
+
+				//**
 				half3 RTD_LAS;
 				if (!_LightAffectShadow)
 				{
@@ -1141,6 +1243,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 				{
 					RTD_LAS = ss_col * lig_col_int;
 				}
+				//**
+
 
 			#else
 				half3 RTD_ST_SS_AVD_OO = (half3)0.0;
@@ -1149,7 +1253,6 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 				half3 lig_col_int = (half3)0.0;
 				half3 RTD_LAS = (half3)0.0;
 			#endif
-
 
 
 			//
@@ -1164,6 +1267,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			#endif
 			//
 
+
+			//**
 			half3 RTD_MC_SM_TC_OO;
 			if (!_SPECMODE)
 			{
@@ -1173,7 +1278,10 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			{
 				RTD_MC_SM_TC_OO = RTD_TEX_COL + _MC_MCP;
 			}
+			//**
 
+
+			//**
 			half3 RTD_MCIALO_OO;
 			if (!_MCIALO)
 			{
@@ -1183,19 +1291,26 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			{
 				RTD_MCIALO_OO = lerp(RTD_MC_SM_TC_OO, _MainTex_var.rgb * MCapOutP * _RTD_MVCOL * 0.7, clamp((RTD_LVLC * 1.0), 0.0, 1.0));
 			}
+			//**
+
 
 			half3 RTD_MCIALO = RTD_MCIALO_OO;
+
 
 			//RT_GLO
 			half RTD_GLO;
 			half3 RTD_GLO_COL;
 			RT_GLO(input.uv, RTD_VD_Cal, halfDirection, normalDirection, viewDirection, positionWS, RTD_GLO, RTD_GLO_COL);
 			half3 RTD_GLO_OTHERS = RTD_GLO;
+			//**
+
 
 			//RT_RL
 			half3 RTD_RL_LARL_OO;
 			half RTD_RL_MAIN;
 			half RTD_RL_CHE_1 = RT_RL(viewDirection, normalDirection, lightColor, RTD_RL_LARL_OO, RTD_RL_MAIN);
+			//**
+
 
 			//RT_ST
 			half3 RTD_SHAT_COL;
@@ -1203,14 +1318,18 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			half RTD_ST_IS;
 			half3 RTD_ST_LAF;
 			half RTD_ST = RT_ST(input.uv, positionWS, normalDirection, RTD_NDOTL, attenuation, lightDirection, RTD_LVLC, RTD_PT_COL, lig_col_int, RTD_SCT, RTD_OSC, RTD_PT, RTD_SHAT_COL, RTD_STIAL, RTD_ST_IS, RTD_ST_LAF);
+			//**
+
 
 			//RT_SS
 			half RTD_SS = RT_SS(input.vertexColor, RTD_NDOTL, attenuation, _MainLightShadowData.x);
+			//**
+
 
 			//RT_RELGI_SUB1
 			half ref_int_val;
-			half3 RTD_SL_OFF_OTHERS = RT_RELGI_SUB1(input.lightmapUV, RTD_GI_FS_OO, RTD_SHAT_COL, RTD_MCIALO, RTD_STIAL, mainLight, normalDirection);
-
+			half3 RTD_SL_OFF_OTHERS = RT_RELGI_SUB1(RTD_LIG_UV, RTD_GI_FS_OO, RTD_SHAT_COL, RTD_MCIALO, RTD_STIAL, mainLight, normalDirection, positionWS, viewDirection, input.positionCS.xy );
+			//==
 
 
 			#ifndef N_F_OFLMB_ON
@@ -1220,22 +1339,28 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			#endif
 
 
-
 			//RT_R
 			half3 RTD_R = RT_R(input.uv, viewReflectDirection, viewDirection, normalDirection, RTD_TEX_COL, RTD_R_OFF_OTHERS, positionWS);
+			//==
+
 
 			//RT_SL
 			half3 RTD_SL_CHE_1;
 			half3 RTD_SL = RT_SL(input.uv, positionWS, normalDirection, RTD_SL_OFF_OTHERS, RTD_TEX_COL, RTD_R, RTD_SL_CHE_1);
+			//==
+
 
 			//RT_RL_SUB1
 			half3 RTD_RL = RT_RL_SUB1(RTD_SL_CHE_1, RTD_RL_LARL_OO, RTD_RL_MAIN);
+			//==
+
 
 			half3 RTD_CA_OFF_OTHERS = (RTD_RL + RTD_SL);
-
 			half3 main_light_output = RTD_CA_OFF_OTHERS;
 
 
+			//========/
+			//========/
 			#ifndef N_F_OFLMB_ON
 
 				#ifdef _ADDITIONAL_LIGHTS
@@ -1254,20 +1379,22 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 								{
 									Light light = GetAdditionalLight(lightIndex, input.posWorld.xyz, shadowMask);
 
-							#ifdef _LIGHT_LAYERS
-									if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
-							#endif
-									{
-										#if N_F_USETLB_ON
-											A_L_O += RT_ADD_LI(light, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex);
-										#else
-											A_L_O = max(RT_ADD_LI(light, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex),A_L_O);
-										#endif
-									}
-								}
+								#ifdef _LIGHT_LAYERS
+										if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
 								#endif
+										{
+											#if N_F_USETLB_ON
+												A_L_O += RT_ADD_LI(light, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex);
+											#else
+												A_L_O = max(RT_ADD_LI(light, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex),A_L_O);
+											#endif
+										}
+								}
+
+							#endif
 
 							LIGHT_LOOP_BEGIN(pixelLightCount)
+
 								Light light = GetAdditionalLight(lightIndex, input.posWorld.xyz, shadowMask);
 
 								#ifdef _LIGHT_LAYERS
@@ -1280,6 +1407,7 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 										A_L_O = max(RT_ADD_LI(light, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex),A_L_O);
 									#endif
 								}
+
 							LIGHT_LOOP_END
 
 					#endif
@@ -1287,7 +1415,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 				#endif
 
 			#endif
-
+			//========/
+			//========/
 
 
 			#ifndef N_F_OFLMB_ON
@@ -1301,7 +1430,6 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			#endif
 
 
-
 			#if N_F_TRANS_ON
 				float Trans_Val = 1.0;
 				#ifndef N_F_CO_ON
@@ -1313,6 +1441,7 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 
 			//RT_CA
 			float3 RTD_CA = RT_CA(color * SSAmOc + GLO_OUT);
+			//==
 
 //SSOL_NU
 //SSOL
@@ -1330,15 +1459,18 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 float3 Init_FO=RTD_CA*RTD_SON_CHE_1;
 //#endif//SSOL
 
+
 			//RT_NFD
 			#ifdef N_F_NFD_ON
 				RT_NFD(input.positionCS.xy);
 			#endif
+			//==
+
 
 			float fogFactor = input.positionWSAndFogFactor.w;
 
 			color = MixFog(Init_FO, fogFactor);
-			outColor = half4(color, Trans_Val);
+			outColor = half4( color , Trans_Val);
 
 			#ifdef _WRITE_RENDERING_LAYERS
 				uint renderingLayers = GetMeshRenderingLayer();
@@ -1356,16 +1488,18 @@ float3 Init_FO=RTD_CA*RTD_SON_CHE_1;
         Name "ShadowCaster"
         Tags{"LightMode" = "ShadowCaster"}
 
+        Cull [_Culling]
 		ZWrite On
-        ColorMask R
-        Cull[_Culling]
+		ZTest LEqual
+        ColorMask 0
 
         HLSLPROGRAM
         #pragma only_renderers d3d9 d3d11 vulkan glcore gles3 gles metal xboxone ps4 xboxseries playstation switch 
 #pragma target 2.0 //targetsc
 
         #pragma multi_compile_instancing
-		#pragma multi_compile _ DOTS_INSTANCING_ON
+
+		#include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl" 
 
 		#pragma shader_feature_local_fragment N_F_TRANS_ON
 		#pragma shader_feature_local_fragment N_F_SIMTRANS_ON
@@ -1375,8 +1509,8 @@ float3 Init_FO=RTD_CA*RTD_SON_CHE_1;
 		#pragma shader_feature_local_fragment N_F_CO_ON
 		#pragma shader_feature_local_fragment N_F_NFD_ON
 		#pragma shader_feature_local_fragment N_F_TP_ON
-		#pragma shader_feature_local_vertex N_F_SE_ON
 		#pragma shader_feature_local_fragment N_F_SCO_ON
+		#pragma shader_feature_local_vertex N_F_SE_ON
 
 		#pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
 		#pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
@@ -1442,7 +1576,6 @@ uint4 indices : BLENDINDICES;//DOTS_LiBleSki_SC
 			positionWS = normalWS * scale.xxx + positionWS;
 			float4 positionCS = TransformWorldToHClip( positionWS );
 
-
 			#if UNITY_REVERSED_Z
 				positionCS.z = min(positionCS.z, UNITY_NEAR_CLIP_VALUE) + -_ReduSha * 0.01;
 			#else
@@ -1491,17 +1624,20 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 
 			VertexPositionInputs vertexInput = GetVertexPositionInputs(_LBS_CD_Position.xyz);
 
+
 			//RT_SE
 			#if N_F_SE_ON
 				input.positionOS = RT_SE(vertexInput.positionWS, input.positionOS);
 				_LBS_CD_Position = input.positionOS;
 			#endif
+			//==
+
 
             //output.positionCS = vertexInput.positionCS; //might remove
 			output.positionWS = TransformObjectToWorld(_LBS_CD_Position.xyz);
 			output.normalWS = TransformObjectToWorldDir(_LBS_CD_Normal);
             output.projPos = ComputeScreenPos (output.positionCS);
-			output.positionCS = GetShadowPositionHClip(input , output.positionWS, output.normalWS);
+			output.positionCS = GetShadowPositionHClip(input, output.positionWS, output.normalWS);
 
 			return output;
 
@@ -1514,12 +1650,12 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 
 			float4 objPos = mul ( GetObjectToWorldMatrix(), float4(0.0,0.0,0.0,1.0) );
             float2 sceneUVs = (input.projPos.xy / input.projPos.w);
-
 			half RTD_OB_VP_CAL = distance(objPos.rgb,_WorldSpaceCameraPos);
 			half2 RTD_VD_Cal = (float2((sceneUVs.x * 2.0 - 1.0)*(_ScreenParams.r/_ScreenParams.g), sceneUVs.y * 2.0 - 1.0).rg*RTD_OB_VP_CAL);
 
-			half2 _TexturePatternStyle_var;
 
+			//**
+			half2 _TexturePatternStyle_var;
 			if (!_TexturePatternStyle)
 			{
 				_TexturePatternStyle_var = input.uv;
@@ -1528,6 +1664,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			{
 				_TexturePatternStyle_var = RTD_VD_Cal;
 			}
+			//**
+
 
 			#ifdef N_F_TP_ON
 				half4 _MainTex_var = RT_Tripl_Default(_MainTex, sampler_MainTex, input.positionWS, input.normalWS);
@@ -1535,7 +1673,9 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 				half4 _MainTex_var = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, TRANSFORM_TEX(_TexturePatternStyle_var, _MainTex));
 			#endif
 
+
 			#if N_F_TRANSAFFSHA_ON
+
 
 				//RT_TRANS_CO
 				half RTD_TRAN_OPA_Sli;
@@ -1549,13 +1689,18 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 						clip(saturate((0.74 > 0.5 ? (1.0 - (1.0 - 2.0 * (0.74 - 0.5)) * (1.0 - dither)) : (2.0 * 0.74 * dither))) - 0.5);
 					#endif
 				#endif
+				//==
+
 
 			#endif
+
 
 			//RT_NFD
 			#ifdef N_F_NFD_ON
 				RT_NFD(input.positionCS.xy);
 			#endif
+			//==
+
 
 			#ifdef LOD_FADE_CROSSFADE
 				LODFadeCrossFade(input.positionCS);
@@ -1568,8 +1713,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
     }
 
 	Pass
-        {
- 
+    {
+
         Name "GBuffer"
 		Tags{"LightMode" = "UniversalGBuffer"}
 
@@ -1589,38 +1734,43 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
         HLSLPROGRAM
 
         #pragma only_renderers d3d9 d3d11 vulkan glcore gles3 gles metal xboxone ps4 xboxseries playstation switch
-#pragma target 2.0 //targetgb
+		#pragma target 4.5
 
 		#pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
 		#pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
+		#pragma multi_compile _ EVALUATE_SH_MIXED EVALUATE_SH_VERTEX
 		#pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
 		#pragma multi_compile_fragment _ _REFLECTION_PROBE_BLENDING
 		#pragma multi_compile_fragment _ _REFLECTION_PROBE_BOX_PROJECTION
-		#pragma multi_compile_fragment _ _DBUFFER_MRT1 _DBUFFER_MRT2 _DBUFFER_MRT3
-        #pragma multi_compile_fragment _ _SHADOWS_SOFT
+		#pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
 		#pragma multi_compile_fragment _ _SCREEN_SPACE_OCCLUSION
+		#pragma multi_compile_fragment _ _DBUFFER_MRT1 _DBUFFER_MRT2 _DBUFFER_MRT3
 		#pragma multi_compile_fragment _ _LIGHT_COOKIES
-		#pragma multi_compile_fragment _ _LIGHT_LAYERS
-		#pragma multi_compile_fragment _ _WRITE_RENDERING_LAYERS
+		#pragma multi_compile _ _LIGHT_LAYERS
 		#pragma multi_compile_fragment _ _RENDER_PASS_ENABLED
+
+		#include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/RenderingLayers.hlsl"
+		#include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ProbeVolumeVariants.hlsl"
+		#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UnityGBuffer.hlsl"
 
 		#pragma multi_compile _ LIGHTMAP_SHADOW_MIXING
 		#pragma multi_compile _ SHADOWS_SHADOWMASK
 		#pragma multi_compile _ DIRLIGHTMAP_COMBINED
 		#pragma multi_compile _ LIGHTMAP_ON
-		#pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
+		#pragma multi_compile _ DYNAMICLIGHTMAP_ON
+        #pragma multi_compile _ USE_LEGACY_LIGHTMAPS
+		#pragma multi_compile _ LOD_FADE_CROSSFADE
 		#pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
 
         #pragma multi_compile_fog
-
         #pragma multi_compile_instancing
 		#pragma instancing_options renderinglayer
-		#pragma multi_compile _ DOTS_INSTANCING_ON
+
+		#include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
 
         #pragma vertex LitPassVertex
         #pragma fragment LitPassFragment
 
-		#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UnityGBuffer.hlsl"
 		#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
 		#include "Assets/RealToon/RealToon Shaders/RealToon Core/URP/RT_URP_Core.hlsl"
 
@@ -1678,7 +1828,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
             float3 normalOS     : NORMAL;
             float4 tangentOS    : TANGENT;
             float2 uv           : TEXCOORD0;
-			float2 lightmapUV   : TEXCOORD1;
+			float2 staticLightmapUV   : TEXCOORD1;
+			float2 dynamicLightmapUV  : TEXCOORD2;
 			float4 vertexColor	: COLOR;
 		#if defined(UNITY_DOTS_INSTANCING_ENABLED)
 
@@ -1697,18 +1848,23 @@ uint4 indices : BLENDINDICES;//DOTS_LiBleSki_GB
         {
 
             float2 uv						: TEXCOORD0;
-			float2 lightmapUV				: TEXCOORD1;
-            float4 positionWSAndFogFactor   : TEXCOORD2; 
-            half3  normalWS                 : TEXCOORD3;
-            half3 tangentWS                 : TEXCOORD4;
-            half3 bitangentWS               : TEXCOORD5;
+            float4 positionWSAndFogFactor   : TEXCOORD1; 
+            float3 normalWS					: TEXCOORD2;
+            float3 tangentWS                : TEXCOORD3;
+            float3 bitangentWS              : TEXCOORD4;
+			float4 posWorld					: TEXCOORD5;
 
 #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
             float4 shadowCoord              : TEXCOORD6; 
 #endif
 			float4 projPos					: TEXCOORD7;
-			float4 posWorld					: TEXCOORD8;
-			float3 smoNorm					: TEXCOORD9;
+
+			float2 staticLightmapUV			: TEXCOORD8;
+		#ifdef DYNAMICLIGHTMAP_ON
+			float2 dynamicLightmapUV		: TEXCOORD9;
+		#endif
+
+			float3 smoNorm					: TEXCOORD10;
 			float4 vertexColor				: COLOR;
             float4 positionCS               : SV_POSITION;
 			UNITY_VERTEX_INPUT_INSTANCE_ID
@@ -1753,11 +1909,14 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
             VertexPositionInputs vertexInput = GetVertexPositionInputs(_LBS_CD_Position.xyz);
 			VertexNormalInputs vertexNormalInput = GetVertexNormalInputs(_LBS_CD_Normal, _LBS_CD_Tangent);
 
+
 			//RT_SE
 			#if N_F_SE_ON
 				input.positionOS = RT_SE(vertexInput.positionWS, input.positionOS);
 				_LBS_CD_Position = input.positionOS;
 			#endif
+			//==
+
 
 			//RT_PA
 			#if N_F_PA_ON
@@ -1765,26 +1924,35 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			#else
 				output.positionCS = vertexInput.positionCS;
 			#endif
+			//==
+
 
 			output.uv = input.uv;
             output.vertexColor = input.vertexColor;
-	
-            output.normalWS = vertexNormalInput.normalWS;
+
+			output.normalWS = vertexNormalInput.normalWS;
             output.tangentWS = vertexNormalInput.tangentWS;
             output.bitangentWS = vertexNormalInput.bitangentWS;
 
 			float fogFactor = ComputeFogFactor(vertexInput.positionCS.z);
             output.positionWSAndFogFactor = float4(vertexInput.positionWS, fogFactor);
-
+				
 			output.posWorld = float4(vertexInput.positionWS, 1.0);
 			output.projPos = ComputeScreenPos (output.positionCS);
 
-			OUTPUT_LIGHTMAP_UV(input.lightmapUV, unity_LightmapST, output.lightmapUV);
-			
+			OUTPUT_LIGHTMAP_UV(input.staticLightmapUV, unity_LightmapST, output.staticLightmapUV);
+			#ifdef DYNAMICLIGHTMAP_ON
+				output.dynamicLightmapUV = input.dynamicLightmapUV.xy * unity_DynamicLightmapST.xy + unity_DynamicLightmapST.zw;
+			#endif
+
+
+
 			//RT_SON
 			#if N_F_SON_ON
 				output.smoNorm = GetAbsolutePositionWS(vertexInput.positionWS);
 			#endif
+			//==
+
 
 #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
 
@@ -1795,22 +1963,23 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
         }
 
         void LitPassFragment(
-			Varyings input
-			, out half4 GBuffer0 : SV_Target0
-			, out half4 GBuffer1 : SV_Target1
-			, out half4 GBuffer2 : SV_Target2
-			, out half4 GBuffer3 : SV_Target3
-			, out half4 GBuffer4 : SV_Target4
-			, out half4 Shadow_Mask : SV_Target6
-			, float facing : VFACE
-		#ifdef _WRITE_RENDERING_LAYERS
-			, out float4 outRenderingLayers : SV_Target5
-		#endif
+							Varyings input
+							, out half4 GBuffer0 : SV_Target0
+							, out half4 GBuffer1 : SV_Target1
+							, out half4 GBuffer2 : SV_Target2
+							, out half4 GBuffer3 : SV_Target3
+							, out half4 GBuffer4 : SV_Target4
+							, out half4 Shadow_Mask : SV_Target6
+							, float facing : VFACE
+						#ifdef _WRITE_RENDERING_LAYERS
+							, out float4 outRenderingLayers : SV_Target5
+						#endif
 		) 
         {
 
 			UNITY_SETUP_INSTANCE_ID (input);
 			UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
 
 			//RT_SSAO
 			half SSAmOc_GOF;
@@ -1819,32 +1988,39 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			#else
 				SSAmOc_GOF = 0;
 			#endif
+			//==
+			
 
 			GBuffer0 = half4(0.0,0.0,0.0,1);
 			GBuffer1 = half4(1.0,1.0,1.0,SSAmOc_GOF);
 			GBuffer4 = half4(0.0,0.0,0.0,0.0);
+			Shadow_Mask = half4(0.0,0.0,0.0,0.0);
 
 			float3 positionWS = input.positionWSAndFogFactor.xyz;
 
-			//=========
+			#if defined(DYNAMICLIGHTMAP_ON)
+				float2 RTD_LIG_UV = input.dynamicLightmapUV;
+			#else
+				float2 RTD_LIG_UV = input.staticLightmapUV;
+			#endif
 
-			float4 shadow_mask = SAMPLE_SHADOWMASK(input.lightmapUV);
+			//=========
+			float4 shadow_mask = SAMPLE_SHADOWMASK(RTD_LIG_UV);
 
 			#if defined(SHADOWS_SHADOWMASK) && defined(LIGHTMAP_ON)
 				half4 shadowMask = shadow_mask;
 				Shadow_Mask = shadowMask;
-			//#elif !defined (LIGHTMAP_ON)
-				//half4 shadowMask = unity_ProbesOcclusion;
+			#elif !defined (LIGHTMAP_ON)
+				half4 shadowMask = unity_ProbesOcclusion;
 			#else
 				half4 shadowMask = half4(1.0, 1.0, 1.0, 1.0);
 				Shadow_Mask = shadowMask;
 			#endif
-
 			//==========
 
 			half3 color = (half3)0.0;
 			float3 A_L_O = (float3)0.0;
-			float3 baked_GI = (float3)1.0;
+			//float3 baked_GI = (float3)1.0; // Remove
 
 			half isFrontFace = ( facing >= 0 ? 1 : 0 );
 			float4 objPos = mul ( GetObjectToWorldMatrix(), float4(0.0,0.0,0.0,1.0) );
@@ -1852,17 +2028,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			half RTD_OB_VP_CAL = distance(objPos.rgb, _WorldSpaceCameraPos);
 			half2 RTD_VD_Cal = (float2((sceneUVs.x * 2.0 - 1.0) * (_ScreenParams.r / _ScreenParams.g), sceneUVs.y * 2.0 - 1.0).rg * RTD_OB_VP_CAL);
 
-			input.normalWS = normalize(input.normalWS);
-			float3x3 tangentTransform = float3x3( input.tangentWS, input.bitangentWS, input.normalWS);
-			float3 viewDirection = normalize(_WorldSpaceCameraPos.xyz - input.posWorld.xyz);
 
-			//RT_NM
-			float3 normalLocal = RT_NM(input.uv, positionWS, tangentTransform, input.normalWS);
-
-			float3 normalDirection = normalize(mul( normalLocal, tangentTransform ));
-			GBuffer2 = half4(normalDirection,1.0);
-			float3 viewReflectDirection = reflect( -viewDirection, normalDirection );
-
+			//**
 			half2 RTD_TC_TP_OO;
 			if (!_TexturePatternStyle)
 			{
@@ -1872,6 +2039,32 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			{
 				RTD_TC_TP_OO = RTD_VD_Cal;
 			}
+			//**
+
+
+			input.normalWS = normalize(input.normalWS);
+			float3x3 tangentTransform = float3x3( input.tangentWS, input.bitangentWS, input.normalWS);
+
+
+			//RT_NM
+			float3 normalLocal = RT_NM(input.uv, positionWS, tangentTransform, input.normalWS);
+			//==
+
+
+			float3 viewDirection = normalize(_WorldSpaceCameraPos.xyz - input.posWorld.xyz);
+			float3 normalDirection = normalize(mul( normalLocal, tangentTransform ));
+			
+			#if defined(_GBUFFER_NORMALS_OCT)
+				float3 normalWS = normalize(mul( normalLocal, tangentTransform ));
+				float2 octNormalWS = PackNormalOctQuadEncode(normalWS);
+				float2 remappedOctNormalWS = saturate(octNormalWS * 0.5 + 0.5);
+				half3 packedNormalWS = PackFloat2To888(remappedOctNormalWS);
+				GBuffer2 = half4(packedNormalWS,0.0);
+			#else
+				GBuffer2 = half4(normalDirection,0.0);
+			#endif
+
+			float3 viewReflectDirection = reflect( -viewDirection, normalDirection );
 
 			#ifdef N_F_TP_ON
 				half4 _MainTex_var = RT_Tripl_Default(_MainTex, sampler_MainTex, positionWS, normalDirection);
@@ -1881,7 +2074,7 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 
 			#if defined(N_F_RDC_ON)
 				#if defined(_DBUFFER) && (!defined(N_F_TRANS_ON) || defined(N_F_CO_ON))
-							RT_DC(input.positionCS, _MainTex_var, input.normalWS);
+					RT_DC(input.positionCS, _MainTex_var, input.normalWS);
 				#endif
 			#endif
 
@@ -1902,7 +2095,6 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			uint meshRenderingLayers = GetMeshRenderingLayer();
 
 
-
 			//
 			#ifdef UNITY_COLORSPACE_GAMMA
 				_OverallShadowColor = float4(LinearToGamma22(_OverallShadowColor.rgb), _OverallShadowColor.a);
@@ -1916,10 +2108,9 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			//
 
 
-
 			//RT_MCAP
 			half3 MCapOutP = RT_MCAP(input.uv, normalDirection);
-
+			//==
 
 
 			//
@@ -1930,32 +2121,40 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			half3 _MC_MCP = (_MainColor.rgb * _MaiColPo);
 
 
-
 			//RT_MCAP_SUB1
 			half3 RTD_TEX_COL;
 			half3 RTD_MCIALO_IL = RT_MCAP_SUB1(MCapOutP, _MainTex_var, _RTD_MVCOL, RTD_TEX_COL);
-			//
+			//==
+
 
 			//RT_TRANS_CO
 			half RTD_TRAN_OPA_Sli;
 			half RTD_CO;
 			half3 GLO_OUT = (half3)0.0;
 			RT_TRANS_CO(input.uv, _MainTex_var, RTD_TRAN_OPA_Sli, RTD_CO, positionWS, normalDirection, input.positionCS.xy, GLO_OUT);
+			//==
+
 
 			//RT_SON
 			float3 RTD_SON_CHE_1;
 			float3 RTD_SON = RT_SON(input.vertexColor, input.smoNorm, normalDirection, RTD_SON_CHE_1);
+			//==
+
 
 			//RT_RELGI
 			float3 RTD_GI_FS_OO = RT_RELGI(RTD_SON);
+			//==
+
 
 			//RT_SCT
 			half3 RTD_SCT = RT_SCT(input.uv, positionWS, normalDirection, RTD_MCIALO_IL);
+			//==
+
 
 			//RT_PT
 			half3 RTD_PT_COL;
 			half RTD_PT = RT_PT(RTD_VD_Cal, RTD_PT_COL);
-
+			//==
 
 
 			//
@@ -1971,7 +2170,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			//
 
 
-
+			//========/
+			//========/
 			#if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
 				Light mainLight = GetMainLight(input.shadowCoord, positionWS, shadowMask);
 			#elif defined(MAIN_LIGHT_CALCULATE_SHADOWS)
@@ -1984,13 +2184,16 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			half mainliSAtt = 0.0;
 			float3 mainliDir = float3(0.0,0.0,0.0);
 
-			if (IsMatchingLightLayer(mainLight.layerMask, meshRenderingLayers))
-			{
-				mainliCol = mainLight.color.rgb;
-				mainliSAtt = mainLight.shadowAttenuation;
-				mainliDir = mainLight.direction;
-			}
-
+			#ifdef _LIGHT_LAYERS
+				if (IsMatchingLightLayer(mainLight.layerMask, meshRenderingLayers))
+			#endif
+				{
+					mainliCol = mainLight.color.rgb;
+					mainliSAtt = mainLight.shadowAttenuation;
+					mainliDir = mainLight.direction;
+				}
+			//========/
+			//========/
 
 
 			#ifndef N_F_OFLMB_ON
@@ -2038,11 +2241,12 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 
 			//RT_CLD
 			float3 RTD_CLD = RT_CLD(lightDirection);
-
+			//==
 
 
 			#ifndef N_F_OFLMB_ON
 
+				//**
 				half3 RTD_ST_SS_AVD_OO;
 				if (!_SelfShadowShadowTAtViewDirection)
 				{
@@ -2052,11 +2256,14 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 				{
 					RTD_ST_SS_AVD_OO = viewDirection;
 				}
+				//**
+
 
 				half RTD_NDOTL = 0.5 * dot(RTD_ST_SS_AVD_OO, float3(RTD_SON.x, RTD_SON.y * (1-_LigIgnoYNorDir), RTD_SON.z)) + 0.5;
 				half RTD_LVLC = RTD_LVLC_F(lightColor.rgb);
 				half3 lig_col_int = (_LightIntensity * lightColor.rgb);
 
+				//**
 				half3 RTD_LAS;
 				if (!_LightAffectShadow)
 				{
@@ -2066,6 +2273,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 				{
 					RTD_LAS = ss_col * lig_col_int;
 				}
+				//**
+
 
 			#else
 				half3 RTD_ST_SS_AVD_OO = (half3)0.0;
@@ -2074,7 +2283,6 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 				half3 lig_col_int = (half3)0.0;
 				half3 RTD_LAS = (half3)0.0;
 			#endif
-
 
 
 			//
@@ -2089,6 +2297,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			#endif
 			//
 
+
+			//**
 			half3 RTD_MC_SM_TC_OO;
 			if (!_SPECMODE)
 			{
@@ -2098,7 +2308,10 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			{
 				RTD_MC_SM_TC_OO = RTD_TEX_COL + _MC_MCP;
 			}
+			//**
 
+
+			//**
 			half3 RTD_MCIALO_OO;
 			if (!_MCIALO)
 			{
@@ -2108,19 +2321,26 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			{
 				RTD_MCIALO_OO = lerp(RTD_MC_SM_TC_OO, _MainTex_var.rgb * MCapOutP * _RTD_MVCOL * 0.7, clamp((RTD_LVLC * 1.0), 0.0, 1.0));
 			}
+			//**
+
 
 			half3 RTD_MCIALO = RTD_MCIALO_OO;
+
 
 			//RT_GLO
 			half RTD_GLO;
 			half3 RTD_GLO_COL;
 			RT_GLO(input.uv, RTD_VD_Cal, halfDirection, normalDirection, viewDirection, positionWS, RTD_GLO, RTD_GLO_COL);
 			half3 RTD_GLO_OTHERS = RTD_GLO;
+			//==
+
 
 			//RT_RL
 			half3 RTD_RL_LARL_OO;
 			half RTD_RL_MAIN;
 			half RTD_RL_CHE_1 = RT_RL(viewDirection, normalDirection, lightColor, RTD_RL_LARL_OO, RTD_RL_MAIN);
+			//==
+
 
 			//RT_ST
 			half3 RTD_SHAT_COL;
@@ -2128,14 +2348,18 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			half RTD_ST_IS;
 			half3 RTD_ST_LAF;
 			half RTD_ST = RT_ST(input.uv, positionWS, normalDirection, RTD_NDOTL, attenuation, lightDirection, RTD_LVLC, RTD_PT_COL, lig_col_int, RTD_SCT, RTD_OSC, RTD_PT, RTD_SHAT_COL, RTD_STIAL, RTD_ST_IS, RTD_ST_LAF);
+			//==
+
 
 			//RT_SS
 			half RTD_SS = RT_SS(input.vertexColor, RTD_NDOTL, attenuation, _MainLightShadowData.x);
+			//==
+
 
 			//RT_RELGI_SUB1
 			half ref_int_val;
-			half3 RTD_SL_OFF_OTHERS = RT_RELGI_SUB1(input.lightmapUV, RTD_GI_FS_OO, RTD_SHAT_COL, RTD_MCIALO, RTD_STIAL, mainLight, normalDirection);
-
+			half3 RTD_SL_OFF_OTHERS = RT_RELGI_SUB1(RTD_LIG_UV, RTD_GI_FS_OO, RTD_SHAT_COL, RTD_MCIALO, RTD_STIAL, mainLight, normalDirection, positionWS, viewDirection, input.positionCS.xy );
+			//==
 
 
 			#ifndef N_F_OFLMB_ON
@@ -2148,19 +2372,26 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 
 			//RT_R
 			half3 RTD_R = RT_R(input.uv, viewReflectDirection, viewDirection, normalDirection, RTD_TEX_COL, RTD_R_OFF_OTHERS, positionWS);
+			//==
+
 
 			//RT_SL
 			half3 RTD_SL_CHE_1;
 			half3 RTD_SL = RT_SL(input.uv, positionWS, normalDirection, RTD_SL_OFF_OTHERS, RTD_TEX_COL, RTD_R, RTD_SL_CHE_1);
+			//==
+
 
 			//RT_RL_SUB1
 			half3 RTD_RL = RT_RL_SUB1(RTD_SL_CHE_1, RTD_RL_LARL_OO, RTD_RL_MAIN);
+			//==
+
 
 			half3 RTD_CA_OFF_OTHERS = (RTD_RL + RTD_SL);
-
 			half3 main_light_output = RTD_CA_OFF_OTHERS;
 
 
+			//========/
+			//========/
 			#ifndef N_F_OFLMB_ON
 
 				#ifdef _ADDITIONAL_LIGHTS
@@ -2212,7 +2443,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 				#endif
 
 			#endif
-
+			//========/
+			//========/
 
 
 			#ifndef N_F_OFLMB_ON
@@ -2224,7 +2456,6 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			#else
 				color = main_light_output;
 			#endif
-
 
 
 			#if N_F_TRANS_ON
@@ -2255,10 +2486,13 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 float3 Init_FO=RTD_CA*RTD_SON_CHE_1;
 //#endif//SSOL
 
+
 			//RT_NFD
 			#ifdef N_F_NFD_ON
 				RT_NFD(input.positionCS.xy);
 			#endif
+			//==
+
 
 			float fogFactor = input.positionWSAndFogFactor.w;
 
@@ -2278,16 +2512,16 @@ float3 Init_FO=RTD_CA*RTD_SON_CHE_1;
 
         ENDHLSL
 
-        }
+    }
 
 	Pass
     {
         Name "DepthOnly"
         Tags{"LightMode" = "DepthOnly"}
 
+        Cull [_Culling]
 		ZWrite On
         ColorMask R
-        Cull [_Culling]
 
         HLSLPROGRAM
 
@@ -2298,7 +2532,9 @@ float3 Init_FO=RTD_CA*RTD_SON_CHE_1;
         #pragma fragment DepthOnlyFragment
 
         #pragma multi_compile_instancing
-		#pragma multi_compile _ DOTS_INSTANCING_ON
+
+		#include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
+
 		#pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
 
 		#pragma shader_feature_local_vertex N_F_DDMD_ON
@@ -2333,7 +2569,8 @@ uint4 indices : BLENDINDICES;//DOTS_LiBleSki_DO
 		struct Varyings
 		{
 			float2 uv           : TEXCOORD0;
-			float3 positionWS	: TEXCOORD1;
+			float4 projPos		: TEXCOORD1;
+			float3 positionWS	: TEXCOORD2;
 			float4 positionCS   : SV_POSITION;
 			UNITY_VERTEX_INPUT_INSTANCE_ID
 			UNITY_VERTEX_OUTPUT_STEREO
@@ -2343,6 +2580,7 @@ uint4 indices : BLENDINDICES;//DOTS_LiBleSki_DO
 		{
 			Varyings output = (Varyings)0;
 			UNITY_SETUP_INSTANCE_ID(input);
+			UNITY_TRANSFER_INSTANCE_ID(input, output);
 			UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 
 		#if defined(UNITY_DOTS_INSTANCING_ENABLED)
@@ -2369,16 +2607,16 @@ DOTS_LiBleSki(input.indices, input.weights, input.position.xyz, input.normalOS.x
 			//float3 _LBS_CD_Normal = input.normalOS; //not currently needed
 			//float4 _LBS_CD_Tangent = input.tangentOS; //not currently needed
 		#endif
-	
-			VertexPositionInputs vertexInput = GetVertexPositionInputs(_LBS_CD_Position.xyz);
+			
+		    VertexPositionInputs vertexInput = GetVertexPositionInputs(_LBS_CD_Position.xyz);
 			output.positionWS = TransformObjectToWorld(_LBS_CD_Position.xyz);
-
 
 			//RT_SE
 			#if N_F_SE_ON
 				input.position = RT_SE(output.positionWS, input.position);
 				_LBS_CD_Position = input.position;
 			#endif
+			//==
 
 
 			//RT_PA
@@ -2387,18 +2625,24 @@ DOTS_LiBleSki(input.indices, input.weights, input.position.xyz, input.normalOS.x
 			#else
 				output.positionCS = TransformObjectToHClip(_LBS_CD_Position.xyz);
 			#endif
+			//
+
 
 			return output;
 		}
 
 		half4 DepthOnlyFragment(Varyings input) : SV_TARGET
 		{
+			UNITY_SETUP_INSTANCE_ID(input);
 			UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
 
 			//RT_NFD
 			#ifdef N_F_NFD_ON
 				RT_NFD(input.positionCS.xy);
 			#endif
+			//==
+
 
 			#ifdef LOD_FADE_CROSSFADE
 				LODFadeCrossFade(input.positionCS);
@@ -2429,12 +2673,17 @@ DOTS_LiBleSki(input.indices, input.weights, input.position.xyz, input.normalOS.x
 
 
         #pragma shader_feature_local _NORMALMAP
+		#pragma shader_feature_local _PARALLAXMAP
+		#pragma shader_feature_local _ _DETAIL_MULX2 _DETAIL_SCALED
         #pragma shader_feature_local_fragment _ALPHATEST_ON
         #pragma shader_feature_local_fragment _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
 
         #pragma multi_compile_instancing
-        #pragma multi_compile _ DOTS_INSTANCING_ON
+
+		#include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
 		#pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
+
+		#include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/RenderingLayers.hlsl"
 
 		#pragma shader_feature_local_fragment N_F_TRANS_ON
 		#pragma shader_feature_local_fragment N_F_SIMTRANS_ON
@@ -2482,6 +2731,8 @@ uint4 indices : BLENDINDICES;//DOTS_LiBleSki_DN
 			float3 normalWS     : TEXCOORD2;
 			float3 positionWS	: TEXCOORD3;
 			float4 projPos		: TEXCOORD4;
+			//float3 tangentWS    : TEXCOORD5;
+			//float3 bitangentWS  : TEXCOORD6;
 
 			UNITY_VERTEX_INPUT_INSTANCE_ID
 			UNITY_VERTEX_OUTPUT_STEREO
@@ -2491,6 +2742,7 @@ uint4 indices : BLENDINDICES;//DOTS_LiBleSki_DN
 		{
 			Varyings output = (Varyings)0;
 			UNITY_SETUP_INSTANCE_ID(input);
+			UNITY_TRANSFER_INSTANCE_ID(input, output);
 			UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
 
 		#if defined(UNITY_DOTS_INSTANCING_ENABLED)
@@ -2520,8 +2772,11 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normal.x
 
 			VertexPositionInputs vertexInput = GetVertexPositionInputs(_LBS_CD_Position.xyz);
 			VertexNormalInputs normalInput = GetVertexNormalInputs(_LBS_CD_Normal, _LBS_CD_Tangent);
-
-			output.positionWS = TransformObjectToWorld(input.positionOS.xyz); 
+			
+			output.positionWS = TransformObjectToWorld(_LBS_CD_Position.xyz);
+			output.normalWS	  = NormalizeNormalPerVertex(normalInput.normalWS);
+			//output.tangentWS = normalInput.tangentWS;
+			//output.bitangentWS = normalInput.bitangentWS;
 			output.uv = TRANSFORM_TEX(input.texcoord, _MainTex);
 
 
@@ -2530,6 +2785,7 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normal.x
 				input.positionOS = RT_SE(output.positionWS, input.positionOS);
 				_LBS_CD_Position = input.positionOS;
 			#endif
+			//==
 
 
 			//RT_PA
@@ -2538,35 +2794,32 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normal.x
 			#else
 				output.positionCS = TransformObjectToHClip(_LBS_CD_Position.xyz);
 			#endif
-
-
-			output.normalWS = NormalizeNormalPerVertex(normalInput.normalWS);
-
+			//==
 
 
 			return output;
 		}
 
-		//
 		void DepthNormalsFragment(
-			Varyings input
-			, out half4 outNormalWS : SV_Target0
-		#ifdef _WRITE_RENDERING_LAYERS
-			, out float4 outRenderingLayers : SV_Target1
-		#endif
+								Varyings input
+								, out half4 outNormalWS : SV_Target0
+							#ifdef _WRITE_RENDERING_LAYERS
+								, out float4 outRenderingLayers : SV_Target1
+							#endif
 		)
-		//
 		{
+			UNITY_SETUP_INSTANCE_ID(input);
 			UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
 			float4 objPos = mul ( GetObjectToWorldMatrix(), float4(0.0,0.0,0.0,1.0) );
             float2 sceneUVs = (input.projPos.xy / input.projPos.w);
-
 			half RTD_OB_VP_CAL = distance(objPos.rgb,_WorldSpaceCameraPos);
 			half2 RTD_VD_Cal = (float2((sceneUVs.x * 2.0 - 1.0)*(_ScreenParams.r/_ScreenParams.g), sceneUVs.y * 2.0 - 1.0).rg*RTD_OB_VP_CAL);
+			//float3x3 tangentTransform = float3x3( input.tangentWS, input.bitangentWS, input.normalWS);
 
+
+			//**
 			half2 _TexturePatternStyle_var;
-
 			if (!_TexturePatternStyle)
 			{
 				_TexturePatternStyle_var = input.uv;
@@ -2575,6 +2828,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normal.x
 			{
 				_TexturePatternStyle_var = RTD_VD_Cal;
 			}
+			//**
+
 
 			#ifdef N_F_TP_ON
 				half4 _MainTex_var = RT_Tripl_Default(_MainTex, sampler_MainTex, input.positionWS, input.normalWS);
@@ -2583,6 +2838,7 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normal.x
 			#endif
 
 			#if N_F_TRANSAFFSHA_ON
+
 
 				//RT_TRANS_CO
 				half RTD_TRAN_OPA_Sli;
@@ -2596,20 +2852,38 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normal.x
 						clip(saturate((0.74 > 0.5 ? (1.0 - (1.0 - 2.0 * (0.74 - 0.5)) * (1.0 - dither)) : (2.0 * 0.74 * dither))) - 0.5);
 					#endif
 				#endif
+				//
+
 
 			#endif
+
 
 			//RT_NFD
 			#ifdef N_F_NFD_ON
 				RT_NFD(input.positionCS.xy);
 			#endif
+			//==
+
+
+			//RT_NM
+			//float3 normalLocal = RT_NM(input.uv, input.positionWS, tangentTransform, input.normalWS);
+			//==
+
 
 			#ifdef LOD_FADE_CROSSFADE
 				LODFadeCrossFade(input.positionCS);
 			#endif
 
-			float3 normalWS = NormalizeNormalPerPixel(input.normalWS);
-			outNormalWS = half4(normalWS, 0.0);
+			#if defined(_GBUFFER_NORMALS_OCT)
+				float3 normalWS = normalize(input.normalWS);
+				float2 octNormalWS = PackNormalOctQuadEncode(normalWS);
+				float2 remappedOctNormalWS = saturate(octNormalWS * 0.5 + 0.5);
+				half3 packedNormalWS = PackFloat2To888(remappedOctNormalWS);
+				outNormalWS = half4(packedNormalWS, 0.0);
+			#else
+				float3 normalWS = NormalizeNormalPerPixel(input.normalWS);
+				outNormalWS = half4(normalWS, 0.0);
+			#endif
 
 			#ifdef _WRITE_RENDERING_LAYERS
 				uint renderingLayers = GetMeshRenderingLayer();
@@ -2635,6 +2909,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normal.x
 
 		#pragma vertex UniversalVertexMeta
 		#pragma fragment UniversalFragmentMeta
+
+		#pragma shader_feature EDITOR_VISUALIZATION
 
 		#pragma shader_feature_local_fragment N_F_SL_ON
 
@@ -2672,9 +2948,6 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normal.x
 
 		Varyings UniversalVertexMeta(Attributes input)
 		{
-			//Varyings output;
-			//output.positionCS = MetaVertexPosition(input.positionOS, input.uv1, input.uv2, unity_LightmapST, unity_DynamicLightmapST);
-			//output.uv = TRANSFORM_TEX(input.uv0, _MainTex);
 
 			//
 			Varyings output = (Varyings)0;
@@ -2692,12 +2965,12 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normal.x
 
 		half4 UniversalFragmentMeta(Varyings input) : SV_Target
 		{
-
 			#ifdef N_F_TP_ON
 				half4 _MainTex_var = RT_Tripl_Default(_MainTex, sampler_MainTex, input.positionWS, input.normalWS);
 			#else
 				half4 _MainTex_var = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, TRANSFORM_TEX(input.uv, _MainTex));
 			#endif
+
 
 			//
 			#ifdef UNITY_COLORSPACE_GAMMA
@@ -2705,22 +2978,24 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normal.x
 			#endif
 			//
 
+
 			half4 RTD_TEX_COL = _MainTex_var * (_MainColor * _MaiColPo);
+
 
 			//RT_SL
 			half3 RTD_SL_CHE_1;
 			half3 RTD_SL = RT_SL(input.uv, input.positionWS, input.normalWS, (half3)0.0, RTD_TEX_COL.rgb, (half3)0.0, RTD_SL_CHE_1);
+			//==
+
 
 			MetaInput metaInput;
 			metaInput.Albedo = RTD_TEX_COL.rgb;
 			metaInput.Emission = RTD_SL;
 
-			//
 			#ifdef EDITOR_VISUALIZATION
 				metaInput.VizUV = fragIn.VizUV;
 				metaInput.LightCoord = fragIn.LightCoord;
 			#endif
-			//
 
 			return MetaFragment(metaInput);
 		}
@@ -2728,6 +3003,106 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normal.x
 		ENDHLSL
 	}
 
+	Pass
+    {
+        Name "MotionVectors"
+        Tags { "LightMode" = "MotionVectors" }
+
+        ColorMask RG
+
+        HLSLPROGRAM
+
+		#pragma only_renderers d3d9 d3d11 vulkan glcore gles3 gles metal xboxone ps4 xboxseries playstation switch 
+		#pragma target 3.5
+
+		#pragma vertex vert
+		#pragma fragment frag
+
+		#pragma shader_feature_local_fragment N_F_TRANS_ON
+		#pragma shader_feature_local_fragment N_F_CO_ON
+		#pragma shader_feature_local_fragment N_F_NFD_ON
+		#pragma shader_feature_local_fragment N_F_TP_ON
+		#pragma shader_feature_local_fragment N_F_SCO_ON
+		#pragma shader_feature_local_vertex N_F_DDMD_ON
+		#pragma shader_feature_local_vertex N_F_PA_ON
+		#pragma shader_feature_local_vertex N_F_SE_ON
+
+        #pragma multi_compile _ LOD_FADE_CROSSFADE
+        #pragma shader_feature_local_vertex _ADD_PRECOMPUTED_VELOCITY
+
+		#include "Assets/RealToon/RealToon Shaders/RealToon Core/URP/RT_URP_Core.hlsl"
+
+		#pragma multi_compile_instancing
+		#include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
+
+		#include_with_pragmas "Packages/com.unity.render-pipelines.core/ShaderLibrary/FoveatedRenderingKeywords.hlsl"
+		#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+		#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UnityInput.hlsl"
+
+		#if defined(LOD_FADE_CROSSFADE)
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
+		#endif
+
+		#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MotionVectorsCommon.hlsl"
+		#include "Assets/RealToon/RealToon Shaders/RealToon Core/URP/Pass/RT_URP_MoVecPas.hlsl"
+
+        ENDHLSL
+    }
+
+	Pass
+    {
+        Name "XRMotionVectors"
+        Tags { "LightMode" = "XRMotionVectors" }
+
+        ColorMask RGBA
+
+        Stencil
+        {
+            WriteMask 1
+            Ref 1
+            Comp Always
+            Pass Replace
+        }
+
+        HLSLPROGRAM
+
+		#pragma only_renderers d3d9 d3d11 vulkan glcore gles3 gles metal xboxone ps4 xboxseries playstation switch 
+		#pragma target 3.5
+
+		#pragma vertex vert
+		#pragma fragment frag
+
+		#pragma shader_feature_local_fragment N_F_TRANS_ON
+		#pragma shader_feature_local_fragment N_F_CO_ON
+		#pragma shader_feature_local_fragment N_F_NFD_ON
+		#pragma shader_feature_local_fragment N_F_TP_ON
+		#pragma shader_feature_local_fragment N_F_SCO_ON
+		#pragma shader_feature_local_vertex N_F_DDMD_ON
+		#pragma shader_feature_local_vertex N_F_PA_ON
+		#pragma shader_feature_local_vertex N_F_SE_ON
+
+        #pragma multi_compile _ LOD_FADE_CROSSFADE
+        #pragma shader_feature_local_vertex _ADD_PRECOMPUTED_VELOCITY
+		#define APLICATION_SPACE_WARP_MOTION 1
+
+		#include "Assets/RealToon/RealToon Shaders/RealToon Core/URP/RT_URP_Core.hlsl"
+
+		#pragma multi_compile_instancing
+		#include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
+
+		#include_with_pragmas "Packages/com.unity.render-pipelines.core/ShaderLibrary/FoveatedRenderingKeywords.hlsl"
+		#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+		#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UnityInput.hlsl"
+
+		#if defined(LOD_FADE_CROSSFADE)
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
+		#endif
+
+		#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MotionVectorsCommon.hlsl"
+		#include_with_pragmas "Assets/RealToon/RealToon Shaders/RealToon Core/URP/Pass/RT_URP_MoVecPas.hlsl"
+
+        ENDHLSL
+    }
 }
 
 FallBack "Hidden/InternalErrorShader"

@@ -108,7 +108,7 @@ namespace VolumetricLights {
                 case LightType.Point:
                     keywords.Add(ShaderParams.SKW_POINT);
                     break;
-                case LightType.Area:
+                case LightType.Rectangle:
                     keywords.Add(ShaderParams.SKW_AREA_RECT);
                     break;
                 case LightType.Disc:
@@ -166,7 +166,7 @@ namespace VolumetricLights {
                     shape.scale = Vector3.one;
                     shape.radius = generatedRange;
                     break;
-                case LightType.Area:
+                case LightType.Rectangle:
                 case LightType.Disc:
                     shape.shapeType = ParticleSystemShapeType.Box;
                     shape.position = new Vector3(0, 0, generatedRange * 0.5f);

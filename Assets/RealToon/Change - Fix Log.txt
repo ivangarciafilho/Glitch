@@ -1330,6 +1330,7 @@ This update supports Unity 5, 2017, 2018, 2019, 2020, 2021, Unity 6 and future u
 
 - Support URP Dynamic Lightmap. (Unity 6.0 to Latest)
 - Support URP Deferred+. (Unity 6.1 to Latest)
+- Support Unity 6.1
 - Early add support for the later Unity 6.2.
 
 

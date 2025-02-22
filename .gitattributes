@@ -1,13 +1,202 @@
-*.psd filter=lfs diff=lfs merge=lfs -text
+# =====================================================
+# 1. Core Line Ending & Text Handling (Cross-Platform Compatibility)
+# =====================================================
+* text=auto eol=lf
+*.bat eol=crlf
+*.cmd eol=crlf
+
+# =====================================================
+# 2. Source Code & Text Formats
+# =====================================================
+# Programming Languages
+*.cs       text diff=csharp
+*.js       text diff=javascript
+*.ts       text diff=typescript
+*.cpp      text diff=cpp
+*.c        text diff=c
+*.h        text diff=c
+*.hpp      text diff=cpp
+*.py       text diff=python
+*.java     text diff=java
+*.php      text diff=php
+*.swift    text diff=swift
+*.rb       text diff=ruby
+*.go       text diff=golang
+*.rs       text diff=rust
+*.kt       text diff=kotlin
+*.lua      text diff=lua
+*.rpy      text diff=renpy
+
+# Shader Formats
+*.shader   text
+*.cginc    text
+*.hlsl     text
+*.glsl     text diff=glsl
+*.vert     text
+*.frag     text
+*.compute  text
+
+# Engine-Specific Text Formats
+*.unity          text merge=unityyaml
+*.prefab         text merge=unityyaml
+*.asset          text merge=unityyaml
+*.mat            text merge=unityyaml
+*.controller     text merge=unityyaml
+*.tscn           text
+*.tres           text
+*.yy             text diff=json
+*.gml            text
+
+# Config & Data Files
+*.json     text diff=json
+*.yaml     text diff=yaml
+*.yml      text diff=yaml
+*.xml      text diff=xml
+*.csv      text diff=csv
+*.toml     text
+*.ini      text
+*.log      text
+*.md       text
+*.txt      text
+
+# =====================================================
+# 3. Binary Assets (Non-LFS Default)
+# =====================================================
+# Raster Texture Formats
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.psd     binary
+*.exr     binary
+*.tga     binary
+*.tiff    binary
+*.bmp     binary
+
+# Vector Graphics
+*.svg     text diff=svg
+
+# 3D Models & Assets
+*.fbx     binary
+*.blend   binary
+*.obj     binary
+*.glb     binary
+*.gltf    text
+*.stl     binary
+*.vox     binary
+*.usd     binary
+*.usdz    binary
+*.ma      binary
+*.mb      binary
+*.max     binary
+*.c4d     binary
+
+# Audio Formats
+*.wav     binary
+*.mp3     binary
+*.ogg     binary
+*.flac    binary
+*.aiff    binary
+*.wma     binary
+*.mid     binary
+*.midi    binary
+
+# Video Formats
+*.mp4     binary
+*.mov     binary
+*.avi     binary
+*.webm    binary
+*.mkv     binary
+*.wmv     binary
+
+# Engine-Specific Binaries
+*.uasset  binary
+*.umap    binary
+*.unitypackage binary
+*.apk     binary
+*.ipa     binary
+*.pak     binary
+*.pck     binary
+
+# =====================================================
+# 4. Git LFS Tracking (Highly Recommended)
+# =====================================================
 *.png filter=lfs diff=lfs merge=lfs -text
-*.exr filter=lfs diff=lfs merge=lfs -text
-*.zip filter=lfs diff=lfs merge=lfs -text
-*.tiff filter=lfs diff=lfs merge=lfs -text
-*.tif filter=lfs diff=lfs merge=lfs -text
-*.raw filter=lfs diff=lfs merge=lfs -text
-*.fbx filter=lfs diff=lfs merge=lfs -text
 *.jpg filter=lfs diff=lfs merge=lfs -text
-*.wav filter=lfs diff=lfs merge=lfs -text
-*.obj filter=lfs diff=lfs merge=lfs -text
-*.aiff filter=lfs diff=lfs merge=lfs -text
+*.jpeg filter=lfs diff=lfs merge=lfs -text
+*.gif filter=lfs diff=lfs merge=lfs -text
+*.psd filter=lfs diff=lfs merge=lfs -text
+*.exr filter=lfs diff=lfs merge=lfs -text
 *.tga filter=lfs diff=lfs merge=lfs -text
+*.bmp filter=lfs diff=lfs merge=lfs -text
+*.fbx filter=lfs diff=lfs merge=lfs -text
+*.blend filter=lfs diff=lfs merge=lfs -text
+*.obj filter=lfs diff=lfs merge=lfs -text
+*.glb filter=lfs diff=lfs merge=lfs -text
+*.stl filter=lfs diff=lfs merge=lfs -text
+*.wav filter=lfs diff=lfs merge=lfs -text
+*.mp3 filter=lfs diff=lfs merge=lfs -text
+*.ogg filter=lfs diff=lfs merge=lfs -text
+*.flac filter=lfs diff=lfs merge=lfs -text
+*.aiff filter=lfs diff=lfs merge=lfs -text
+*.mp4 filter=lfs diff=lfs merge=lfs -text
+*.mov filter=lfs diff=lfs merge=lfs -text
+*.avi filter=lfs diff=lfs merge=lfs -text
+*.webm filter=lfs diff=lfs merge=lfs -text
+*.mkv filter=lfs diff=lfs merge=lfs -text
+*.uasset filter=lfs diff=lfs merge=lfs -text
+*.umap filter=lfs diff=lfs merge=lfs -text
+*.unitypackage filter=lfs diff=lfs merge=lfs -text
+*.apk filter=lfs diff=lfs merge=lfs -text
+*.ipa filter=lfs diff=lfs merge=lfs -text
+*.zip filter=lfs diff=lfs merge=lfs -text
+*.rar filter=lfs diff=lfs merge=lfs -text
+*.7z filter=lfs diff=lfs merge=lfs -text
+*.tar filter=lfs diff=lfs merge=lfs -text
+*.gz filter=lfs diff=lfs merge=lfs -text
+
+# =====================================================
+# 5. Merge Strategies & Conflict Prevention
+# =====================================================
+*.unity merge=unityyaml
+*.prefab merge=unityyaml
+*.asset merge=unityyaml
+
+# Lockfiles
+package-lock.json -merge
+yarn.lock -merge
+
+# Project Files
+*.csproj merge=union
+*.sln merge=union
+
+# =====================================================
+# 6. Repository Hygiene
+# =====================================================
+[Bb]uild/ linguist-generated
+[Ll]ibrary/ linguist-generated
+[Tt]emp/ linguist-generated
+[Dd]erivedDataCache/ linguist-generated
+
+# Security & Secrets
+*.env linguist-generated
+*.pem linguist-generated
+
+# OS Metadata
+.DS_Store binary
+Thumbs.db binary
+
+# =====================================================
+# 7. Special Cases
+# =====================================================
+*.ipynb binary
+*.db binary
+*.sqlite3 binary
+
+# =====================================================
+# 8. Documentation & Fonts
+# =====================================================
+*.pdf binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary

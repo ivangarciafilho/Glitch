@@ -24,12 +24,12 @@ MonoBehaviour:
   noiseTextureOptimizedSize: 256
   noiseStrength: 1.5
   noiseScale: 64
-  noiseFinalMultiplier: 1
+  noiseFinalMultiplier: 1.5
   useDetailNoise: 1
   detailTexture: {fileID: 11700000, guid: e16130adacefd47a5a21af699b8ede7a, type: 2}
   detailScale: 0.025
   detailStrength: 0.75
-  detailOffset: -0.5
+  detailOffset: -0.25
   density: 1
   shape: 0
   scaleNoiseWithHeight: 1
@@ -37,8 +37,8 @@ MonoBehaviour:
   customHeight: 0
   height: 25
   verticalOffset: 0
-  distance: 10
-  distanceFallOff: 0.9
+  distance: 5
+  distanceFallOff: 0.75
   maxDistance: 90
   maxDistanceFallOff: 1
   terrainFit: 0

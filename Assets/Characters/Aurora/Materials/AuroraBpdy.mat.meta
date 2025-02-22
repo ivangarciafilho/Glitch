@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: bc18c83dbdd4b674ab7bc92c7701ccbc
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 190760
+  packageName: 'Aurora : cyberpunk female humanoid character'
+  packageVersion: 1.0
+  assetPath: Assets/Characters/Aurora/Materials/AuroraBpdy.mat
+  uploadId: 433992

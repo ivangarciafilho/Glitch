@@ -64,9 +64,11 @@
     <Compile Include="Assets\Beautify\URP\Editor\LUTBrowser.cs" />
     <Compile Include="Assets\VolumetricLights\Editor\VolumetricLightEditor.cs" />
     <Compile Include="Assets\VolumetricFog2\Editor\Managers\PointLightManagerEditor.cs" />
+    <Compile Include="Assets\FImpossible Creations\Editor\Plugins - Editor - Animating\Bones Stimulator\BonesStimulator.Editor.Langs.cs" />
     <Compile Include="Assets\RealToon\Editor\RealToonShaderCache.cs" />
     <Compile Include="Assets\DuckType\Jiggle\Editor\JiggleEditor.cs" />
     <Compile Include="Assets\VolumetricFog2\Editor\VolumetricFogManagerEditor.cs" />
+    <Compile Include="Assets\FImpossible Creations\Editor\Plugins - Editor - Animating\Leaning Animator\LeaningAnimator.Editor.cs" />
     <Compile Include="Assets\SoxAnimationToolkit\JiggleBoneTentacle\Editor\SoxAtkSphereColliderMenu.cs" />
     <Compile Include="Assets\Beautify\URP\Editor\BeautifyOptCompiler.cs" />
     <Compile Include="Assets\SoxAnimationToolkit\LookAt\Editor\SoxAtkLookAtEditor.cs" />
@@ -76,11 +78,16 @@
     <Compile Include="Assets\SoxAnimationToolkit\JiggleBoneSimple\Editor\SoxAtkJiggleBoneSimpleEditor.cs" />
     <Compile Include="Assets\VolumetricLights\Editor\VolumetricLightsRenderFeatureEditor.cs" />
     <Compile Include="Assets\VolumetricFog2\Editor\MenuIntegration.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor\Property Drawers\FPD_HeaderDrawer.cs" />
+    <Compile Include="Assets\FImpossible Creations\Editor\Plugins - Editor - Animating\Bones Stimulator\BonesStimulator.Editor.Helpers.cs" />
     <Compile Include="Assets\RadiantGI\Editor\RadiantGlobalIlluminationEditor.cs" />
+    <Compile Include="Assets\FImpossible Creations\Editor\Plugins - Editor - Animating\Bones Stimulator\BonesStimulator.Editor.cs" />
     <Compile Include="Assets\VolumetricLights\Editor\VolumetricLightProfileEditor.cs" />
+    <Compile Include="Assets\FImpossible Creations\Editor\Plugins - Editor - Animating\Bones Stimulator\BonesStimulator.Editor.Elements.cs" />
     <Compile Include="Assets\VolumetricFog2\Editor\NoiseGenerator.cs" />
     <Compile Include="Assets\RadiantGI\Editor\RadiantRenderFeatureEditor.cs" />
     <Compile Include="Assets\RadiantGI\Editor\RadiantVirtualEmitterEditor.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor\Inspector And Scene Tools\Property Drawers\FPD_SuffixDrawer.cs" />
     <Compile Include="Assets\RealToon\Editor\SwapShaderToRealToon.cs" />
     <Compile Include="Assets\SoxAnimationToolkit\JiggleBoneTentacle\Editor\SoxAtkJiggleBoneEditor.cs" />
     <Compile Include="Assets\Beautify\URP\Editor\ContactUs.cs" />
@@ -89,9 +96,12 @@
     <Compile Include="Assets\Beautify\URP\Editor\BeautifyRenderFeatureEditor.cs" />
     <Compile Include="Assets\VolumetricFog2\Editor\VolumetricFogEditor.FoW.cs" />
     <Compile Include="Assets\Beautify\URP\Editor\BeautifyEditor.cs" />
+    <Compile Include="Assets\FImpossible Creations\Editor\Plugins - Editor - Animating\Bones Stimulator\BonesStimulator.Editor.Tabs.cs" />
     <Compile Include="Assets\VolumetricFog2\Editor\VolumetricFogShaderOptions.cs" />
     <Compile Include="Assets\Beautify\URP\Editor\FrameBrowser.cs" />
     <Compile Include="Assets\SoxAnimationToolkit\JiggleBoneTentacle\Editor\SoxAtkTentacleEditor.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor\Inspector And Scene Tools\Property Drawers\FPD_MiscDrawers.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor\Property Drawers\FPD_FixedCurveWindowDrawer.cs" />
     <Compile Include="Assets\Beautify\URP\Editor\CubeLUTImporter.cs" />
     <Compile Include="Assets\VolumetricFog2\Editor\FogPointLightEditor.cs" />
     <Compile Include="Assets\VolumetricFog2\Editor\VolumetricFogSubVolumeEditor.cs" />
@@ -102,11 +112,13 @@
     <Compile Include="Assets\VolumetricLights\Editor\VolumetricLightsTranslucencyEditor.cs" />
     <Compile Include="Assets\VolumetricFog2\Editor\VolumetricFogEditor.cs" />
     <Compile Include="Assets\RealToon\Editor\RT_Welcome.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor\Inspector And Scene Tools\Property Drawers\FPD_MinMaxSliderDrawer.cs" />
     <Compile Include="Assets\SoxAnimationToolkit\MotionPath\Editor\SoxAtkMotionPathEditor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Beautify\URP\Editor\Resources\FrameThumbnail.shader" />
     <None Include="Assets\Beautify\URP\Editor\Resources\LUTThumbnail.shader" />
+    <None Include="Assets\FImpossible Creations\Editor\Plugins - Editor - Animating\Bones Stimulator\Resources\Bones Stimulator\BonesStimulator_Langs.xml" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
@@ -1157,12 +1169,12 @@
       <HintPath>Library\ScriptAssemblies\Unity.Searcher.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.AI.Navigation">
-      <HintPath>Library\ScriptAssemblies\Unity.AI.Navigation.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Rider.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.Rider.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.AI.Navigation">
+      <HintPath>Library\ScriptAssemblies\Unity.AI.Navigation.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Recorder">
@@ -1319,10 +1331,6 @@
     </Reference>
     <Reference Include="Unity.RenderPipelines.Core.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.Core.Editor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Unity.VSCode.Editor">
-      <HintPath>Library\ScriptAssemblies\Unity.VSCode.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.State">

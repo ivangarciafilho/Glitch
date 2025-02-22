@@ -138,7 +138,7 @@ MonoBehaviour:
   cookie: 0
   distantFog: 1
   distantFogStartDistance: 5
-  distantFogDistanceDensity: 0.0125
+  distantFogDistanceDensity: 0.25
   distantFogMaxHeight: 16
   distantFogHeightDensity: 5
   distantFogColor: {r: 0.6414976, g: 0.64199996, b: 0.46352398, a: 1}

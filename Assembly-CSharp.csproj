@@ -62,46 +62,112 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\DynamicBone\Scripts\DynamicBoneColliderBase.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Fimpossible Utilities\FHierarchyShortcut.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor Tools\FEditor_OneShotLog.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Bones Stimulator\Core\BonesStimulator.Logics.Squeeze.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Math Helpers\Math\FLogicMethods.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Bones Stimulator\Core\BonesStimulator.EditorRelated.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Bones Stimulator\Core\BonesStimulator.Misc.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Math Helpers\Math\FEngineering.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Bones Stimulator\Core\BonesStimulator.Logics.Muscles.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Bones Stimulator\Core\BonesStimulator.ExtraProcessing.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Fimpossible Utilities\FimpossibleComponent.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Math Helpers\Helpers\FColorMethods.cs" />
     <Compile Include="Assets\StarterAssets\Mobile\Scripts\VirtualInputs\UIVirtualTouchZone.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Leaning Animator\Core\LeaningProcessor.GroundAlign.cs" />
     <Compile Include="Assets\DuckType\Jiggle\Jiggle.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Physics\FImp_ColliderData_Capsule.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Leaning Animator\Core\LeaningProcessor.References.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Leaning Animator\Core\LeaningProcessor.SpineGroundAlign.cs" />
     <Compile Include="Assets\DuckType\Jiggle\Extensions.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Bones Stimulator\Core\BonesStimulator.Logics.Vibrate.cs" />
     <Compile Include="Assets\StarterAssets\Mobile\Scripts\VirtualInputs\UIVirtualJoystick.cs" />
     <Compile Include="Assets\VolumetricLights\Demos\Temple\Scripts\PlayerController.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Bones Stimulator\Core\BonesStimulator.Class.Bone.Muscles.cs" />
     <Compile Include="Assets\DuckType\Jiggle\FrameRateLimiter.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\GUI Helpers\FGUI_Inspector.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Math Helpers\Animating\FAnimatorMethods.cs" />
     <Compile Include="Assets\SoxAnimationToolkit\JiggleBoneTentacle\SoxAtkCollider.cs" />
     <Compile Include="Assets\SoxAnimationToolkit\ConstraintTransform\ConstraintTransform.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Physics\FImp_ColliderData_Terrain.cs" />
     <Compile Include="Assets\SoxAnimationToolkit\SampleResources\TestResources\FPSDisplay.cs" />
     <Compile Include="Assets\SoxAnimationToolkit\LookAt\SoxAtkLookAt.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Physics\FImp_ColliderData_CharacterCapsule.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Math Helpers\Math\FEasing.cs" />
     <Compile Include="Assets\_Project\_Scripts\FollowReference.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Physics\FImp_ColliderData_Sphere.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Math Helpers\Animating\FAnimationClips.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Utils\FBasic_Enums.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Math Helpers\Helpers\FStringMethods.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Physics\FImp_ColliderData_Base.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Bones Stimulator\Core\BonesStimulator.Gizmos.cs" />
     <Compile Include="Assets\StarterAssets\Mobile\Scripts\Utilities\MobileDisableAutoSwitchControls.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor Tools\Property Attributes\FPD_SuffixAttribute.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Bones Stimulator\Core\BonesStimulator.Class.Bone.Vibration.cs" />
     <Compile Include="Assets\DuckType\Jiggle\JiggleScheduler.cs" />
     <Compile Include="Assets\DynamicBone\Scripts\DynamicBone.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\FBasic Assets\Behaviours\Character Controllers\FBasic_TestGroundMovement.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor Tools\Property Attributes\FPD_HeaderAttribute.cs" />
     <Compile Include="Assets\SoxAnimationToolkit\JiggleBoneTentacle\SoxAtkTentacle.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Physics\FImp_ColliderData_Box.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Bones Stimulator\Core\BonesStimulator.Preparations.cs" />
     <Compile Include="Assets\StarterAssets\ThirdPersonController\Scripts\ThirdPersonController.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Procedural\FMuscles.cs" />
     <Compile Include="Assets\DuckType\Jiggle\ProceduralAnimation.cs" />
     <Compile Include="Assets\RealToon\RealToon Tools\FrameByFrameRendering\FrameByFrameRendering_Manual.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Bones Stimulator\Core\BonesStimulator.Settings.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor Tools\FDebug_PerformanceTest.cs" />
     <Compile Include="Assets\RealToon\RealToon Tools\ShadowTSDFModeHelper.cs" />
     <Compile Include="Assets\RealToon\RealToon Tools\CustomShadowResolution.cs" />
     <Compile Include="Assets\SoxAnimationToolkit\JiggleBoneTentacle\SoxAtkJiggleBone.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Leaning Animator\Core\LeaningProcessor.Editor.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Bones Stimulator\Core\BonesStimulator.User.cs" />
     <Compile Include="Assets\RealToon\RealToon Tools\SmearEffectHelper.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Bones Stimulator\Core\BonesStimulator.Logics.Collision.cs" />
     <Compile Include="Assets\VolumetricLights\Demos\Minimal\Scripts\FenceGen.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Leaning Animator\Core\LeaningProcessor.MainLogics.cs" />
     <Compile Include="Assets\StarterAssets\Mobile\Scripts\VirtualInputs\UIVirtualButton.cs" />
     <Compile Include="Assets\TutorialInfo\Scripts\Readme.cs" />
     <Compile Include="Assets\RealToon\RealToon Tools\PerspectiveAdjustmentController.cs" />
     <Compile Include="Assets\RealToon\RealToon Tools\SmoothObjectNormalHelper.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Procedural\FElasticTransform.cs" />
     <Compile Include="Assets\SoxAnimationToolkit\JiggleBoneSimple\SoxAtkJiggleBoneSimple.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Leaning Animator\Core\LeaningProcessor.SetRotations.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Math Helpers\Helpers\FDebug.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Leaning Animator\Core\LeaningProcessor.Utilities.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor Tools\Property Attributes\FPD_FixedCurveWindowAttribute.cs" />
+    <Compile Include="Assets\FollowWithForce.cs" />
+    <Compile Include="Assets\SpeedTracker.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor Tools\FHierarchyIcons.cs" />
     <Compile Include="Assets\_Project\_Scripts\OscilateLight.cs" />
     <Compile Include="Assets\VolumetricLights\Demos\Minimal\Scripts\CubeGen.cs" />
     <Compile Include="Assets\RealToon\RealToon Tools\FrameByFrameRendering\FrameByFrameRendering_Default.cs" />
     <Compile Include="Assets\StarterAssets\Mobile\Scripts\CanvasInputs\UICanvasControllerInput.cs" />
     <Compile Include="Assets\DynamicBone\Scripts\DynamicBonePlaneCollider.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor Tools\FEditor_Handles.cs" />
+    <Compile Include="Assets\OscillateTransform.cs" />
     <Compile Include="Assets\VolumetricLights\Demos\Minimal\Scripts\ObjectRotate.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Bones Stimulator\BonesStimulator.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor Tools\Property Attributes\FPD_MiscAttributes.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\GUI Helpers\FGUI_Handles.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Bones Stimulator\Core\BonesStimulator.Class.Bone.cs" />
     <Compile Include="Assets\SoxAnimationToolkit\DragTransform\SoxAtkDragTransform.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Physics\FImp_ColliderData_Mesh.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\GUI Helpers\FGUI_Resources.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Math Helpers\Math\FTransformMethods.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Procedural\UniRotateBone.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Leaning Animator\LeaningAnimator.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Animating\Leaning Animator\Core\LeaningProcessor.cs" />
     <Compile Include="Assets\DynamicBone\Demo\DynamicBoneDemo1.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor Tools\Property Attributes\FPD_MinMaxSliderAttribute.cs" />
     <Compile Include="Assets\DynamicBone\Scripts\DynamicBoneCollider.cs" />
     <Compile Include="Assets\StarterAssets\ThirdPersonController\Scripts\BasicRigidBodyPush.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor Tools\Inspector And Scene Tools\FSceneIcons.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\Math Helpers\Math\FVectorMethods.cs" />
     <Compile Include="Assets\StarterAssets\InputSystem\StarterAssetsInputs.cs" />
     <Compile Include="Assets\SoxAnimationToolkit\MotionPath\SoxAtkMotionPath.cs" />
+    <Compile Include="Assets\FImpossible Creations\Plugins - Shared\FBasic Assets\Behaviours\Cameras\FBasic_TPPCameraBehaviour.cs" />
+    <Compile Include="Assets\FImpossible Creations\Shared Tools\GUI Helpers\FGUI_Finders.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\VolumetricFog2\Resources\Shaders\FogOfWarBlur.shader" />
@@ -125,6 +191,7 @@
     <None Include="Assets\VolumetricLights\Resources\Shaders\VolumetricLightURP.shader" />
     <None Include="Assets\RealToon\RealToon Shaders\Version 5\URP\Default\D_Default_URP.shader" />
     <None Include="Assets\VolumetricLights\Resources\Shaders\Particles\DustParticlesInput.hlsl" />
+    <None Include="Assets\FImpossible Creations\Plugins - Animating\Leaning Animator\Readme - Leaning Animator.txt" />
     <None Include="Assets\VolumetricLights\Demos\Church\Textures\Source.txt" />
     <None Include="Assets\Horizon Based Ambient Occlusion\SRP\Readme.txt" />
     <None Include="Assets\VolumetricLights\Resources\Shaders\DepthOnly_Include.hlsl" />
@@ -170,13 +237,16 @@
     <None Include="Assets\Horizon Based Ambient Occlusion\Shaders\HBAO_Common.cginc" />
     <None Include="Assets\DynamicBone\ReadMe.txt" />
     <None Include="Assets\VolumetricFog2\Resources\Shaders\VolumetricFog2DURP.shader" />
+    <None Include="Assets\FImpossible Creations\Plugins - Animating\Bones Stimulator\ReadMe - BonesStimulator.txt" />
     <None Include="Assets\Horizon Based Ambient Occlusion\Readme.txt" />
+    <None Include="Assets\FImpossible Creations\Plugins - Shared\Math Helpers\MathHelpers - ReadMe.txt" />
     <None Include="Assets\VolumetricFog2\Resources\Shaders\DistantFog.shader" />
     <None Include="Assets\VolumetricFog2\Resources\Shaders\Turbulence2D.shader" />
     <None Include="Assets\Horizon Based Ambient Occlusion\Shaders\HBAO_TemporalFilter.cginc" />
     <None Include="Assets\Horizon Based Ambient Occlusion\Shaders\HBAO_Blur.cginc" />
     <None Include="Assets\VolumetricLights\Resources\Shaders\Raymarch.hlsl" />
     <None Include="Assets\Horizon Based Ambient Occlusion\SRP\URP\Shaders\HBAO.shader" />
+    <None Include="Assets\FImpossible Creations\Directories Description.txt" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
@@ -1171,12 +1241,12 @@
       <HintPath>Library\ScriptAssemblies\Unity.Searcher.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.AI.Navigation">
-      <HintPath>Library\ScriptAssemblies\Unity.AI.Navigation.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Rider.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.Rider.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.AI.Navigation">
+      <HintPath>Library\ScriptAssemblies\Unity.AI.Navigation.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Recorder">
@@ -1333,10 +1403,6 @@
     </Reference>
     <Reference Include="Unity.RenderPipelines.Core.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.Core.Editor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Unity.VSCode.Editor">
-      <HintPath>Library\ScriptAssemblies\Unity.VSCode.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.State">

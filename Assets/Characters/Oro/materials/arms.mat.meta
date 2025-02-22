@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a31152a5155887646b05f90500b1ef4c
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 195033
+  packageName: Oro
+  packageVersion: 1.0
+  assetPath: Assets/Characters/Oro/materials/arms.mat
+  uploadId: 432410

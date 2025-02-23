@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1a67a63035ffb304f95abb1683b1b5c5
+timeCreated: 1486580469
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Buildings/mat_fence_02.mat
+  uploadId: 502326

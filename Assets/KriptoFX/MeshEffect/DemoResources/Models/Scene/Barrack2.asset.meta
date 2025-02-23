@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 7a480bb4ed005dc46a6bf305a0dbdc10
+timeCreated: 1486636890
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Models/Scene/Barrack2.asset
+  uploadId: 502326

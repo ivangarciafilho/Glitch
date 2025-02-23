@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 07febf57df48148a3a4551707674e816
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {fileID: 2800000, guid: 202f2ac25cbe74e8aa0340e9df0feae3, type: 3}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Scripts/FluxyStorage.cs
+  uploadId: 602102

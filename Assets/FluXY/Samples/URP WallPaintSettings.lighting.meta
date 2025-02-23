@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d21172e6ca265457faada9ef5ef75414
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4890085278179872738
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Samples/URP WallPaintSettings.lighting
+  uploadId: 602102

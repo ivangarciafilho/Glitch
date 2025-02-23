@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 338519b7b767148e181c420b58df5f70
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Resources/Shaders/Simulation/Splat.shader
+  uploadId: 602102

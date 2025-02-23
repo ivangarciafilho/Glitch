@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 25878e1bce8cb1446929103c39402c0f
+timeCreated: 1512931333
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Animation/SwordRotating 1.anim
+  uploadId: 502326

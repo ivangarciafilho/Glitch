@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 54624a8f34e7c154eb7ad5f7f7b003f9
+timeCreated: 1467845590
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/Materials/Effect18/Mesh_MeshEffect.mat
+  uploadId: 502326

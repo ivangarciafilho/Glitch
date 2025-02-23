@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: a63e0d18a921e43a1912f78fdc35b2f7
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Samples/Character.unity
+  uploadId: 602102

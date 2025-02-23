@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 11174857619fb40f391ce700108de768
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Resources/Shaders/Rendering/PressureWaves.shader
+  uploadId: 602102

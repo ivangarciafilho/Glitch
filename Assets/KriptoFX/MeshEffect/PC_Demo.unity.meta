@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 89f43707598534845876a6dd906feffb
+timeCreated: 1512932531
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/PC_Demo.unity
+  uploadId: 502326

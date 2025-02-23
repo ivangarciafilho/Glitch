@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 3c88c339b7d7d4537b423df244a83a4e
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Resources/Shaders/Simulation/FluidSimulation.shader
+  uploadId: 602102

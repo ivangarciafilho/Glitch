@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b5752ab7ff1834f41919933efe8f15a8
+timeCreated: 1486584211
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Props/mat_boulder_02.mat
+  uploadId: 502326

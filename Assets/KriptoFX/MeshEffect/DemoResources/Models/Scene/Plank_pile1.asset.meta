@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ae0b0bd091892754f83f7dacea9dc0bb
+timeCreated: 1486638253
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Models/Scene/Plank_pile1.asset
+  uploadId: 502326

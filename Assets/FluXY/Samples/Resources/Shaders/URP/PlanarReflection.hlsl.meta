@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: c43ee5fe0a13b46ebaec89b7641b4a71
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Samples/Resources/Shaders/URP/PlanarReflection.hlsl
+  uploadId: 602102

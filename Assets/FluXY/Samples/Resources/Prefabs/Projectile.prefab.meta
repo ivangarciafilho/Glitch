@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 43d149aaabdfb4626a10458370ceaaec
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Samples/Resources/Prefabs/Projectile.prefab
+  uploadId: 602102

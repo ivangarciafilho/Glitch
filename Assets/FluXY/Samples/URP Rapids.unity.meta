@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: bd92086cba1bc49bcb9d9d07b8198139
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Samples/URP Rapids.unity
+  uploadId: 602102

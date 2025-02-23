@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 575cf66084ef24d6da9dd4b0941223dc
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Editor/Resources/Shaders/PreviewState.shader
+  uploadId: 602102

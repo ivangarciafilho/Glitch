@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9d687d7d1596d794589b02340d5a0d64
+timeCreated: 1486585793
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Props/mat_crane_03.mat
+  uploadId: 502326

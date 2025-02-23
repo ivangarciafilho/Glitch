@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 90163192e057e486196519babf6ad0bb
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Samples/Falling Pieces.unity
+  uploadId: 602102

@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: e8759f37ba76b9340bd47646c47106ed
+timeCreated: 1501663699
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Prefabs/Dragonblade.prefab
+  uploadId: 502326

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d96fbd4ef336df8409f7d4b3d97df40b
+timeCreated: 1486581680
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Props/mat_barrel_01.mat
+  uploadId: 502326

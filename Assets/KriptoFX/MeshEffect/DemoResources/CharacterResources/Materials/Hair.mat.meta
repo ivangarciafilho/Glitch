@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8c1cb8e0884a03e43ac8fe60d86e14e3
+timeCreated: 1471569736
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/CharacterResources/Materials/Hair.mat
+  uploadId: 502326

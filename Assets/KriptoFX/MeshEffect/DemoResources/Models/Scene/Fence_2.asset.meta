@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ad3edb4ac1d36bf48a5cf328fcfb6455
+timeCreated: 1486633381
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Models/Scene/Fence_2.asset
+  uploadId: 502326

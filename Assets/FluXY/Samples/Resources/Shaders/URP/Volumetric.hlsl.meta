@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: fadc013d8261b4113ad6303f78641409
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Samples/Resources/Shaders/URP/Volumetric.hlsl
+  uploadId: 602102

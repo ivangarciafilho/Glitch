@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 16eb480c35cc64b6683c53935f74f6ee
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Editor/Resources/Materials/FlipbookPreview.mat
+  uploadId: 602102

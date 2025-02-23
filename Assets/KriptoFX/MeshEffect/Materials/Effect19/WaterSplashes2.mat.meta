@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4c5ed85b3be2f484d996d1038b65d36a
+timeCreated: 1513276223
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/Materials/Effect19/WaterSplashes2.mat
+  uploadId: 502326

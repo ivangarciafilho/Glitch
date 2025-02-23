@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 7100e42938463d642905ee6843592025
+timeCreated: 1456935721
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/Materials/Effect13/IceParticles.mat
+  uploadId: 502326

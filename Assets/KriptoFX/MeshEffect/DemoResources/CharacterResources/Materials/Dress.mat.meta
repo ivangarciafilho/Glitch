@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 294061d345ef7724d87dbe3962e90273
+timeCreated: 1471568934
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/CharacterResources/Materials/Dress.mat
+  uploadId: 502326

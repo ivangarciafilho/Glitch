@@ -23,7 +23,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>Temp\bin\Debug\</OutputPath>
-    <DefineConstants>UNITY_6000_0_35;UNITY_6000_0;UNITY_6000;UNITY_5_3_OR_NEWER;UNITY_5_4_OR_NEWER;UNITY_5_5_OR_NEWER;UNITY_5_6_OR_NEWER;UNITY_2017_1_OR_NEWER;UNITY_2017_2_OR_NEWER;UNITY_2017_3_OR_NEWER;UNITY_2017_4_OR_NEWER;UNITY_2018_1_OR_NEWER;UNITY_2018_2_OR_NEWER;UNITY_2018_3_OR_NEWER;UNITY_2018_4_OR_NEWER;UNITY_2019_1_OR_NEWER;UNITY_2019_2_OR_NEWER;UNITY_2019_3_OR_NEWER;UNITY_2019_4_OR_NEWER;UNITY_2020_1_OR_NEWER;UNITY_2020_2_OR_NEWER;UNITY_2020_3_OR_NEWER;UNITY_2021_1_OR_NEWER;UNITY_2021_2_OR_NEWER;UNITY_2021_3_OR_NEWER;UNITY_2022_1_OR_NEWER;UNITY_2022_2_OR_NEWER;UNITY_2022_3_OR_NEWER;UNITY_2023_1_OR_NEWER;UNITY_2023_2_OR_NEWER;UNITY_2023_3_OR_NEWER;UNITY_6000_0_OR_NEWER;PLATFORM_ARCH_64;UNITY_64;UNITY_INCLUDE_TESTS;ENABLE_AR;ENABLE_AUDIO;ENABLE_CACHING;ENABLE_CLOTH;ENABLE_EVENT_QUEUE;ENABLE_MICROPHONE;ENABLE_MULTIPLE_DISPLAYS;ENABLE_PHYSICS;ENABLE_TEXTURE_STREAMING;ENABLE_VIRTUALTEXTURING;ENABLE_LZMA;ENABLE_UNITYEVENTS;ENABLE_VR;ENABLE_WEBCAM;ENABLE_UNITYWEBREQUEST;ENABLE_WWW;ENABLE_CLOUD_SERVICES;ENABLE_CLOUD_SERVICES_ADS;ENABLE_CLOUD_SERVICES_USE_WEBREQUEST;ENABLE_CLOUD_SERVICES_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_PURCHASING;ENABLE_CLOUD_SERVICES_ANALYTICS;ENABLE_CLOUD_SERVICES_BUILD;ENABLE_EDITOR_GAME_SERVICES;ENABLE_UNITY_GAME_SERVICES_ANALYTICS_SUPPORT;ENABLE_CLOUD_LICENSE;ENABLE_EDITOR_HUB_LICENSE;ENABLE_WEBSOCKET_CLIENT;ENABLE_GENERATE_NATIVE_PLUGINS_FOR_ASSEMBLIES_API;ENABLE_DIRECTOR_AUDIO;ENABLE_DIRECTOR_TEXTURE;ENABLE_MANAGED_JOBS;ENABLE_MANAGED_TRANSFORM_JOBS;ENABLE_MANAGED_ANIMATION_JOBS;ENABLE_MANAGED_AUDIO_JOBS;ENABLE_MANAGED_UNITYTLS;INCLUDE_DYNAMIC_GI;ENABLE_SCRIPTING_GC_WBARRIERS;PLATFORM_SUPPORTS_MONO;RENDER_SOFTWARE_CURSOR;ENABLE_MARSHALLING_TESTS;ENABLE_VIDEO;ENABLE_NAVIGATION_OFFMESHLINK_TO_NAVMESHLINK;ENABLE_ACCELERATOR_CLIENT_DEBUGGING;TEXTCORE_1_0_OR_NEWER;EDITOR_ONLY_NAVMESH_BUILDER_DEPRECATED;PLATFORM_STANDALONE_WIN;PLATFORM_STANDALONE;UNITY_STANDALONE_WIN;UNITY_STANDALONE;ENABLE_RUNTIME_GI;ENABLE_MOVIES;ENABLE_NETWORK;ENABLE_NVIDIA;ENABLE_AMD;ENABLE_CRUNCH_TEXTURE_COMPRESSION;ENABLE_OUT_OF_PROCESS_CRASH_HANDLER;ENABLE_CLUSTER_SYNC;ENABLE_CLUSTERINPUT;PLATFORM_UPDATES_TIME_OUTSIDE_OF_PLAYER_LOOP;GFXDEVICE_WAITFOREVENT_MESSAGEPUMP;PLATFORM_USES_EXPLICIT_MEMORY_MANAGER_INITIALIZER;PLATFORM_SUPPORTS_WAIT_FOR_PRESENTATION;PLATFORM_SUPPORTS_SPLIT_GRAPHICS_JOBS;ENABLE_MONO;NET_4_6;NET_UNITY_4_8;ENABLE_PROFILER;DEBUG;TRACE;UNITY_ASSERTIONS;UNITY_EDITOR;UNITY_EDITOR_64;UNITY_EDITOR_WIN;ENABLE_UNITY_COLLECTIONS_CHECKS;ENABLE_BURST_AOT;UNITY_TEAM_LICENSE;ENABLE_CUSTOM_RENDER_TEXTURE;ENABLE_DIRECTOR;ENABLE_LOCALIZATION;ENABLE_SPRITES;ENABLE_TERRAIN;ENABLE_TILEMAP;ENABLE_TIMELINE;ENABLE_INPUT_SYSTEM;ENABLE_LEGACY_INPUT_MANAGER;TEXTCORE_FONT_ENGINE_1_5_OR_NEWER;TEXTCORE_TEXT_ENGINE_1_5_OR_NEWER;CSHARP_7_OR_LATER;CSHARP_7_3_OR_NEWER;UNITY_EDITOR_ONLY_COMPILATION</DefineConstants>
+    <DefineConstants>UNITY_6000_0_35;UNITY_6000_0;UNITY_6000;UNITY_5_3_OR_NEWER;UNITY_5_4_OR_NEWER;UNITY_5_5_OR_NEWER;UNITY_5_6_OR_NEWER;UNITY_2017_1_OR_NEWER;UNITY_2017_2_OR_NEWER;UNITY_2017_3_OR_NEWER;UNITY_2017_4_OR_NEWER;UNITY_2018_1_OR_NEWER;UNITY_2018_2_OR_NEWER;UNITY_2018_3_OR_NEWER;UNITY_2018_4_OR_NEWER;UNITY_2019_1_OR_NEWER;UNITY_2019_2_OR_NEWER;UNITY_2019_3_OR_NEWER;UNITY_2019_4_OR_NEWER;UNITY_2020_1_OR_NEWER;UNITY_2020_2_OR_NEWER;UNITY_2020_3_OR_NEWER;UNITY_2021_1_OR_NEWER;UNITY_2021_2_OR_NEWER;UNITY_2021_3_OR_NEWER;UNITY_2022_1_OR_NEWER;UNITY_2022_2_OR_NEWER;UNITY_2022_3_OR_NEWER;UNITY_2023_1_OR_NEWER;UNITY_2023_2_OR_NEWER;UNITY_2023_3_OR_NEWER;UNITY_6000_0_OR_NEWER;PLATFORM_ARCH_64;UNITY_64;UNITY_INCLUDE_TESTS;ENABLE_AR;ENABLE_AUDIO;ENABLE_CACHING;ENABLE_CLOTH;ENABLE_EVENT_QUEUE;ENABLE_MICROPHONE;ENABLE_MULTIPLE_DISPLAYS;ENABLE_PHYSICS;ENABLE_TEXTURE_STREAMING;ENABLE_VIRTUALTEXTURING;ENABLE_LZMA;ENABLE_UNITYEVENTS;ENABLE_VR;ENABLE_WEBCAM;ENABLE_UNITYWEBREQUEST;ENABLE_WWW;ENABLE_CLOUD_SERVICES;ENABLE_CLOUD_SERVICES_ADS;ENABLE_CLOUD_SERVICES_USE_WEBREQUEST;ENABLE_CLOUD_SERVICES_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_PURCHASING;ENABLE_CLOUD_SERVICES_ANALYTICS;ENABLE_CLOUD_SERVICES_BUILD;ENABLE_EDITOR_GAME_SERVICES;ENABLE_UNITY_GAME_SERVICES_ANALYTICS_SUPPORT;ENABLE_CLOUD_LICENSE;ENABLE_EDITOR_HUB_LICENSE;ENABLE_WEBSOCKET_CLIENT;ENABLE_GENERATE_NATIVE_PLUGINS_FOR_ASSEMBLIES_API;ENABLE_DIRECTOR_AUDIO;ENABLE_DIRECTOR_TEXTURE;ENABLE_MANAGED_JOBS;ENABLE_MANAGED_TRANSFORM_JOBS;ENABLE_MANAGED_ANIMATION_JOBS;ENABLE_MANAGED_AUDIO_JOBS;ENABLE_MANAGED_UNITYTLS;INCLUDE_DYNAMIC_GI;ENABLE_SCRIPTING_GC_WBARRIERS;PLATFORM_SUPPORTS_MONO;RENDER_SOFTWARE_CURSOR;ENABLE_MARSHALLING_TESTS;ENABLE_VIDEO;ENABLE_NAVIGATION_OFFMESHLINK_TO_NAVMESHLINK;ENABLE_ACCELERATOR_CLIENT_DEBUGGING;TEXTCORE_1_0_OR_NEWER;EDITOR_ONLY_NAVMESH_BUILDER_DEPRECATED;PLATFORM_STANDALONE_WIN;PLATFORM_STANDALONE;UNITY_STANDALONE_WIN;UNITY_STANDALONE;ENABLE_RUNTIME_GI;ENABLE_MOVIES;ENABLE_NETWORK;ENABLE_NVIDIA;ENABLE_AMD;ENABLE_CRUNCH_TEXTURE_COMPRESSION;ENABLE_OUT_OF_PROCESS_CRASH_HANDLER;ENABLE_CLUSTER_SYNC;ENABLE_CLUSTERINPUT;PLATFORM_UPDATES_TIME_OUTSIDE_OF_PLAYER_LOOP;GFXDEVICE_WAITFOREVENT_MESSAGEPUMP;PLATFORM_USES_EXPLICIT_MEMORY_MANAGER_INITIALIZER;PLATFORM_SUPPORTS_WAIT_FOR_PRESENTATION;PLATFORM_SUPPORTS_SPLIT_GRAPHICS_JOBS;ENABLE_MONO;NET_4_6;NET_UNITY_4_8;ENABLE_PROFILER;DEBUG;TRACE;UNITY_ASSERTIONS;UNITY_EDITOR;UNITY_EDITOR_64;UNITY_EDITOR_WIN;ENABLE_UNITY_COLLECTIONS_CHECKS;ENABLE_BURST_AOT;UNITY_TEAM_LICENSE;ENABLE_CUSTOM_RENDER_TEXTURE;ENABLE_DIRECTOR;ENABLE_LOCALIZATION;ENABLE_SPRITES;ENABLE_TERRAIN;ENABLE_TILEMAP;ENABLE_TIMELINE;ENABLE_INPUT_SYSTEM;ENABLE_LEGACY_INPUT_MANAGER;TEXTCORE_FONT_ENGINE_1_5_OR_NEWER;TEXTCORE_TEXT_ENGINE_1_5_OR_NEWER;UNITY_PIPELINE_URP;VOL_FX;CSHARP_7_OR_LATER;CSHARP_7_3_OR_NEWER;UNITY_EDITOR_ONLY_COMPILATION</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <NoWarn>0169;USG0001</NoWarn>
@@ -62,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Beautify\URP\Editor\LUTBrowser.cs" />
+    <Compile Include="Assets\HOLO_FX_PACK\Editor\AssetPostImportProcess_HOLOFX.cs" />
     <Compile Include="Assets\VolumetricLights\Editor\VolumetricLightEditor.cs" />
     <Compile Include="Assets\VolumetricFog2\Editor\Managers\PointLightManagerEditor.cs" />
     <Compile Include="Assets\FImpossible Creations\Editor\Plugins - Editor - Animating\Bones Stimulator\BonesStimulator.Editor.Langs.cs" />
@@ -75,7 +76,9 @@
     <Compile Include="Assets\VolumetricFog2\Editor\VolumetricFogProfileEditor.cs" />
     <Compile Include="Assets\TutorialInfo\Scripts\Editor\ReadmeEditor.cs" />
     <Compile Include="Assets\VolumetricFog2\Editor\NoiseTools.cs" />
+    <Compile Include="Assets\KriptoFX\MeshEffect\Shaders\Editor\ME_UberParticleGUI.cs" />
     <Compile Include="Assets\SoxAnimationToolkit\JiggleBoneSimple\Editor\SoxAtkJiggleBoneSimpleEditor.cs" />
+    <Compile Include="Assets\HOLO_FX_PACK\Editor\Welcome.cs" />
     <Compile Include="Assets\VolumetricLights\Editor\VolumetricLightsRenderFeatureEditor.cs" />
     <Compile Include="Assets\VolumetricFog2\Editor\MenuIntegration.cs" />
     <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor\Property Drawers\FPD_HeaderDrawer.cs" />
@@ -83,6 +86,7 @@
     <Compile Include="Assets\RadiantGI\Editor\RadiantGlobalIlluminationEditor.cs" />
     <Compile Include="Assets\FImpossible Creations\Editor\Plugins - Editor - Animating\Bones Stimulator\BonesStimulator.Editor.cs" />
     <Compile Include="Assets\VolumetricLights\Editor\VolumetricLightProfileEditor.cs" />
+    <Compile Include="Assets\LazyEti\FakePointLight\Assets\Editor\CustomMaterialEditor.cs" />
     <Compile Include="Assets\FImpossible Creations\Editor\Plugins - Editor - Animating\Bones Stimulator\BonesStimulator.Editor.Elements.cs" />
     <Compile Include="Assets\VolumetricFog2\Editor\NoiseGenerator.cs" />
     <Compile Include="Assets\RadiantGI\Editor\RadiantRenderFeatureEditor.cs" />
@@ -95,11 +99,14 @@
     <Compile Include="Assets\VolumetricFog2\Editor\FogVoidEditor.cs" />
     <Compile Include="Assets\Beautify\URP\Editor\BeautifyRenderFeatureEditor.cs" />
     <Compile Include="Assets\VolumetricFog2\Editor\VolumetricFogEditor.FoW.cs" />
+    <Compile Include="Assets\KriptoFX\MeshEffect\Shaders\Editor\ME_CustomShaderGUI.cs" />
     <Compile Include="Assets\Beautify\URP\Editor\BeautifyEditor.cs" />
     <Compile Include="Assets\FImpossible Creations\Editor\Plugins - Editor - Animating\Bones Stimulator\BonesStimulator.Editor.Tabs.cs" />
+    <Compile Include="Assets\HOLO_FX_PACK\Editor\Glitch_Editor_lite.cs" />
     <Compile Include="Assets\VolumetricFog2\Editor\VolumetricFogShaderOptions.cs" />
     <Compile Include="Assets\Beautify\URP\Editor\FrameBrowser.cs" />
     <Compile Include="Assets\SoxAnimationToolkit\JiggleBoneTentacle\Editor\SoxAtkTentacleEditor.cs" />
+    <Compile Include="Assets\KriptoFX\MeshEffect\Scripts\Editor\MeshRendererEditor.cs" />
     <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor\Inspector And Scene Tools\Property Drawers\FPD_MiscDrawers.cs" />
     <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor\Property Drawers\FPD_FixedCurveWindowDrawer.cs" />
     <Compile Include="Assets\Beautify\URP\Editor\CubeLUTImporter.cs" />
@@ -108,12 +115,15 @@
     <Compile Include="Assets\SoxAnimationToolkit\DragTransform\Editor\SoxAtkDragTransformEditor.cs" />
     <Compile Include="Assets\SoxAnimationToolkit\AnimPoseCopyPaste\Editor\SoxAtkAnimPoseCopyPaste.cs" />
     <Compile Include="Assets\VolumetricLights\Editor\MenuIntegration.cs" />
+    <Compile Include="Assets\HOLO_FX_PACK\Editor\Glitch_Editor.cs" />
     <Compile Include="Assets\RealToon\Editor\RealToonShaderGUI_URP_SRP.cs" />
     <Compile Include="Assets\VolumetricLights\Editor\VolumetricLightsTranslucencyEditor.cs" />
     <Compile Include="Assets\VolumetricFog2\Editor\VolumetricFogEditor.cs" />
     <Compile Include="Assets\RealToon\Editor\RT_Welcome.cs" />
     <Compile Include="Assets\FImpossible Creations\Shared Tools\Editor\Inspector And Scene Tools\Property Drawers\FPD_MinMaxSliderDrawer.cs" />
+    <Compile Include="Assets\LazyEti\FakePointLight\Assets\Editor\RenderingPipelineDefines.cs" />
     <Compile Include="Assets\SoxAnimationToolkit\MotionPath\Editor\SoxAtkMotionPathEditor.cs" />
+    <Compile Include="Assets\SineVFX\CreativeLights\AssetResources\Scripts\Editor\CustomRampGeneratorEditor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Beautify\URP\Editor\Resources\FrameThumbnail.shader" />
@@ -1281,12 +1291,16 @@
       <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.Universal.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.Collections.Editor">
-      <HintPath>Library\ScriptAssemblies\Unity.Collections.Editor.dll</HintPath>
+    <Reference Include="Unity.VisualEffectGraph.Runtime">
+      <HintPath>Library\ScriptAssemblies\Unity.VisualEffectGraph.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary">
-      <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary.dll</HintPath>
+    <Reference Include="Unity.VisualEffectGraph.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.VisualEffectGraph.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Collections.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.Collections.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.Shared.Editor">
@@ -1303,6 +1317,10 @@
     </Reference>
     <Reference Include="Unity.AI.Navigation.Updater">
       <HintPath>Library\ScriptAssemblies\Unity.AI.Navigation.Updater.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary">
+      <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.Flow.Editor">
@@ -1395,9 +1413,25 @@
       <Project>{05095140-B5ED-763A-513E-052864E21B42}</Project>
       <Name>Assembly-CSharp-Editor-firstpass</Name>
     </ProjectReference>
+    <ProjectReference Include="ScreenFx.Editor.csproj">
+      <Project>{AB4A28B1-C69F-AA7A-163E-CC0B8FC9C9E5}</Project>
+      <Name>ScreenFx.Editor</Name>
+    </ProjectReference>
+    <ProjectReference Include="ScreenFx.csproj">
+      <Project>{FD6BDF43-B49C-0353-FF5F-0E899E6D24F9}</Project>
+      <Name>ScreenFx</Name>
+    </ProjectReference>
+    <ProjectReference Include="sc.posteffects.editor.csproj">
+      <Project>{79932460-67D8-218A-29DE-2A973016C1CF}</Project>
+      <Name>sc.posteffects.editor</Name>
+    </ProjectReference>
     <ProjectReference Include="HBAO.Universal.Runtime.csproj">
       <Project>{D3059ABA-077F-0BBA-91CF-01D3B2193C25}</Project>
       <Name>HBAO.Universal.Runtime</Name>
+    </ProjectReference>
+    <ProjectReference Include="VolFx.Editor.csproj">
+      <Project>{C05E82A3-4AFC-02EF-0D74-F43AF3F7D06F}</Project>
+      <Name>VolFx.Editor</Name>
     </ProjectReference>
     <ProjectReference Include="HBAO.Universal.Editor.csproj">
       <Project>{8F7C7DDB-1838-2C66-C7A5-6BB532A7CB7B}</Project>
@@ -1407,13 +1441,33 @@
       <Project>{13BD09A3-A0AB-8AA7-9AFD-9E0129CCF8FC}</Project>
       <Name>HBAO.Runtime</Name>
     </ProjectReference>
+    <ProjectReference Include="Tools.Runtime.csproj">
+      <Project>{D43616A1-AB2E-4AD8-2D6B-5E8FB360557C}</Project>
+      <Name>Tools.Runtime</Name>
+    </ProjectReference>
+    <ProjectReference Include="sc.posteffects.runtime.csproj">
+      <Project>{8E3F888E-7268-240B-8DF7-46DF285FD477}</Project>
+      <Name>sc.posteffects.runtime</Name>
+    </ProjectReference>
     <ProjectReference Include="HBAO.Editor.csproj">
       <Project>{32E28883-1591-9976-ED0E-305338A466E1}</Project>
       <Name>HBAO.Editor</Name>
     </ProjectReference>
+    <ProjectReference Include="VolFx.csproj">
+      <Project>{BA4CF497-152A-DAF5-6B54-4AC9B077FB91}</Project>
+      <Name>VolFx</Name>
+    </ProjectReference>
     <ProjectReference Include="Unity.RenderPipelines.Universal.Runtime.csproj">
       <Project>{1C48AC28-D7AB-18EC-783C-3592266C994F}</Project>
       <Name>Unity.RenderPipelines.Universal.Runtime</Name>
+    </ProjectReference>
+    <ProjectReference Include="VolFx.Samples.csproj">
+      <Project>{E3AEDF7B-3166-0417-3631-52E0EF1B8FAF}</Project>
+      <Name>VolFx.Samples</Name>
+    </ProjectReference>
+    <ProjectReference Include="Tools.Editor.csproj">
+      <Project>{BF158803-FA5F-A358-DD78-D73084D6376E}</Project>
+      <Name>Tools.Editor</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

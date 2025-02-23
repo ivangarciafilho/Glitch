@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: da7ad523546a8ab4e9150c6f097d9115
+timeCreated: 1512946472
+licenseType: Store
+ShaderImporter:
+  defaultTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/Shaders/ME_DistortionPasses.cginc
+  uploadId: 502326

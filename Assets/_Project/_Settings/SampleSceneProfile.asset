@@ -1,104 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-5626517691203067264
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 90fbf49926625114084d7e0c0cffe8d1, type: 3}
-  m_Name: HBAO
-  m_EditorClassIdentifier: 
-  active: 0
-  preset:
-    m_OverrideState: 1
-    m_Value: 4
-  mode:
-    m_OverrideState: 1
-    m_Value: 0
-  renderingPath:
-    m_OverrideState: 1
-    m_Value: 1
-  quality:
-    m_OverrideState: 1
-    m_Value: 0
-  deinterleaving:
-    m_OverrideState: 1
-    m_Value: 0
-  resolution:
-    m_OverrideState: 1
-    m_Value: 1
-  noiseType:
-    m_OverrideState: 1
-    m_Value: 1
-  debugMode:
-    m_OverrideState: 0
-    m_Value: 1
-  radius:
-    m_OverrideState: 1
-    m_Value: 0.5
-  maxRadiusPixels:
-    m_OverrideState: 1
-    m_Value: 64
-  bias:
-    m_OverrideState: 1
-    m_Value: 0.05
-  intensity:
-    m_OverrideState: 1
-    m_Value: 1
-  useMultiBounce:
-    m_OverrideState: 1
-    m_Value: 1
-  multiBounceInfluence:
-    m_OverrideState: 1
-    m_Value: 0.75
-  directLightingStrength:
-    m_OverrideState: 1
-    m_Value: 0.75
-  offscreenSamplesContribution:
-    m_OverrideState: 0
-    m_Value: 0
-  maxDistance:
-    m_OverrideState: 1
-    m_Value: 32
-  distanceFalloff:
-    m_OverrideState: 1
-    m_Value: 16
-  perPixelNormals:
-    m_OverrideState: 1
-    m_Value: 1
-  baseColor:
-    m_OverrideState: 0
-    m_Value: {r: 0, g: 0, b: 0, a: 1}
-  temporalFilterEnabled:
-    m_OverrideState: 1
-    m_Value: 1
-  varianceClipping:
-    m_OverrideState: 1
-    m_Value: 2
-  blurType:
-    m_OverrideState: 1
-    m_Value: 4
-  sharpness:
-    m_OverrideState: 1
-    m_Value: 16
-  colorBleedingEnabled:
-    m_OverrideState: 1
-    m_Value: 1
-  saturation:
-    m_OverrideState: 1
-    m_Value: 2
-  brightnessMask:
-    m_OverrideState: 1
-    m_Value: 0.5
-  brightnessMaskRange:
-    m_OverrideState: 1
-    m_Value: {x: 0, y: 2}
-    min: 0
-    max: 2
 --- !u!114 &-4052810851037813694
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -1060,40 +961,6 @@ MonoBehaviour:
   texture:
     m_OverrideState: 0
     m_Value: {fileID: 0}
---- !u!114 &-1649856356680501034
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 558a8e2b6826cf840aae193990ba9f2e, type: 3}
-  m_Name: ShadowsMidtonesHighlights
-  m_EditorClassIdentifier: 
-  active: 0
-  shadows:
-    m_OverrideState: 1
-    m_Value: {x: 0.5661463, y: 0.52367914, z: 1, w: 0.12224104}
-  midtones:
-    m_OverrideState: 1
-    m_Value: {x: 0.99582475, y: 0.9270666, z: 1, w: 0.013582137}
-  highlights:
-    m_OverrideState: 1
-    m_Value: {x: 1, y: 0.9280067, z: 0.7440667, w: 0.04074693}
-  shadowsStart:
-    m_OverrideState: 1
-    m_Value: 0
-  shadowsEnd:
-    m_OverrideState: 1
-    m_Value: 0.333
-  highlightsStart:
-    m_OverrideState: 1
-    m_Value: 0.111
-  highlightsEnd:
-    m_OverrideState: 1
-    m_Value: 1
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1108,13 +975,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   components:
   - {fileID: -2669614245856101724}
-  - {fileID: -5626517691203067264}
-  - {fileID: 5046649956060272083}
-  - {fileID: -1649856356680501034}
   - {fileID: -4052810851037813694}
-  - {fileID: 8508869938715676837}
   - {fileID: -1843231790543169652}
   - {fileID: 4290889971557109133}
+  - {fileID: 8022700889488106883}
 --- !u!114 &4290889971557109133
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -1140,7 +1004,7 @@ MonoBehaviour:
   clamp:
     m_OverrideState: 1
     m_Value: 0.05
---- !u!114 &5046649956060272083
+--- !u!114 &8022700889488106883
 MonoBehaviour:
   m_ObjectHideFlags: 3
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1149,256 +1013,118 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3eb4b772797da9440885e8bd939e9560, type: 3}
-  m_Name: ColorCurves
+  m_Script: {fileID: 11500000, guid: 74483714bbf784b45b0c9c7c76035dd8, type: 3}
+  m_Name: Fog
   m_EditorClassIdentifier: 
-  active: 0
-  master:
-    m_OverrideState: 1
-    m_Value:
-      <length>k__BackingField: 2
-      m_Loop: 0
-      m_ZeroValue: 0
-      m_Range: 1
-      m_Curve:
-        serializedVersion: 2
-        m_Curve:
-        - serializedVersion: 3
-          time: 0
-          value: 0
-          inSlope: 0.51092744
-          outSlope: 0.51092744
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        - serializedVersion: 3
-          time: 1
-          value: 1
-          inSlope: 0.44735718
-          outSlope: 0.44735718
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        m_PreInfinity: 2
-        m_PostInfinity: 2
-        m_RotationOrder: 4
-  red:
-    m_OverrideState: 0
-    m_Value:
-      <length>k__BackingField: 2
-      m_Loop: 0
-      m_ZeroValue: 0
-      m_Range: 1
-      m_Curve:
-        serializedVersion: 2
-        m_Curve:
-        - serializedVersion: 3
-          time: 0
-          value: 0
-          inSlope: 1
-          outSlope: 1
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        - serializedVersion: 3
-          time: 1
-          value: 1
-          inSlope: 1
-          outSlope: 1
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        m_PreInfinity: 2
-        m_PostInfinity: 2
-        m_RotationOrder: 4
-  green:
-    m_OverrideState: 0
-    m_Value:
-      <length>k__BackingField: 2
-      m_Loop: 0
-      m_ZeroValue: 0
-      m_Range: 1
-      m_Curve:
-        serializedVersion: 2
-        m_Curve:
-        - serializedVersion: 3
-          time: 0
-          value: 0
-          inSlope: 1
-          outSlope: 1
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        - serializedVersion: 3
-          time: 1
-          value: 1
-          inSlope: 1
-          outSlope: 1
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        m_PreInfinity: 2
-        m_PostInfinity: 2
-        m_RotationOrder: 4
-  blue:
-    m_OverrideState: 0
-    m_Value:
-      <length>k__BackingField: 2
-      m_Loop: 0
-      m_ZeroValue: 0
-      m_Range: 1
-      m_Curve:
-        serializedVersion: 2
-        m_Curve:
-        - serializedVersion: 3
-          time: 0
-          value: 0
-          inSlope: 1
-          outSlope: 1
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        - serializedVersion: 3
-          time: 1
-          value: 1
-          inSlope: 1
-          outSlope: 1
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        m_PreInfinity: 2
-        m_PostInfinity: 2
-        m_RotationOrder: 4
-  hueVsHue:
-    m_OverrideState: 0
-    m_Value:
-      <length>k__BackingField: 0
-      m_Loop: 1
-      m_ZeroValue: 0.5
-      m_Range: 1
-      m_Curve:
-        serializedVersion: 2
-        m_Curve: []
-        m_PreInfinity: 2
-        m_PostInfinity: 2
-        m_RotationOrder: 4
-  hueVsSat:
-    m_OverrideState: 0
-    m_Value:
-      <length>k__BackingField: 0
-      m_Loop: 1
-      m_ZeroValue: 0.5
-      m_Range: 1
-      m_Curve:
-        serializedVersion: 2
-        m_Curve: []
-        m_PreInfinity: 2
-        m_PostInfinity: 2
-        m_RotationOrder: 4
-  satVsSat:
-    m_OverrideState: 0
-    m_Value:
-      <length>k__BackingField: 0
-      m_Loop: 0
-      m_ZeroValue: 0.5
-      m_Range: 1
-      m_Curve:
-        serializedVersion: 2
-        m_Curve: []
-        m_PreInfinity: 2
-        m_PostInfinity: 2
-        m_RotationOrder: 4
-  lumVsSat:
-    m_OverrideState: 1
-    m_Value:
-      <length>k__BackingField: 3
-      m_Loop: 0
-      m_ZeroValue: 0.5
-      m_Range: 1
-      m_Curve:
-        serializedVersion: 2
-        m_Curve:
-        - serializedVersion: 3
-          time: 0
-          value: 0
-          inSlope: 0.45941392
-          outSlope: 0.45941392
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        - serializedVersion: 3
-          time: 0.19120458
-          value: 0.43424654
-          inSlope: 1.9065096
-          outSlope: 1.9065096
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        - serializedVersion: 3
-          time: 1
-          value: 0
-          inSlope: -0.2982376
-          outSlope: -0.2982376
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        m_PreInfinity: 2
-        m_PostInfinity: 2
-        m_RotationOrder: 4
---- !u!114 &8508869938715676837
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c01700fd266d6914ababb731e09af2eb, type: 3}
-  m_Name: DepthOfField
-  m_EditorClassIdentifier: 
-  active: 0
-  mode:
-    m_OverrideState: 1
-    m_Value: 1
-  gaussianStart:
-    m_OverrideState: 1
-    m_Value: 16
-  gaussianEnd:
-    m_OverrideState: 1
-    m_Value: 32
-  gaussianMaxRadius:
-    m_OverrideState: 1
-    m_Value: 1.5
-  highQualitySampling:
-    m_OverrideState: 1
-    m_Value: 1
-  focusDistance:
-    m_OverrideState: 0
-    m_Value: 10
-  aperture:
-    m_OverrideState: 0
-    m_Value: 5.6
-  focalLength:
-    m_OverrideState: 0
-    m_Value: 50
-  bladeCount:
-    m_OverrideState: 0
-    m_Value: 5
-  bladeCurvature:
-    m_OverrideState: 0
-    m_Value: 1
-  bladeRotation:
+  active: 1
+  useSceneSettings:
     m_OverrideState: 0
     m_Value: 0
+  fogMode:
+    m_OverrideState: 1
+    m_Value: 1
+  globalDensity:
+    m_OverrideState: 1
+    m_Value: 1
+  fogStartDistance:
+    m_OverrideState: 1
+    m_Value: 5
+  fogEndDistance:
+    m_OverrideState: 1
+    m_Value: 30
+  colorSource:
+    m_OverrideState: 1
+    m_Value: 0
+  fogColor:
+    m_OverrideState: 1
+    m_Value: {r: 0.349, g: 0.23571911, b: 0.12110298, a: 1}
+  fogColorGradient:
+    m_OverrideState: 0
+    m_Value: {fileID: 0}
+    dimension: 1
+  gradientDistance:
+    m_OverrideState: 0
+    m_Value: 1000
+  gradientUseFarClipPlane:
+    m_OverrideState: 0
+    m_Value: 1
+  distanceFog:
+    m_OverrideState: 1
+    m_Value: 1
+  distanceDensity:
+    m_OverrideState: 1
+    m_Value: 1.5
+  useRadialDistance:
+    m_OverrideState: 1
+    m_Value: 1
+  horizonMinMax:
+    m_OverrideState: 1
+    m_Value: {x: 0, y: 1}
+  skyboxInfluence:
+    m_OverrideState: 1
+    m_Value: 1
+  enableDirectionalLight:
+    m_OverrideState: 0
+    m_Value: 0
+  useLightDirection:
+    m_OverrideState: 0
+    m_Value: 1
+  useLightColor:
+    m_OverrideState: 0
+    m_Value: 1
+  useLightIntensity:
+    m_OverrideState: 0
+    m_Value: 1
+  lightColor:
+    m_OverrideState: 0
+    m_Value: {r: 1, g: 0.89, b: 0.55, a: 1}
+  lightDirection:
+    m_OverrideState: 0
+    m_Value: {x: 0, y: 0.5, z: -1}
+  lightIntensity:
+    m_OverrideState: 0
+    m_Value: 1
+  lightExponent:
+    m_OverrideState: 0
+    m_Value: 8
+  heightFog:
+    m_OverrideState: 1
+    m_Value: 0
+  height:
+    m_OverrideState: 0
+    m_Value: 10
+  heightDensity:
+    m_OverrideState: 0
+    m_Value: 0.75
+  heightFogNoise:
+    m_OverrideState: 0
+    m_Value: 1
+  heightNoiseTex:
+    m_OverrideState: 1
+    m_Value: {fileID: 2800000, guid: 82a8d5f38e2ccf44c86362214b2d3e5e, type: 3}
+    dimension: 1
+  heightNoiseSize:
+    m_OverrideState: 0
+    m_Value: 0.25
+  heightNoiseStrength:
+    m_OverrideState: 0
+    m_Value: 1
+  heightNoiseSpeed:
+    m_OverrideState: 0
+    m_Value: 2
+  lightScattering:
+    m_OverrideState: 0
+    m_Value: 0
+  scatterIntensity:
+    m_OverrideState: 0
+    m_Value: 10
+  scatterThreshold:
+    m_OverrideState: 0
+    m_Value: 1
+  scatterDiffusion:
+    m_OverrideState: 0
+    m_Value: 10
+  scatterSoftKnee:
+    m_OverrideState: 0
+    m_Value: 0.5
+  shader: {fileID: 4800000, guid: 8080b34b2281e8945a5ddfe687d717fb, type: 3}

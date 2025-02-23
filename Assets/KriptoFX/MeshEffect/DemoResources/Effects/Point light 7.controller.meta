@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9540cc6d6c6a9fc4aa665d87657226cf
+timeCreated: 1486673913
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Effects/Point light 7.controller
+  uploadId: 502326

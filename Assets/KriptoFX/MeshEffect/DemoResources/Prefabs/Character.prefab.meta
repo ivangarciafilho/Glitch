@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 391b179b307d6de4fb4931b75b962cfb
+timeCreated: 1512934221
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Prefabs/Character.prefab
+  uploadId: 502326

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 126fc3237c71ddc459a9fcffe558bc75
+timeCreated: 1486673378
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Effects/LightAnimation.anim
+  uploadId: 502326

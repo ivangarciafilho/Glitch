@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ca9f73d7e00a74ef98054b554e2bc6d4
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4890085278179872738
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Samples/FlipbookSettings.lighting
+  uploadId: 602102

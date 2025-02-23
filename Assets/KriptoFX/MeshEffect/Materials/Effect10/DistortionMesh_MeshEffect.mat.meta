@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4ceb6068f99cd1246bd7d6feec2a93ac
+timeCreated: 1467123072
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/Materials/Effect10/DistortionMesh_MeshEffect.mat
+  uploadId: 502326

@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 53cfc00c28a414a77865e8190a9c1408
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Samples/Resources/Shaders/URP/URPFluidUtilsShaderGraph.hlsl
+  uploadId: 602102

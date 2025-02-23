@@ -1,0 +1,161 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: FakePointLight
+  m_Shader: {fileID: 4800000, guid: a3a929c6ce1b6c24a86decaf6ab40814, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _BLENDMODE_ADDITIVE
+  - _DITHERINGPATTERN_ON
+  - _SCREENSHADOWS_HIGH
+  - _SPECULARHIGHLIGHT_ON
+  - _TEXTUREPACKING_RED
+  - ___FLICKERING____ON
+  - ___HALO____ON
+  m_InvalidKeywords:
+  - DISTANCEFADE_ON
+  - _FLICKERING_ON
+  - _FLICKERRADIUS_ON
+  - _NOISE_ON
+  - _PARTICLEMESH_ON
+  - _RECEIVESHADOWS_OFF
+  - _RECEIVE_SHADOWS_OFF
+  - _USETEXTUREGRADIENT_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 2450
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _ColorGradient:
+        m_Texture: {fileID: 3342436360307218768, guid: 95801a53599a6c344a1224cfd935c031,
+          type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GradientTexture:
+        m_Texture: {fileID: 2800000, guid: 779931d3f36adac45ae9a3806d7b688e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NoiseTexture:
+        m_Texture: {fileID: 2800000, guid: 7bdee552502044b368c86f90e4e9a6fb, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _TextureGradient:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _texcoord:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - DayAlpha: 0
+    - DistanceFade: 1
+    - _AccurateColors: 0
+    - _AlphaCutoff: 0.5
+    - _Blendmode: 0
+    - _CloseFade: 1
+    - _CloseTransition: 15
+    - _DayAlpha1: 0
+    - _DayFading: 0
+    - _DepthWrite: 2
+    - _DitherIntensity: 0.125
+    - _DitheringPattern: 1
+    - _DstBlend: 1
+    - _EXPERIMENTALShadows: 0
+    - _FadeDistance: 80.3
+    - _FadeOffset: 38
+    - _FarFade: 90
+    - _FarTransition: 30
+    - _FlickerHardness: 0.58
+    - _FlickerIntensity: 0.25
+    - _FlickerRadius: 1
+    - _FlickerSoftness: 1
+    - _FlickerSpeed: 2
+    - _Flickering: 1
+    - _HaloDepthFade: 1
+    - _HaloPosterize: 0
+    - _HaloPower: 1
+    - _HaloSize: 2
+    - _HaloSoftness: 0.5
+    - _Hardness: 0.526
+    - _LightPosterize: 0
+    - _LightRadius: 1
+    - _LightSoftness: 1
+    - _Noise: 1
+    - _NoiseMovement: 0.39
+    - _NoiseScale: 0.1
+    - _Noisiness: 2
+    - _NormalIntensity: 0.323
+    - _NormalsBlend: 0
+    - _NormalsBlending: 0.5
+    - _NormalsSoftness: 0.467
+    - _ParticleMesh: 1
+    - _ParticleMode: 0
+    - _Posterize: 74.9
+    - _PosterizeHalo: 78
+    - _PosterizeLight: 57
+    - _QueueControl: 0
+    - _QueueOffset: 0
+    - _Radius: 0.82
+    - _RadiusFlickering: 0.355
+    - _RandomOffset: 0
+    - _ReceiveShadows: 0
+    - _ScreenShadows: 3
+    - _ShadingBlend: 0.25
+    - _ShadingSoftness: 1
+    - _ShadowThreshold: 0.05
+    - _SizeFlickering: 0.5
+    - _Softness: 0.564
+    - _Spacing: 2
+    - _SpecIntensity: 0.25
+    - _SpecularHighlight: 1
+    - _SrcBlend: 5
+    - _StartDistance: 400
+    - _StepSpacing: 3
+    - _TexturePacking: 0
+    - _TransitionDistance: 50
+    - _UseLightNormal: 0.5
+    - _UseTextureGradient: 1
+    - __HEAVYShadows: 0
+    - ___DayAlpha___: 0
+    - ___DistanceFade___: 0
+    - ___Flickering___: 1
+    - ___Halo___: 1
+    - ___Noise___: 0
+    - ___ParticleMode___: 0
+    - _randomOffset: 0
+    m_Colors:
+    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+    - _FlickerHue: {r: 0.959674, g: 1, b: 0, a: 1}
+    - _HTint: {r: 1, g: 1, b: 1, a: 1}
+    - _HaloTint: {r: 1.0408943, g: 1.4980392, b: 0.9411765, a: 0.050980393}
+    - _LTint: {r: 1, g: 1, b: 1, a: 1}
+    - _LightTint: {r: 0.49019608, g: 0.5795311, b: 0.58431375, a: 0.2509804}
+    - _Tint: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

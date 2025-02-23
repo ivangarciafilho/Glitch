@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6570e97dceca8d644be386841cb743aa
+timeCreated: 1486584637
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Props/mat_shield_05.mat
+  uploadId: 502326

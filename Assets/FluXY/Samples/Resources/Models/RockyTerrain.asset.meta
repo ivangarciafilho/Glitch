@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 14a8b1749bee44deb82cf8ada83b191e
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 15600000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Samples/Resources/Models/RockyTerrain.asset
+  uploadId: 602102

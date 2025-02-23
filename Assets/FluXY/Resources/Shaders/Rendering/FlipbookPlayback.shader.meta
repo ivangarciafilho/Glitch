@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 19c766946642a46f2843decdb5f896d0
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Resources/Shaders/Rendering/FlipbookPlayback.shader
+  uploadId: 602102

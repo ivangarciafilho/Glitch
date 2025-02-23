@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a747deff7728d804fa4710cf3790f1c2
+timeCreated: 1457033275
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/Materials/Effect5/Fog.mat
+  uploadId: 502326

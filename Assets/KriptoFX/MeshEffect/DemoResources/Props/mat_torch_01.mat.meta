@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 166b729d7f7763344a41bf61c92da8e5
+timeCreated: 1486582646
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Props/mat_torch_01.mat
+  uploadId: 502326

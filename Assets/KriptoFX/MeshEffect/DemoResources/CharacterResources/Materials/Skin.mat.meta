@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 869ba61e99e58db43ba4237de4951488
+timeCreated: 1471569168
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/CharacterResources/Materials/Skin.mat
+  uploadId: 502326

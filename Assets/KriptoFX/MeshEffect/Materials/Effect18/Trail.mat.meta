@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a94a4c589197f314089eecdcf7b25424
+timeCreated: 1457257304
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/Materials/Effect18/Trail.mat
+  uploadId: 502326

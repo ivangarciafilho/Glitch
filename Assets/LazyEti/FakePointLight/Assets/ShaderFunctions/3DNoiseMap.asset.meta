@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2fca756491ec7bf4e9c71d18280c45cc
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 283797
+  packageName: Fake Point Light (URP/Built-In)
+  packageVersion: 1.1.3
+  assetPath: Assets/LazyEti/FakePointLight/Assets/ShaderFunctions/3DNoiseMap.asset
+  uploadId: 733008

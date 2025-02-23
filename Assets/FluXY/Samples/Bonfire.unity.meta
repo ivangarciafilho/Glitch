@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: cb2cf4e65424c42b0be9fa38a796a0f8
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Samples/Bonfire.unity
+  uploadId: 602102

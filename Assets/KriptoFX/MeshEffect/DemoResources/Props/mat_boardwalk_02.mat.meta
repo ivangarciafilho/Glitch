@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e3e9e1b504317fc43b3907973608c7da
+timeCreated: 1486465129
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Props/mat_boardwalk_02.mat
+  uploadId: 502326

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 38cf261fdceb8b348a95ebc712eb170c
+timeCreated: 1486639069
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Models/Scene/Shield1.asset
+  uploadId: 502326

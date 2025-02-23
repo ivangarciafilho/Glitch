@@ -26,10 +26,10 @@ MonoBehaviour:
   noiseScale: 64
   noiseFinalMultiplier: 1.5
   useDetailNoise: 1
-  detailTexture: {fileID: 11700000, guid: e16130adacefd47a5a21af699b8ede7a, type: 2}
-  detailScale: 0.025
+  detailTexture: {fileID: 11700000, guid: 2dcd0d9f4d79a454e9c297915657b2c9, type: 2}
+  detailScale: 0.05
   detailStrength: 0.75
-  detailOffset: -0.25
+  detailOffset: -0.75
   density: 1
   shape: 0
   scaleNoiseWithHeight: 1
@@ -113,30 +113,30 @@ MonoBehaviour:
     m_ColorSpace: 1
     m_NumColorKeys: 2
     m_NumAlphaKeys: 5
-  brightness: 1
-  deepObscurance: 1
+  brightness: 1.25
+  deepObscurance: 0.75
   specularColor: {r: 1, g: 0.78291553, b: 0, a: 1}
   specularThreshold: 0.25
   specularIntensity: 1
-  turbulence: 0.2
-  windDirection: {x: 0, y: 0, z: 0.0125}
+  turbulence: 0.25
+  windDirection: {x: 0, y: 0, z: 0.005}
   useCustomDetailNoiseWindDirection: 1
-  detailNoiseWindDirection: {x: 0, y: 0, z: 0.1}
+  detailNoiseWindDirection: {x: 0, y: 0, z: 0.01}
   dayNightCycle: 0
   sunDirection: {x: 0, y: 1, z: 0}
   sunColor: {r: 1, g: 0.9266667, b: 0.75, a: 1}
   sunIntensity: 0.5
   ambientLightMultiplier: 1
   lightDiffusionModel: 1
-  lightDiffusionPower: 128
+  lightDiffusionPower: 256
   lightDiffusionIntensity: 0.5
   lightDiffusionNearDepthAtten: 16
-  receiveShadows: 1
+  receiveShadows: 0
   shadowIntensity: 1
   shadowCancellation: 0
   shadowMaxDistance: 60
   cookie: 0
-  distantFog: 1
+  distantFog: 0
   distantFogStartDistance: 5
   distantFogDistanceDensity: 0.25
   distantFogMaxHeight: 16

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 017a69c44e1cb4041831e9dea580d915
+timeCreated: 1486585079
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Props/mat_tower_06.mat
+  uploadId: 502326

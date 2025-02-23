@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 310ff0a41f6a46cba06a0c6985ead2d5
+timeCreated: 1711352594
+AssetOrigin:
+  serializedVersion: 1
+  productId: 300643
+  packageName: VolFx - VFX Toolkit
+  packageVersion: 2.4.3
+  assetPath: Assets/VolFx/VolFx/Runtime/Passes/Base/Mask/MaskVol.cs
+  uploadId: 724912

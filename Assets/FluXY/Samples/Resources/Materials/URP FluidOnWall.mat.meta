@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c78c2edf0a6b74736a23278100de71e6
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Samples/Resources/Materials/URP FluidOnWall.mat
+  uploadId: 602102

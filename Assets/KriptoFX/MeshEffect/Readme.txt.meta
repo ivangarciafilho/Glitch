@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b1a4cfdad744e474f9aba4cf99b05f0d
+timeCreated: 1469227232
+licenseType: Store
+TextScriptImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/Readme.txt
+  uploadId: 502326

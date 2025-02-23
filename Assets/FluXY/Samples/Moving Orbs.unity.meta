@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 1f2c2bf7e642240cda14d9325c776e1e
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Samples/Moving Orbs.unity
+  uploadId: 602102

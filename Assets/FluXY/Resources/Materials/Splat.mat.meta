@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 644c5fbe7e0624b239c5c09b7d1613ae
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Resources/Materials/Splat.mat
+  uploadId: 602102

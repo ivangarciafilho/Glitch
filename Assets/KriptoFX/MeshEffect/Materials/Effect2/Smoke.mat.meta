@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d101c7d8a8bdf3449b3eab56daf6aff6
+timeCreated: 1467842835
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/Materials/Effect2/Smoke.mat
+  uploadId: 502326

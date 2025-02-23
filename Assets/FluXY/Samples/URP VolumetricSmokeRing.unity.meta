@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 472db171b555742e480f962be256aee0
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Samples/URP VolumetricSmokeRing.unity
+  uploadId: 602102

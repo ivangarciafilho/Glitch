@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 98543ca2ab4679444b215c0468734eb6
+timeCreated: 1457216209
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/Materials/Effect11/WeaponMesh_MeshEffect.mat
+  uploadId: 502326

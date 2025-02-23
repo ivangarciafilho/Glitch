@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a1f480689c2691e4ca60d7b61ac55cff
+timeCreated: 1457599785
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/Prefabs/Effect1.prefab
+  uploadId: 502326

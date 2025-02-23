@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8c25b86c68be36e438e107e2fafb7dbd
+timeCreated: 1468105684
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/Materials/Effect4/IceFog2.mat
+  uploadId: 502326

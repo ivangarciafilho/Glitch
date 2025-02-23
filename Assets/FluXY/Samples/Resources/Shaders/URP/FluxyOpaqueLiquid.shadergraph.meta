@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 34b9cd94cbb1d44549f707fb76ba499d
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 625f186215c104763be7675aa2d941aa, type: 3}
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Samples/Resources/Shaders/URP/FluxyOpaqueLiquid.shadergraph
+  uploadId: 602102

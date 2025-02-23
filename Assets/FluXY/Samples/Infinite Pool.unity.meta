@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5c7c76a6192d0470a8b43459670f2be0
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Samples/Infinite Pool.unity
+  uploadId: 602102

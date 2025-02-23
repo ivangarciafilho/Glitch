@@ -1608,10 +1608,10 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  SqueezingAmount: 0
-  SqueezingSpeed: 2
+  SqueezingAmount: 0.75
+  SqueezingSpeed: 5
   SqueezingMultiply: 0.5
-  SqueezingAxis: {x: 0.05, y: 0.2, z: 0.1}
+  SqueezingAxis: {x: 0.05, y: 0.1, z: 0.05}
   UseCollisions: 0
   MovementMusclesCollision: 1
   CollidersScaleCurve:
@@ -3465,10 +3465,10 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  SqueezingAmount: 0
+  SqueezingAmount: 0.75
   SqueezingSpeed: 3
   SqueezingMultiply: 0.5
-  SqueezingAxis: {x: 0.2, y: 0.05, z: 0.05}
+  SqueezingAxis: {x: 0.3, y: 0.05, z: 0.05}
   UseCollisions: 0
   MovementMusclesCollision: 1
   CollidersScaleCurve:
@@ -4508,7 +4508,7 @@ MonoBehaviour:
   _editor_DisplayedPreset: 0
   _editor_DrawGizmos: 1
   DrawGizmos: 1
-  _editor_SelCategory: 1
+  _editor_SelCategory: 2
   UpdateRate: 0
   MovementMuscles: 0.75
   MusclesRapidity: 0.75
@@ -4628,10 +4628,10 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  SqueezingAmount: 0
+  SqueezingAmount: 0.75
   SqueezingSpeed: 3
   SqueezingMultiply: 0.5
-  SqueezingAxis: {x: 0.2, y: 0.05, z: 0.05}
+  SqueezingAxis: {x: 0.3, y: 0.05, z: 0.05}
   UseCollisions: 0
   MovementMusclesCollision: 1
   CollidersScaleCurve:

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a8b8b1ebbb34aea4d8b33cbd8adb89e2
+timeCreated: 1486638082
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Models/Scene/Barrack_wall.asset
+  uploadId: 502326

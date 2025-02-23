@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c9eda7d81c656414083b00d60da63c47
+timeCreated: 1467556700
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/Materials/Effect3/Particles.mat
+  uploadId: 502326

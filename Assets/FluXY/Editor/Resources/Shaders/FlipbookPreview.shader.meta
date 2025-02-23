@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 318cbbeba938c412487d2ce351514073
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/Editor/Resources/Shaders/FlipbookPreview.shader
+  uploadId: 602102

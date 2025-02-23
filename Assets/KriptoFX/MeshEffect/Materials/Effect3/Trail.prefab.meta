@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 923551ed0ade07443b884c99a7799ad9
+timeCreated: 1512949004
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/Materials/Effect3/Trail.prefab
+  uploadId: 502326

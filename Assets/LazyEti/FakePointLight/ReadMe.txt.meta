@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 3cff7920f461e054b8668ede950ba287
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 283797
+  packageName: Fake Point Light (URP/Built-In)
+  packageVersion: 1.1.3
+  assetPath: Assets/LazyEti/FakePointLight/ReadMe.txt
+  uploadId: 733008

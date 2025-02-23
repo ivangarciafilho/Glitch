@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 260a8c4bde34c4047a0d747dc1040715
+timeCreated: 1486639258
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/DemoResources/Models/Scene/Pillar.asset
+  uploadId: 502326

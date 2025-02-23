@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 66e101acc9279406fab7f3bced9d22fc
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 203795
+  packageName: FluXY - 2.5D fluid simulator
+  packageVersion: 1.4.1
+  assetPath: Assets/FluXY/CHANGELOG.txt
+  uploadId: 602102

@@ -14,7 +14,7 @@ public class SpeedTracker : MonoBehaviour
         positionCurrent = transform.position;
 
 
-        speedCurrent = Mathf.Lerp(speedPrevious,  Vector3.Distance(positionPrevious,positionCurrent) *Time.deltaTime, 0.666f ); 
+        speedCurrent = Mathf.Lerp(speedPrevious,  Vector3.Distance(positionPrevious,positionCurrent) * Time.deltaTime, 0.666f ); 
 
         speedPrevious = speedCurrent;
         positionCurrent = positionPrevious;

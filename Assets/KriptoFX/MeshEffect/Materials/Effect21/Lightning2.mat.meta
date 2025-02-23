@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5286d5563b9c1d14c8ae73fc7ec75069
+timeCreated: 1513142666
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/Materials/Effect21/Lightning2.mat
+  uploadId: 502326

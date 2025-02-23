@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 22d3eef818b680b46b1bf6ce79b1d8d0
+timeCreated: 1456867004
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 67803
+  packageName: Mesh Effects
+  packageVersion: 1.5.0a
+  assetPath: Assets/KriptoFX/MeshEffect/Materials/Effect20/Water_MeshEffect.mat
+  uploadId: 502326

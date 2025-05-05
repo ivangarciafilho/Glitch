@@ -15,6 +15,7 @@ Material:
   - _BLENDMODE_ADDITIVE
   - _SCREENSHADOWS_OFF
   - _TEXTUREPACKING_RED
+  - ___FLICKERING____ON
   - ___HALO____ON
   m_InvalidKeywords:
   - _EXPERIMENTALSHADOWS_ON
@@ -177,7 +178,7 @@ Material:
     - __HEAVYShadows: 0
     - ___DayAlpha___: 0
     - ___DistanceFade___: 0
-    - ___Flickering___: 0
+    - ___Flickering___: 1
     - ___Halo___: 1
     - ___Noise___: 0
     - ___ParticleMode___: 0

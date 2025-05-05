@@ -1,33 +1,23 @@
-What's New to RealToon V5.0.11 (February 2025)
+What's New to RealToon V5.0.12 (April 2025)
 =====================================
 
 [New]
-- (ShadowT - SDF Mode Helper - New Options) (Built-In, URP and HDRP)
-*Forward Inverted - Invert Forward/Front position of the object.
-*Right Inverted - Invert Right position of the object.
-*Light Threshold - The amount of light.
-
-- RealToon Shader Cache (New Tool) (Built-In, URP and HDRP)
-"To reduce or clear cached RealToon Shader."
-"Useful for after update RealToon Shader or Re-import RealToon Shader."
-"To access this, "Window -> RealToon -> RealToon Shader Cache"."
-
-- Support URP Dynamic Lightmap. (Unity 6.0 to Latest)
-- Support URP Deferred+. (Unity 6.1 to Latest)
-- Support Unity 6.1
-- Early add support for the later Unity 6.2.
-
+- Multiple Directional Lights support (HDRP)
+- Anisotropic Mode (Anisotropic Highlights) for Gloss Texture (New Feature) (URP and HDRP)
+- RealToon Built-In now support Perspective Adjustment.
+- Anti - Aliasing Affect Cutout (New Option) (URP)
 
 [Changes]
-- RealToon Shader (SRP) packages has been reorganized, separate Unity 6 folder and Older/Previous Unity version folders.
-- (URP 10 - 11) and (HDRP 10 - 11) has been removed, not supported anymore.
+- Cutout feature option default value changed to 0.5.
 
+[Minor Improvements]
+- Object Selection (HDRP)
+- DeNorSob Outline (URP and HDRP)
+- Screen Space Rimlight(HDRP)
 
 [Fixed]
-- Gloss feature "Unity_WorldToObject" error. (URP)
-- Overlap Sky & RayTracing Reflection. (HDRP)
-- RealToon HDRP Example missing Global Volume and overexposed. (HDRP)
-- URP Lightmap errors. (URP)
+- Can't select object including flat plane object.
+- Error when in debug baked lightmap. (URP)
 
 ====================================
 

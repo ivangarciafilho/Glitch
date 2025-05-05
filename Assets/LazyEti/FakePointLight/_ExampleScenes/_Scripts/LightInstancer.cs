@@ -1,9 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 
-namespace StylizedPointLight
+namespace FPL.Examples
 {
     [ExecuteInEditMode]
     public class LightInstancer : MonoBehaviour

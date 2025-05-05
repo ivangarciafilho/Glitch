@@ -12,6 +12,9 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
+  - _BLENDMODE_ADDITIVE
+  - _SCREENSHADOWS_OFF
+  - _TEXTUREPACKING_RED
   - ___HALO____ON
   m_InvalidKeywords:
   - _FLICKERING_ON
@@ -69,9 +72,15 @@ Material:
     - DayAlpha: 0
     - DistanceFade: 0
     - _AlphaCutoff: 0.5
+    - _Blendmode: 0
     - _CloseFade: 0
     - _CloseTransition: 0
     - _DayAlpha1: 0
+    - _DayFading: 0
+    - _DepthWrite: 0
+    - _DitherIntensity: 0.5
+    - _DitheringPattern: 0
+    - _DstBlend: 1
     - _EXPERIMENTALShadows: 0
     - _FadeDistance: 80.3
     - _FadeOffset: 38
@@ -83,6 +92,7 @@ Material:
     - _FlickerSoftness: 0.5
     - _FlickerSpeed: 2.08
     - _Flickering: 1
+    - _HaloDepthFade: 0.5
     - _HaloPosterize: 1
     - _HaloPower: 1
     - _HaloSize: 1.75
@@ -108,14 +118,21 @@ Material:
     - _QueueOffset: 0
     - _Radius: 0.82
     - _RadiusFlickering: 0.355
+    - _RandomOffset: 0
     - _ReceiveShadows: 0
+    - _ScreenShadows: 0
     - _ShadingBlend: 0.5
     - _ShadingSoftness: 0.5
+    - _ShadowThreshold: 0.5
     - _SizeFlickering: 0.38
     - _Softness: 0.564
     - _Spacing: 2
+    - _SpecIntensity: 0.5
+    - _SpecularHighlight: 0
+    - _SrcBlend: 1
     - _StartDistance: 400
     - _StepSpacing: 3
+    - _TexturePacking: 0
     - _TransitionDistance: 50
     - _UseLightNormal: 0.5
     - _UseTextureGradient: 1
@@ -129,6 +146,7 @@ Material:
     - _randomOffset: 0
     m_Colors:
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+    - _FlickerHue: {r: 1, g: 1, b: 1, a: 1}
     - _HTint: {r: 1, g: 1, b: 1, a: 1}
     - _HaloTint: {r: 2.670157, g: 2.2970276, b: 1.6751456, a: 1}
     - _LTint: {r: 1, g: 1, b: 1, a: 1}

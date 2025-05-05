@@ -1192,16 +1192,16 @@
       <HintPath>Library\ScriptAssemblies\UnityEditor.UI.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.Searcher.Editor">
-      <HintPath>Library\ScriptAssemblies\Unity.Searcher.Editor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Rider.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.Rider.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.AI.Navigation">
       <HintPath>Library\ScriptAssemblies\Unity.AI.Navigation.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Searcher.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.Searcher.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Recorder">
@@ -1418,13 +1418,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="ScreenFx.Editor.csproj">
-      <Project>{AB4A28B1-C69F-AA7A-163E-CC0B8FC9C9E5}</Project>
-      <Name>ScreenFx.Editor</Name>
-    </ProjectReference>
     <ProjectReference Include="ScreenFx.csproj">
       <Project>{FD6BDF43-B49C-0353-FF5F-0E899E6D24F9}</Project>
       <Name>ScreenFx</Name>
+    </ProjectReference>
+    <ProjectReference Include="ScreenFx.Editor.csproj">
+      <Project>{AB4A28B1-C69F-AA7A-163E-CC0B8FC9C9E5}</Project>
+      <Name>ScreenFx.Editor</Name>
     </ProjectReference>
     <ProjectReference Include="sc.posteffects.editor.csproj">
       <Project>{79932460-67D8-218A-29DE-2A973016C1CF}</Project>
@@ -1433,6 +1433,10 @@
     <ProjectReference Include="HBAO.Universal.Runtime.csproj">
       <Project>{D3059ABA-077F-0BBA-91CF-01D3B2193C25}</Project>
       <Name>HBAO.Universal.Runtime</Name>
+    </ProjectReference>
+    <ProjectReference Include="fluxy.csproj">
+      <Project>{0EE2168E-63F3-F665-8CCF-6EA0D74BC421}</Project>
+      <Name>fluxy</Name>
     </ProjectReference>
     <ProjectReference Include="VolFx.Editor.csproj">
       <Project>{C05E82A3-4AFC-02EF-0D74-F43AF3F7D06F}</Project>
@@ -1457,6 +1461,10 @@
     <ProjectReference Include="HBAO.Editor.csproj">
       <Project>{32E28883-1591-9976-ED0E-305338A466E1}</Project>
       <Name>HBAO.Editor</Name>
+    </ProjectReference>
+    <ProjectReference Include="FluXYEditor.csproj">
+      <Project>{026BCDCA-0E0B-5BC1-CEE9-C3859A548F87}</Project>
+      <Name>FluXYEditor</Name>
     </ProjectReference>
     <ProjectReference Include="VolFx.csproj">
       <Project>{BA4CF497-152A-DAF5-6B54-4AC9B077FB91}</Project>

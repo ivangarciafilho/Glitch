@@ -6,7 +6,7 @@
 
 using UnityEngine;
 
-namespace StylizedPointLight
+namespace FPL.Examples
 {
     public class SimpleCameraController : MonoBehaviour
     {

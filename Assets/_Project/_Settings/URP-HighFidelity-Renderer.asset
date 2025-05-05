@@ -347,7 +347,7 @@ MonoBehaviour:
   stripBeautifyTonemappingACESFitted: 0
   stripBeautifyTonemappingAGX: 1
   stripBeautifySharpen: 0
-  stripBeautifyDithering: 1
+  stripBeautifyDithering: 0
   stripBeautifyEdgeAA: 1
   stripBeautifyLUT: 0
   stripBeautifyLUT3D: 1
@@ -658,7 +658,7 @@ MonoBehaviour:
     failOperation: 0
     zFailOperation: 0
   m_ShadowTransparentReceive: 0
-  m_RenderingMode: 1
+  m_RenderingMode: 2
   m_DepthPrimingMode: 1
   m_CopyDepthMode: 0
   m_DepthAttachmentFormat: 0
@@ -1370,7 +1370,7 @@ MonoBehaviour:
   m_Name: RadiantRenderFeature
   m_EditorClassIdentifier: 
   m_Active: 1
-  renderingPath: 1
+  renderingPath: 2
   ignorePostProcessingOption: 1
   ignoreOverlayCameras: 1
   camerasLayerMask:

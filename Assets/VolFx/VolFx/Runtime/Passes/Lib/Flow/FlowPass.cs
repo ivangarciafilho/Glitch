@@ -12,6 +12,7 @@ namespace VolFx
         private static readonly int s_Weight  = Shader.PropertyToID("_Weight");
         private static readonly int s_Tiling  = Shader.PropertyToID("_Tiling");
         private static readonly int s_Tint    = Shader.PropertyToID("_Tint");
+        private static readonly int s_Data    = Shader.PropertyToID("_Data");
         
         public override string ShaderName => string.Empty;
         
@@ -84,6 +85,7 @@ namespace VolFx
             _rotUv    = settings.m_Angle.value * 0.01f;
             
             mat.SetColor(s_Tint, settings.m_Tint.value);
+            mat.SetVector(s_Data, new Vector4(settings.m_Focus.value, 0f));
             
             return true;
         }

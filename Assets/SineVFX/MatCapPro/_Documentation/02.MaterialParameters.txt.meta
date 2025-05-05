@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 1c77fe7d74c2769458418bf85a89e223
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 170451
+  packageName: MatCap Pro
+  packageVersion: 1.2
+  assetPath: Assets/SineVFX/MatCapPro/_Documentation/02.MaterialParameters.txt
+  uploadId: 740695

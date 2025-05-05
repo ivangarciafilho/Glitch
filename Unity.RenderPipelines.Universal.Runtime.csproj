@@ -64,8 +64,8 @@
     <Compile Include="Assets\Beautify\URP\Runtime\BeautifyRendererFeature.cs" />
     <Compile Include="Assets\RadiantGI\Runtime\Scripts\RadiantProbe.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@39c80789bb81\Runtime\Overrides\ColorAdjustments.cs" />
-    <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@39c80789bb81\Runtime\Decal\Entities\DecalEntityManager.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@39c80789bb81\Runtime\Passes\ScreenSpaceAmbientOcclusionPass.cs" />
+    <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@39c80789bb81\Runtime\Decal\Entities\DecalEntityManager.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@39c80789bb81\Runtime\Overrides\ScreenSpaceLensFlare.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@39c80789bb81\Runtime\History\RawColorHistory.cs" />
     <Compile Include="Assets\VolumetricLights\Scripts\VolumetricLight.Settings.cs" />
@@ -117,8 +117,8 @@
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@39c80789bb81\Runtime\RendererFeatures\ScreenSpaceAmbientOcclusion.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@39c80789bb81\Runtime\History\TaaHistory.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@39c80789bb81\Runtime\FrameData\UniversalPostProcessingData.cs" />
-    <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@39c80789bb81\Runtime\Overrides\Bloom.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@39c80789bb81\Runtime\FrameData\UniversalShadowData.cs" />
+    <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@39c80789bb81\Runtime\Overrides\Bloom.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@39c80789bb81\Runtime\Debug\DebugDisplaySettingsRendering.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@39c80789bb81\Runtime\SupportedOnRenderer.cs" />
     <Compile Include="Library\PackageCache\com.unity.render-pipelines.universal@39c80789bb81\Runtime\UniversalRenderer.cs" />

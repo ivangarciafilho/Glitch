@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-namespace StylizedPointLight
+namespace FPL.Examples
 {
     public class SimpleRotator : MonoBehaviour
     {
@@ -13,19 +11,9 @@ namespace StylizedPointLight
         public bool yAxis = false;
         public bool zAxis = false;
 
-
-        // Start is called before the first frame update
-        void Start()
-        {
-
-        }
-
-        // Update is called once per frame
         void FixedUpdate()
         {
             transform.Rotate (speed * Convert.ToInt32 (xAxis), speed * Convert.ToInt32 (yAxis), speed * Convert.ToInt32 (zAxis));
-
-
         }
     }
 }

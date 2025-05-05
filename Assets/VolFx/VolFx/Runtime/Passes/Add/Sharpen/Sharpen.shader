@@ -1,15 +1,6 @@
 //  VolFx © NullTale - https://x.com/NullTale
 Shader "Hidden/VolFx/Sharpen"
 {
-    Properties
-    {
-        _Center("Center Weight", Float) = 5
-        _Side("Sample Weight", Float) = -1
-        _Color("Color", Color) = (1, 1, 1, 1)
-        
-		[Toggle(BOX)]_Centered("Box", Float) = 1
-    }
-
     SubShader
     {
         name "Sharpen"
@@ -33,14 +24,17 @@ Shader "Hidden/VolFx/Sharpen"
 			#pragma multi_compile_local __ BOX
 
             sampler2D       _MainTex;
-            uniform float2  _Thickness;         // 1 / width, 1 / height
+            sampler2D       _ValueTex;
+            float4          _Thickness;         // 1 / width, 1 / height, offset x, offset y
             
-            half            _Impact;
-            half            _Center;
-            half            _Side;
+            half4           _Data;
+            
+            #define _Center _Data.y
+            #define _Side   _Data.z
+            
             half4           _Color;
 
-            //half4x4        _kernel; 
+            // half4x4        _kernel; 
             
             struct vert_in
             {
@@ -61,23 +55,36 @@ Shader "Hidden/VolFx/Sharpen"
                 o.uv = v.uv;
                 return o;
             }
+            
+            half luma(half3 rgb)
+            {
+                return dot(rgb, half3(.299, .587, .114));
+            }
 
             half4 frag (frag_in i) : SV_Target
             {
                 // Sharpen calculations
                 half4 initial = tex2D(_MainTex, i.uv);
-                half4 result = initial * _Center;
+                half4 result = 0;
+
+                half l = luma(initial.rgb);
+                _Thickness.xy *= tex2D(_ValueTex, float2(l, .5));
                 
-                result += tex2D(_MainTex, i.uv + float2( _Thickness.x, 0)) * _Side;
-                result += tex2D(_MainTex, i.uv + float2(-_Thickness.x, 0)) * _Side;
-                result += tex2D(_MainTex, i.uv + float2(0, _Thickness.y)) * _Side;
-                result += tex2D(_MainTex, i.uv + float2(0,-_Thickness.y)) * _Side;
+                i.uv += float2(_Thickness.z * l, _Thickness.w * l);
+                
+                result += tex2D(_MainTex, i.uv + float2( _Thickness.x, 0));
+                result += tex2D(_MainTex, i.uv + float2(-_Thickness.x, 0));
+                result += tex2D(_MainTex, i.uv + float2(0, _Thickness.y));
+                result += tex2D(_MainTex, i.uv + float2(0,-_Thickness.y));
 #ifdef BOX
-                result += tex2D(_MainTex, i.uv + float2( _Thickness.x, _Thickness.y)) * _Side;
-                result += tex2D(_MainTex, i.uv + float2(-_Thickness.x, _Thickness.y)) * _Side;
-                result += tex2D(_MainTex, i.uv + float2( _Thickness.x,-_Thickness.y)) * _Side;
-                result += tex2D(_MainTex, i.uv + float2(-_Thickness.x,-_Thickness.y)) * _Side;
+                result += tex2D(_MainTex, i.uv + float2( _Thickness.x, _Thickness.y));
+                result += tex2D(_MainTex, i.uv + float2(-_Thickness.x, _Thickness.y));
+                result += tex2D(_MainTex, i.uv + float2( _Thickness.x,-_Thickness.y));
+                result += tex2D(_MainTex, i.uv + float2(-_Thickness.x,-_Thickness.y));
 #endif
+
+                result *= _Side;
+                result += initial * _Center;
 
                 // Output to screen
                 return initial + (result - initial) * _Color;

@@ -117,8 +117,9 @@ float4 frag(Varyings input) : SV_Target
 		half4 _MainTex_var = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, TRANSFORM_TEX(input.uv, _MainTex));
 	#endif
 
+		
 	//RT_CO
-	RT_CO(input.uv, _MainTex_var, input.positionWS, input.normalWS, input.positionCS.xy);
+	RT_CO(input.uv, _MainTex_var, _MainTex_var.a, input.positionWS, input.normalWS, input.positionCS.xy);
 	//==
 		
 		

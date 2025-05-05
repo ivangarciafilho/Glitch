@@ -1,4 +1,4 @@
-//RealToon V5.0.11 (URP)
+//RealToon V5.0.12 (URP)
 //MJQStudioWorks
 //©2025
 
@@ -29,9 +29,11 @@ Shader "Universal Render Pipeline/RealToon/Version 5/Default/Default"
 		_SPECIN ("Specular Power", Float ) = 1
 		_MCapMask ("Mask MatCap", 2D) = "white" {}
 
-        _Cutout ("Cutout", Range(0, 1)) = 0.0
+        _Cutout ("Cutout", Range(0, 1)) = 0.5
 		[ToggleOff] _AlphaBaseCutout ("Alpha Base Cutout", Float ) = 1.0
 		[Toggle(N_F_SCO_ON)] _N_F_SCO ("Soft Cutout", Float ) = 0.0
+		[Toggle(N_F_ATC_ON)] _AlpToCov("Anti - Aliasing Affect Cutout", int) = 0
+
         [ToggleOff] _UseSecondaryCutout ("Use Secondary Cutout Only", Float ) = 0.0
         _SecondaryCutout ("Secondary Cutout", 2D) = "white" {}
 
@@ -97,10 +99,15 @@ Shader "Universal Render Pipeline/RealToon/Version 5/Default/Default"
         _MaskGloss ("Mask Gloss", 2D) = "white" {}
 
         _GlossTexture ("Gloss Texture", 2D) = "black" {}
+		[Toggle(N_F_ANIS_ON)] _N_F_ANIS ("Anisotropic Mode", Float ) = 0.0
         _GlossTextureSoftness ("Softness", Float ) = 0.0
 		[ToggleOff] _PSGLOTEX ("Pattern Style", Float ) = 0.0
         _GlossTextureRotate ("Rotate", Float ) = 0.0
         [ToggleOff] _GlossTextureFollowObjectRotation ("Follow Object Rotation", Float ) = 0.0
+		_NoisTexInten ("Noise Texture Intensity", Range(0, 10)) = 1.0
+        _StraWidt ("Width", Float ) = 10.0
+        _NoiTexAffStraWidt ("Noise Texture Affect Width", Range(0, 1) ) = 0
+        _ShifAnis ("Shift", Float ) = 0.0
         _GlossTextureFollowLight ("Follow Light", Range(0, 1)) = 0.0
 
         [HDR] _OverallShadowColor ("Overall Shadow Color", Color) = (0.0,0.0,0.0,1.0)
@@ -253,7 +260,6 @@ Shader "Universal Render Pipeline/RealToon/Version 5/Default/Default"
 		[HideInInspector]_ObjectForward("Object Forward", Vector) = (0, 0, 0, 0)
 		[HideInInspector]_ObjectRight("Object Right", Vector) = (0, 0, 0, 0)
 
-
     }
 
 SubShader
@@ -269,441 +275,6 @@ SubShader
 	}
     LOD 300
 
-	Pass {
-
-Name"Outline"
-Tags{"LightMode"="SRPDefaultUnlit"}
-//OL_NRE
-
-Cull [_DoubleSidedOutline]//OL_RCUL
-Blend[_BleModSour][_BleModDest]
-
-		Stencil {
-/*//O_ST
-			Ref[_RefVal]
-			Comp [_Compa]
-			Pass [_Oper]
-			Fail [_Oper]
-//O_ST_En*/
-
-Pass Invert//O_PI
-		}
-
-        HLSLPROGRAM
-
-        #pragma only_renderers d3d9 d3d11 vulkan glcore gles3 gles metal xboxone ps4 xboxseries playstation switch
-#pragma target 4.5 //targetol
-
-		#pragma multi_compile _ _ADDITIONAL_LIGHTS
-		#pragma multi_compile _ _FORWARD_PLUS
-
-		#include_with_pragmas "Packages/com.unity.render-pipelines.core/ShaderLibrary/FoveatedRenderingKeywords.hlsl"
-		#include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/RenderingLayers.hlsl"
-		#pragma multi_compile_fragment _ _LIGHT_LAYERS
-        #pragma multi_compile_fog
-        #pragma multi_compile_instancing
-		#pragma instancing_options renderinglayer
-
-		#pragma multi_compile _ DOTS_INSTANCING_ON
-		#pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
-
-        #pragma vertex LitPassVertex
-        #pragma fragment LitPassFragment
-
-		#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
-		#include "Assets/RealToon/RealToon Shaders/RealToon Core/URP/RT_URP_Core.hlsl"
-
-		#if defined(LOD_FADE_CROSSFADE)
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
-		#endif
-
-		#pragma shader_feature_local_fragment N_F_TRANS_ON
-		#pragma shader_feature_local_fragment N_F_SIMTRANS_ON
-		#pragma shader_feature_local_fragment N_F_CO_ON
-		#pragma shader_feature_local_fragment N_F_EAL_ON
-		#pragma shader_feature_local N_F_O_ON
-		#pragma shader_feature_local_vertex N_F_DNO_ON
-		#pragma shader_feature_local_vertex N_F_DDMD_ON
-		#pragma shader_feature_local_fragment N_F_NFD_ON
-		#pragma shader_feature_local_fragment N_F_TP_ON
-		#pragma shader_feature_local_vertex N_F_PA_ON
-		#pragma shader_feature_local_vertex N_F_SE_ON
-		#pragma shader_feature_local_fragment N_F_SCO_ON
-
-		struct Attributes
-        {
-
-            float4 positionOS   : POSITION;
-            float3 normalOS     : NORMAL;
-            float2 uv           : TEXCOORD0;
-			float4 vertexColor	: COLOR;
-			float2 uvLM         : TEXCOORD1;
-		#if defined(UNITY_DOTS_INSTANCING_ENABLED)
-
-		#ifndef	N_F_DDMD_ON
-			float4 tangentOS    : TANGENT;
-float4 weights : BLENDWEIGHTS;//DOTS_LiBleSki_OL
-uint4 indices : BLENDINDICES;//DOTS_LiBleSki_OL
-//uint vertexID : SV_VertexID;//DOTS_CompDef_OL
-		#endif
-
-		#endif
-            UNITY_VERTEX_INPUT_INSTANCE_ID
-
-        };
-
-        struct Varyings
-        {
-
-            float2 uv                       : TEXCOORD0;
-            float4 positionWSAndFogFactor   : TEXCOORD2; 
-			float4 projPos					: TEXCOORD7;
-			float4 posWorld					: TEXCOORD8;
-			float3 normalWS					: TEXCOORD9;
-			float4 vertexColor				: COLOR;
-            float4 positionCS               : SV_POSITION;
-			UNITY_VERTEX_INPUT_INSTANCE_ID
-			UNITY_VERTEX_OUTPUT_STEREO
-
-        };
-
-
-		Varyings LitPassVertex(Attributes input)
-        {
-
-			Varyings output = (Varyings)0;
-
-			UNITY_SETUP_INSTANCE_ID (input);
-			UNITY_TRANSFER_INSTANCE_ID(input, output);
-            UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
-
-            output.uv = input.uv;
-            output.vertexColor = input.vertexColor;
-
-		#if defined(UNITY_DOTS_INSTANCING_ENABLED)
-
-			#ifdef	N_F_DDMD_ON
-
-				float4 _LBS_CD_Position = input.positionOS;
-				float3 _LBS_CD_Normal = input.normalOS;
-				//float4 _LBS_CD_Tangent = input.tangentOS; //not currently needed
-
-			#else
-
-				float4 _LBS_CD_Position = 0;
-				float3 _LBS_CD_Normal = 0;
-				float4 _LBS_CD_Tangent = 0;
-
-DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS.xyz, input.tangentOS.xyz, (float3)_LBS_CD_Position, _LBS_CD_Normal, (float3)_LBS_CD_Tangent);//DOTS_LiBleSki_OL
-//DOTS_CompDef(input.vertexID, (float3)_LBS_CD_Position, _LBS_CD_Normal, (float3)_LBS_CD_Tangent);//DOTS_CompDef_OL
-
-			#endif
-			
-		#else
-			float4 _LBS_CD_Position = input.positionOS;
-			float3 _LBS_CD_Normal = input.normalOS;
-			//float4 _LBS_CD_Tangent = input.tangentOS; //not currently needed
-		#endif
-
-			VertexPositionInputs vertexInput = GetVertexPositionInputs(_LBS_CD_Position.xyz);
-
-			output.normalWS = TransformObjectToWorldNormal(input.normalOS);
-			output.posWorld = float4(vertexInput.positionWS, 1.0);
-
-			float4 objPos = mul ( GetObjectToWorldMatrix(), float4(0.0,0.0,0.0,1.0) );
-
-
-			//RT_SE
-			#if N_F_SE_ON
-				input.positionOS = RT_SE(vertexInput.positionWS, input.positionOS);
-				_LBS_CD_Position = input.positionOS;
-			#endif
-			//==
-
-
-			half RTD_OB_VP_CAL = distance(objPos.rgb,_WorldSpaceCameraPos);
-
-			//**
-			half RTD_OL_VCRAOW_OO;
-			if (!_VertexColorBlueAffectOutlineWitdh)
-			{
-				RTD_OL_VCRAOW_OO = _OutlineWidth;
-			}
-			else
-			{
-				RTD_OL_VCRAOW_OO = _OutlineWidth * (1.0 - output.vertexColor.b);
-			}
-			//**
-
-
-			//**
-			half RTD_OL_OLWABVD_OO;
-			if (!_OutlineWidthAffectedByViewDistance)
-			{
-				RTD_OL_OLWABVD_OO = RTD_OL_VCRAOW_OO;
-			}
-			else
-			{
-				RTD_OL_OLWABVD_OO = clamp(RTD_OL_VCRAOW_OO * RTD_OB_VP_CAL, RTD_OL_VCRAOW_OO, _FarDistanceMaxWidth);
-			}
-			//**
-
-
-			#if defined(SHADER_API_GLES) 
-				half4 _OutlineWidthControl_var = tex2Dlod(_OutlineWidthControl, float4(TRANSFORM_TEX(output.uv, _OutlineWidthControl), 0.0, 0)); //replace soon
-			#else
-				half4 _OutlineWidthControl_var = SAMPLE_TEXTURE2D_LOD(_OutlineWidthControl, sampler_OutlineWidthControl, TRANSFORM_TEX(output.uv, _OutlineWidthControl), 0.0);
-			#endif
-
-			#if N_F_DNO_ON
-
-				float4 _3726 = _Time;
-				float _8530_ang = _3726.g;
-				float _8530_spd = 0.002;
-				float _8530_cos = cos(_8530_spd * _8530_ang);
-				float _8530_sin = sin(_8530_spd * _8530_ang);
-				float2 _8530_piv = float2(0.5, 0.5);
-				half2 _8530 = (mul(output.uv - _8530_piv, float2x2(_8530_cos, -_8530_sin, _8530_sin, _8530_cos)) + _8530_piv);
-
-				half2 RTD_OL_DNOL_OO = _8530;
-
-			#else
-
-				half2 RTD_OL_DNOL_OO = output.uv;
-
-			#endif
-
-
-			half2 _8743 = RTD_OL_DNOL_OO;
-            float2 _1283_skew = _8743 + 0.2127+_8743.x*0.3713*_8743.y;
-            float2 _1283_rnd = 4.789*sin(489.123*(_1283_skew));
-            half _1283 = frac(_1283_rnd.x*_1283_rnd.y*(1+_1283_skew.x));
-
-
-			//**
-			float3 _OEM = float3(0.0, 0.0, 0.0);
-			if (!_OutlineExtrudeMethod)
-			{
-				_OEM = _LBS_CD_Normal;
-			}
-			else
-			{
-				_OEM = normalize(_LBS_CD_Position.xyz);
-			}
-			//**
-
-
-			half RTD_OL = ( RTD_OL_OLWABVD_OO*0.01 ) * _OutlineWidthControl_var.r * lerp(1.0,_1283,_NoisyOutlineIntensity);
-
-
-			//RT_PA
-			#if N_F_PA_ON
-				output.positionCS = mul(RT_PA(vertexInput.positionWS), float4( (_LBS_CD_Position.xyz + _OutlineOffset.xyz * 0.01) + _OEM * RTD_OL, 1.0) );
-			#else
-				output.positionCS = mul(GetWorldToHClipMatrix(), mul(GetObjectToWorldMatrix(), float4( (_LBS_CD_Position.xyz + _OutlineOffset.xyz * 0.01) + _OEM * RTD_OL,1.0) ) );
-			#endif
-			//==
-
-
-			#if defined(SHADER_API_GLCORE) || defined(SHADER_API_GLES) || defined(SHADER_API_GLES3)
-				output.positionCS.z += _OutlineZPostionInCamera * 0.0005;
-			#else
-				output.positionCS.z -= _OutlineZPostionInCamera * 0.0005;
-			#endif
-
-			float fogFactor = ComputeFogFactor(vertexInput.positionCS.z);
-			output.positionWSAndFogFactor = float4(vertexInput.positionWS, fogFactor);
-			output.projPos = ComputeScreenPos (output.positionCS);
-
-            return output;
-
-        }
-
-        void LitPassFragment(
-			Varyings input
-		    , out half4 outColor : SV_Target0
-		#ifdef _WRITE_RENDERING_LAYERS
-			, out float4 outRenderingLayers : SV_Target1
-		#endif
-		)
-        {
-
-			UNITY_SETUP_INSTANCE_ID (input);
-			UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-
-            float3 positionWS = input.positionWSAndFogFactor.xyz;
-			float4 objPos = mul ( GetObjectToWorldMatrix(), float4(0.0,0.0,0.0,1.0) );
-            float2 sceneUVs = (input.projPos.xy / input.projPos.w);
-			half RTD_OB_VP_CAL = distance(objPos.rgb,_WorldSpaceCameraPos);
-			half2 RTD_VD_Cal = (float2((sceneUVs.x * 2.0 - 1.0)*(_ScreenParams.r/_ScreenParams.g), sceneUVs.y * 2.0 - 1.0).rg*RTD_OB_VP_CAL);
-
-			#ifdef LOD_FADE_CROSSFADE
-				LODFadeCrossFade(input.positionCS);
-			#endif
-
-			half3 color = (half3)1.0;
-
-			//**
-			half2 RTD_TC_TP_OO;
-			if (!_TexturePatternStyle)
-			{
-				RTD_TC_TP_OO = input.uv;
-			}
-			else
-			{
-				RTD_TC_TP_OO = RTD_VD_Cal;
-			}
-			//**
-
-
-			#ifdef N_F_TP_ON
-				half4 _MainTex_var = RT_Tripl_Default(_MainTex, sampler_MainTex, positionWS, input.normalWS);
-			#else
-				half4 _MainTex_var = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, TRANSFORM_TEX(RTD_TC_TP_OO, _MainTex));
-			#endif
-
-
-			//RT_TRANS_CO
-			half RTD_TRAN_OPA_Sli;
-			half RTD_CO;
-			half3 GLO_OUT;
-			RT_TRANS_CO(input.uv, _MainTex_var, RTD_TRAN_OPA_Sli, RTD_CO, positionWS, input.normalWS, input.positionCS.xy, GLO_OUT);
-
-			#if N_F_TRANS_ON
-				#ifndef N_F_CO_ON
-					clip(RTD_TRAN_OPA_Sli - 0.5);
-				#endif
-			#endif
-			//
-
-
-			//========/
-			//========/
-			Light mainLight = GetMainLight();
-
-			#ifndef N_F_OFLMB_ON
-				half3 lightColor = mainLight.color.rgb;
-			#else
-				half3 lightColor = (half3)1.0;
-			#endif
-			//========/
-			//========/
-
-
-			uint meshRenderingLayers = GetMeshRenderingLayer();
-
-
-			//========/
-			//========/
-			#ifndef N_F_OFLMB_ON
-				#ifdef _ADDITIONAL_LIGHTS
-					#if N_F_EAL_ON
-
-						uint pixelLightCount = GetAdditionalLightsCount();
-
-						#if USE_FORWARD_PLUS
-
-							InputData inputData = (InputData)0;
-							inputData.positionWS = positionWS;
-							inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
-
-							for (uint lightIndex = 0; lightIndex < min(URP_FP_DIRECTIONAL_LIGHTS_COUNT, MAX_VISIBLE_LIGHTS); lightIndex++)
-							{
-								Light light = GetAdditionalLight(lightIndex, input.posWorld.xyz, (float4)1.0);
-
-						#ifdef _LIGHT_LAYERS
-								if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
-						#endif
-								{
-									lightColor += light.color * light.distanceAttenuation;
-								}
-							}
-						#endif
-
-						LIGHT_LOOP_BEGIN(pixelLightCount)
-							Light light = GetAdditionalLight(lightIndex, positionWS);
-
-							#ifdef _LIGHT_LAYERS
-								if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
-							#endif
-							{
-								lightColor += light.color * light.distanceAttenuation;
-							}
-						LIGHT_LOOP_END
-
-					#endif
-				#endif
-			#endif
-			//========/
-			//========/
-
-
-            float fogFactor = input.positionWSAndFogFactor.w;
-
-
-			//
-			#ifdef UNITY_COLORSPACE_GAMMA
-				_OutlineColor = float4(LinearToGamma22(_OutlineColor.rgb), _OutlineColor.a);
-			#endif
-			//
-
-
-			//**
-			half3 RTD_MMTTO_OO;
-			if (!_MixMainTexToOutline)
-			{
-				RTD_MMTTO_OO = _OutlineColor.rgb;
-			}
-			else
-			{
-
-				RTD_MMTTO_OO = _OutlineColor.rgb * _MainTex_var.rgb;
-			}
-			//**
-
-
-			//**
-			half3 RTD_OL_LAOC_OO;
-			if (!_LightAffectOutlineColor)
-			{
-				RTD_OL_LAOC_OO = RTD_MMTTO_OO;
-			}
-			else
-			{
-
-				RTD_OL_LAOC_OO = lerp(half3(0.0, 0.0, 0.0), RTD_MMTTO_OO, lightColor.rgb);
-			}
-			//**
-
-
-			half3 finalRGBA = RTD_OL_LAOC_OO;
-
-
-			//RT_NFD
-			#ifdef N_F_NFD_ON
-				RT_NFD(input.positionCS.xy);
-			#endif
-			//==
-
-
-			color = MixFog(finalRGBA, fogFactor);
-
-			#if defined(N_F_TRANS_ON) & !defined(N_F_CO_ON)
-				outColor = half4(color, RTD_TRAN_OPA_Sli);
-			#else
-				outColor = half4(color, 1.0);
-			#endif
-
-			#ifdef _WRITE_RENDERING_LAYERS
-				uint renderingLayers = GetMeshRenderingLayer();
-				outRenderingLayers = float4(EncodeMeshRenderingLayer(renderingLayers), 0, 0, 0);
-			#endif
-
-        }
-
-		ENDHLSL
-    }
-
     Pass
     {
 
@@ -713,6 +284,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
         Cull [_Culling]
 		Blend [_BleModSour] [_BleModDest]
 		ZWrite[_ZWrite]
+
+		AlphaToMask[_AlpToCov]
 
 /*//F_ST
 		Stencil {
@@ -809,6 +382,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 		#pragma shader_feature_local_vertex N_F_SE_ON
 		#pragma shader_feature_local_fragment N_F_SCO_ON
 		#pragma shader_feature_local_fragment N_F_STSDFM_ON
+		#pragma shader_feature_local_fragment N_F_ATC_ON
+		#pragma shader_feature_local_fragment N_F_ANIS_ON
 
 		#define _EMISSION
 
@@ -1099,7 +674,7 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			half RTD_TRAN_OPA_Sli;
 			half RTD_CO;
 			half3 GLO_OUT = (half3)0.0;
-			RT_TRANS_CO(input.uv, _MainTex_var, RTD_TRAN_OPA_Sli, RTD_CO, positionWS, normalDirection, input.positionCS.xy, GLO_OUT);
+			RT_TRANS_CO(input.uv, _MainTex_var, _MainTex_var.a, RTD_TRAN_OPA_Sli, RTD_CO, positionWS, normalDirection, input.positionCS.xy, GLO_OUT);
 			//==
 
 
@@ -1300,7 +875,7 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			//RT_GLO
 			half RTD_GLO;
 			half3 RTD_GLO_COL;
-			RT_GLO(input.uv, RTD_VD_Cal, halfDirection, normalDirection, viewDirection, positionWS, RTD_GLO, RTD_GLO_COL);
+			RT_GLO(input.uv, RTD_VD_Cal, halfDirection, input.bitangentWS, normalDirection, viewDirection, positionWS, RTD_GLO, RTD_GLO_COL);
 			half3 RTD_GLO_OTHERS = RTD_GLO;
 			//**
 
@@ -1384,9 +959,9 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 								#endif
 										{
 											#if N_F_USETLB_ON
-												A_L_O += RT_ADD_LI(light, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex);
+												A_L_O += RT_ADD_LI(light, input.bitangentWS, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex);
 											#else
-												A_L_O = max(RT_ADD_LI(light, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex),A_L_O);
+												A_L_O = max(RT_ADD_LI(light, input.bitangentWS, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex),A_L_O);
 											#endif
 										}
 								}
@@ -1402,9 +977,9 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 								#endif
 								{
 									#if N_F_USETLB_ON
-										A_L_O += RT_ADD_LI(light, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex);
+										A_L_O += RT_ADD_LI(light, input.bitangentWS, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex);
 									#else
-										A_L_O = max(RT_ADD_LI(light, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex),A_L_O);
+										A_L_O = max(RT_ADD_LI(light, input.bitangentWS, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex),A_L_O);
 									#endif
 								}
 
@@ -1418,7 +993,6 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			//========/
 			//========/
 
-
 			#ifndef N_F_OFLMB_ON
 				#if N_F_USETLB_ON
 					color = main_light_output + A_L_O;
@@ -1428,22 +1002,28 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			#else
 				color = main_light_output;
 			#endif
-
-
+			
 			#if N_F_TRANS_ON
 				float Trans_Val = 1.0;
 				#ifndef N_F_CO_ON
 					Trans_Val = RTD_TRAN_OPA_Sli;
+				#else
+					#if N_F_ATC_ON
+						Trans_Val = _MainTex_var.a;
+					#else
+						Trans_Val = 1.0;
+					#endif
 				#endif
 			#else
 				float Trans_Val = 1.0;
 			#endif
 
+
 			//RT_CA
 			float3 RTD_CA = RT_CA(color * SSAmOc + GLO_OUT);
 			//==
 
-//SSOL_NU
+//SSOL_NUs
 //SSOL
 //#ifdef UNITY_COLORSPACE_GAMMA//SSOL
 //_OutlineColor=float4(LinearToGamma22(_OutlineColor.rgb),_OutlineColor.a);//SSOL
@@ -1676,12 +1256,12 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 
 			#if N_F_TRANSAFFSHA_ON
 
-
+				
 				//RT_TRANS_CO
 				half RTD_TRAN_OPA_Sli;
 				half RTD_CO;
 				half3 GLO_OUT;
-				RT_TRANS_CO(input.uv, _MainTex_var, RTD_TRAN_OPA_Sli, RTD_CO, input.positionWS, input.normalWS, input.positionCS.xy, GLO_OUT);
+				RT_TRANS_CO(input.uv, _MainTex_var, _MainTex_var.a, RTD_TRAN_OPA_Sli, RTD_CO, input.positionWS, input.normalWS, input.positionCS.xy, GLO_OUT);
 
 				#if N_F_TRANS_ON
 					#ifndef N_F_CO_ON
@@ -1818,6 +1398,7 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 		#pragma shader_feature_local_vertex N_F_SE_ON
 		#pragma shader_feature_local_fragment N_F_SCO_ON
 		#pragma shader_feature_local_fragment N_F_STSDFM_ON
+		#pragma shader_feature_local_fragment N_F_ANIS_ON
 
 		#define _EMISSION
 
@@ -2126,12 +1707,12 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 			half3 RTD_MCIALO_IL = RT_MCAP_SUB1(MCapOutP, _MainTex_var, _RTD_MVCOL, RTD_TEX_COL);
 			//==
 
-
+			
 			//RT_TRANS_CO
 			half RTD_TRAN_OPA_Sli;
 			half RTD_CO;
 			half3 GLO_OUT = (half3)0.0;
-			RT_TRANS_CO(input.uv, _MainTex_var, RTD_TRAN_OPA_Sli, RTD_CO, positionWS, normalDirection, input.positionCS.xy, GLO_OUT);
+			RT_TRANS_CO(input.uv, _MainTex_var, _MainTex_var.a, RTD_TRAN_OPA_Sli, RTD_CO, positionWS, normalDirection, input.positionCS.xy, GLO_OUT);
 			//==
 
 
@@ -2326,11 +1907,11 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 
 			half3 RTD_MCIALO = RTD_MCIALO_OO;
 
-
+			
 			//RT_GLO
 			half RTD_GLO;
 			half3 RTD_GLO_COL;
-			RT_GLO(input.uv, RTD_VD_Cal, halfDirection, normalDirection, viewDirection, positionWS, RTD_GLO, RTD_GLO_COL);
+			RT_GLO(input.uv, RTD_VD_Cal, halfDirection, input.bitangentWS, normalDirection, viewDirection, positionWS, RTD_GLO, RTD_GLO_COL);
 			half3 RTD_GLO_OTHERS = RTD_GLO;
 			//==
 
@@ -2415,9 +1996,9 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 							#endif
 									{
 										#if N_F_USETLB_ON
-											A_L_O += RT_ADD_LI(light, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex);
+											A_L_O += RT_ADD_LI(light, input.bitangentWS, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex);
 										#else
-											A_L_O = max(RT_ADD_LI(light, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex),A_L_O);
+											A_L_O = max(RT_ADD_LI(light, input.bitangentWS, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex),A_L_O);
 										#endif
 									}
 								}
@@ -2431,9 +2012,9 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 								#endif
 								{
 									#if N_F_USETLB_ON
-										A_L_O += RT_ADD_LI(light, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex);
+										A_L_O += RT_ADD_LI(light, input.bitangentWS, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex);
 									#else
-										A_L_O = max(RT_ADD_LI(light, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex),A_L_O);
+										A_L_O = max(RT_ADD_LI(light, input.bitangentWS, viewDirection, viewReflectDirection, positionWS, ss_col, RTD_TEX_COL, _MC_MCP, _MainTex_var, MCapOutP, _RTD_MVCOL, RTD_VD_Cal, normalDirection, RTD_SON, RTD_PT_COL, RTD_SCT, RTD_OSC, RTD_PT, RTD_MCIALO_IL, input.uv, input.vertexColor, isFrontFace, lightIndex),A_L_O);
 									#endif
 								}
 							LIGHT_LOOP_END
@@ -2462,10 +2043,13 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS
 				float Trans_Val = 1.0;
 				#ifndef N_F_CO_ON
 					Trans_Val = RTD_TRAN_OPA_Sli;
+				#else
+					Trans_Val = 1.0;
 				#endif
 			#else
 				float Trans_Val = 1.0;
 			#endif
+
 
 			//RT_CA
 			float3 RTD_CA = RT_CA(color + GLO_OUT);
@@ -2839,12 +2423,12 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normal.x
 
 			#if N_F_TRANSAFFSHA_ON
 
-
+				
 				//RT_TRANS_CO
 				half RTD_TRAN_OPA_Sli;
 				half RTD_CO;
 				half3 GLO_OUT;
-				RT_TRANS_CO(input.uv, _MainTex_var, RTD_TRAN_OPA_Sli, RTD_CO, input.positionWS, input.normalWS, input.positionCS.xy, GLO_OUT);
+				RT_TRANS_CO(input.uv, _MainTex_var, _MainTex_var.a, RTD_TRAN_OPA_Sli, RTD_CO, input.positionWS, input.normalWS, input.positionCS.xy, GLO_OUT);
 
 				#if N_F_TRANS_ON
 					#ifndef N_F_CO_ON
@@ -2993,8 +2577,8 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normal.x
 			metaInput.Emission = RTD_SL;
 
 			#ifdef EDITOR_VISUALIZATION
-				metaInput.VizUV = fragIn.VizUV;
-				metaInput.LightCoord = fragIn.LightCoord;
+				metaInput.VizUV = input.VizUV;
+				metaInput.LightCoord = input.LightCoord;
 			#endif
 
 			return MetaFragment(metaInput);
@@ -3103,6 +2687,450 @@ DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normal.x
 
         ENDHLSL
     }
+
+	Pass {
+
+Name"Outline"
+Tags{"LightMode"="SRPDefaultUnlit"}
+//OL_NRE
+
+Cull [_DoubleSidedOutline]//OL_RCUL
+Blend[_BleModSour][_BleModDest]
+
+AlphaToMask[_AlpToCov]
+
+		Stencil {
+/*//O_ST
+			Ref[_RefVal]
+			Comp [_Compa]
+			Pass [_Oper]
+			Fail [_Oper]
+//O_ST_En*/
+
+Pass Invert//O_PI
+		}
+
+        HLSLPROGRAM
+
+        #pragma only_renderers d3d9 d3d11 vulkan glcore gles3 gles metal xboxone ps4 xboxseries playstation switch
+#pragma target 4.5 //targetol
+
+		#pragma multi_compile _ _ADDITIONAL_LIGHTS
+		#pragma multi_compile _ _FORWARD_PLUS
+
+		#include_with_pragmas "Packages/com.unity.render-pipelines.core/ShaderLibrary/FoveatedRenderingKeywords.hlsl"
+		#include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/RenderingLayers.hlsl"
+		#pragma multi_compile_fragment _ _LIGHT_LAYERS
+        #pragma multi_compile_fog
+        #pragma multi_compile_instancing
+		#pragma instancing_options renderinglayer
+
+		#pragma multi_compile _ DOTS_INSTANCING_ON
+		#pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
+
+        #pragma vertex LitPassVertex
+        #pragma fragment LitPassFragment
+
+		#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
+		#include "Assets/RealToon/RealToon Shaders/RealToon Core/URP/RT_URP_Core.hlsl"
+
+		#if defined(LOD_FADE_CROSSFADE)
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
+		#endif
+
+		#pragma shader_feature_local_fragment N_F_TRANS_ON
+		#pragma shader_feature_local_fragment N_F_SIMTRANS_ON
+		#pragma shader_feature_local_fragment N_F_CO_ON
+		#pragma shader_feature_local_fragment N_F_EAL_ON
+		#pragma shader_feature_local N_F_O_ON
+		#pragma shader_feature_local_vertex N_F_DNO_ON
+		#pragma shader_feature_local_vertex N_F_DDMD_ON
+		#pragma shader_feature_local_fragment N_F_NFD_ON
+		#pragma shader_feature_local_fragment N_F_TP_ON
+		#pragma shader_feature_local_vertex N_F_PA_ON
+		#pragma shader_feature_local_vertex N_F_SE_ON
+		#pragma shader_feature_local_fragment N_F_SCO_ON
+		#pragma shader_feature_local_fragment N_F_ATC_ON
+
+		struct Attributes
+        {
+
+            float4 positionOS   : POSITION;
+            float3 normalOS     : NORMAL;
+            float2 uv           : TEXCOORD0;
+			float4 vertexColor	: COLOR;
+			float2 uvLM         : TEXCOORD1;
+		#if defined(UNITY_DOTS_INSTANCING_ENABLED)
+
+		#ifndef	N_F_DDMD_ON
+		float4 tangentOS    : TANGENT;
+float4 weights : BLENDWEIGHTS;//DOTS_LiBleSki_OL
+uint4 indices : BLENDINDICES;//DOTS_LiBleSki_OL
+//uint vertexID : SV_VertexID;//DOTS_CompDef_OL
+		#endif
+
+		#endif
+            UNITY_VERTEX_INPUT_INSTANCE_ID
+
+        };
+
+        struct Varyings
+        {
+
+            float2 uv                       : TEXCOORD0;
+            float4 positionWSAndFogFactor   : TEXCOORD2; 
+			float4 projPos					: TEXCOORD7;
+			float4 posWorld					: TEXCOORD8;
+			float3 normalWS					: TEXCOORD9;
+			float4 vertexColor				: COLOR;
+            float4 positionCS               : SV_POSITION;
+			UNITY_VERTEX_INPUT_INSTANCE_ID
+			UNITY_VERTEX_OUTPUT_STEREO
+
+        };
+
+
+		Varyings LitPassVertex(Attributes input)
+        {
+
+			Varyings output = (Varyings)0;
+
+			UNITY_SETUP_INSTANCE_ID (input);
+			UNITY_TRANSFER_INSTANCE_ID(input, output);
+            UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+
+            output.uv = input.uv;
+            output.vertexColor = input.vertexColor;
+
+		#if defined(UNITY_DOTS_INSTANCING_ENABLED)
+
+			#ifdef	N_F_DDMD_ON
+
+				float4 _LBS_CD_Position = input.positionOS;
+				float3 _LBS_CD_Normal = input.normalOS;
+				//float4 _LBS_CD_Tangent = input.tangentOS; //not currently needed
+
+			#else
+
+				float4 _LBS_CD_Position = 0;
+				float3 _LBS_CD_Normal = 0;
+				float4 _LBS_CD_Tangent = 0;
+
+DOTS_LiBleSki(input.indices, input.weights, input.positionOS.xyz, input.normalOS.xyz, input.tangentOS.xyz, (float3)_LBS_CD_Position, _LBS_CD_Normal, (float3)_LBS_CD_Tangent);//DOTS_LiBleSki_OL
+//DOTS_CompDef(input.vertexID, (float3)_LBS_CD_Position, _LBS_CD_Normal, (float3)_LBS_CD_Tangent);//DOTS_CompDef_OL
+
+			#endif
+			
+		#else
+			float4 _LBS_CD_Position = input.positionOS;
+			float3 _LBS_CD_Normal = input.normalOS;
+			//float4 _LBS_CD_Tangent = input.tangentOS; //not currently needed
+		#endif
+
+			VertexPositionInputs vertexInput = GetVertexPositionInputs(_LBS_CD_Position.xyz);
+
+			output.normalWS = TransformObjectToWorldNormal(input.normalOS);
+			output.posWorld = float4(vertexInput.positionWS, 1.0);
+
+			float4 objPos = mul ( GetObjectToWorldMatrix(), float4(0.0,0.0,0.0,1.0) );
+
+
+			//RT_SE
+			#if N_F_SE_ON
+				input.positionOS = RT_SE(vertexInput.positionWS, input.positionOS);
+				_LBS_CD_Position = input.positionOS;
+			#endif
+			//==
+
+
+			half RTD_OB_VP_CAL = distance(objPos.rgb,_WorldSpaceCameraPos);
+
+			//**
+			half RTD_OL_VCRAOW_OO;
+			if (!_VertexColorBlueAffectOutlineWitdh)
+			{
+				RTD_OL_VCRAOW_OO = _OutlineWidth;
+			}
+			else
+			{
+				RTD_OL_VCRAOW_OO = _OutlineWidth * (1.0 - output.vertexColor.b);
+			}
+			//**
+
+
+			//**
+			half RTD_OL_OLWABVD_OO;
+			if (!_OutlineWidthAffectedByViewDistance)
+			{
+				RTD_OL_OLWABVD_OO = RTD_OL_VCRAOW_OO;
+			}
+			else
+			{
+				RTD_OL_OLWABVD_OO = clamp(RTD_OL_VCRAOW_OO * RTD_OB_VP_CAL, RTD_OL_VCRAOW_OO, _FarDistanceMaxWidth);
+			}
+			//**
+
+
+			#if defined(SHADER_API_GLES) 
+				half4 _OutlineWidthControl_var = tex2Dlod(_OutlineWidthControl, float4(TRANSFORM_TEX(output.uv, _OutlineWidthControl), 0.0, 0)); //replace soon
+			#else
+				half4 _OutlineWidthControl_var = SAMPLE_TEXTURE2D_LOD(_OutlineWidthControl, sampler_OutlineWidthControl, TRANSFORM_TEX(output.uv, _OutlineWidthControl), 0.0);
+			#endif
+
+			#if N_F_DNO_ON
+
+				float4 _3726 = _Time;
+				float _8530_ang = _3726.g;
+				float _8530_spd = 0.002;
+				float _8530_cos = cos(_8530_spd * _8530_ang);
+				float _8530_sin = sin(_8530_spd * _8530_ang);
+				float2 _8530_piv = float2(0.5, 0.5);
+				half2 _8530 = (mul(output.uv - _8530_piv, float2x2(_8530_cos, -_8530_sin, _8530_sin, _8530_cos)) + _8530_piv);
+
+				half2 RTD_OL_DNOL_OO = _8530;
+
+			#else
+
+				half2 RTD_OL_DNOL_OO = output.uv;
+
+			#endif
+
+
+			half2 _8743 = RTD_OL_DNOL_OO;
+            float2 _1283_skew = _8743 + 0.2127+_8743.x*0.3713*_8743.y;
+            float2 _1283_rnd = 4.789*sin(489.123*(_1283_skew));
+            half _1283 = frac(_1283_rnd.x*_1283_rnd.y*(1+_1283_skew.x));
+
+
+			//**
+			float3 _OEM = float3(0.0, 0.0, 0.0);
+			if (!_OutlineExtrudeMethod)
+			{
+				_OEM = _LBS_CD_Normal;
+			}
+			else
+			{
+				_OEM = normalize(_LBS_CD_Position.xyz);
+			}
+			//**
+
+
+			half RTD_OL = ( RTD_OL_OLWABVD_OO*0.01 ) * _OutlineWidthControl_var.r * lerp(1.0,_1283,_NoisyOutlineIntensity);
+
+
+			//RT_PA
+			#if N_F_PA_ON
+				output.positionCS = mul(RT_PA(vertexInput.positionWS), float4( (_LBS_CD_Position.xyz + _OutlineOffset.xyz * 0.01) + _OEM * RTD_OL, 1.0) );
+			#else
+				output.positionCS = mul(GetWorldToHClipMatrix(), mul(GetObjectToWorldMatrix(), float4( (_LBS_CD_Position.xyz + _OutlineOffset.xyz * 0.01) + _OEM * RTD_OL,1.0) ) );
+			#endif
+			//==
+
+
+			#if defined(SHADER_API_GLCORE) || defined(SHADER_API_GLES) || defined(SHADER_API_GLES3)
+				output.positionCS.z += _OutlineZPostionInCamera * 0.0005;
+			#else
+				output.positionCS.z -= _OutlineZPostionInCamera * 0.0005;
+			#endif
+
+			float fogFactor = ComputeFogFactor(vertexInput.positionCS.z);
+			output.positionWSAndFogFactor = float4(vertexInput.positionWS, fogFactor);
+			output.projPos = ComputeScreenPos (output.positionCS);
+
+            return output;
+
+        }
+
+        void LitPassFragment(
+			Varyings input
+		    , out half4 outColor : SV_Target0
+		#ifdef _WRITE_RENDERING_LAYERS
+			, out float4 outRenderingLayers : SV_Target1
+		#endif
+		)
+        {
+
+			UNITY_SETUP_INSTANCE_ID (input);
+			UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+
+            float3 positionWS = input.positionWSAndFogFactor.xyz;
+			float4 objPos = mul ( GetObjectToWorldMatrix(), float4(0.0,0.0,0.0,1.0) );
+            float2 sceneUVs = (input.projPos.xy / input.projPos.w);
+			half RTD_OB_VP_CAL = distance(objPos.rgb,_WorldSpaceCameraPos);
+			half2 RTD_VD_Cal = (float2((sceneUVs.x * 2.0 - 1.0)*(_ScreenParams.r/_ScreenParams.g), sceneUVs.y * 2.0 - 1.0).rg*RTD_OB_VP_CAL);
+
+			#ifdef LOD_FADE_CROSSFADE
+				LODFadeCrossFade(input.positionCS);
+			#endif
+
+			half3 color = (half3)1.0;
+
+			//**
+			half2 RTD_TC_TP_OO;
+			if (!_TexturePatternStyle)
+			{
+				RTD_TC_TP_OO = input.uv;
+			}
+			else
+			{
+				RTD_TC_TP_OO = RTD_VD_Cal;
+			}
+			//**
+
+
+			#ifdef N_F_TP_ON
+				half4 _MainTex_var = RT_Tripl_Default(_MainTex, sampler_MainTex, positionWS, input.normalWS);
+			#else
+				half4 _MainTex_var = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, TRANSFORM_TEX(RTD_TC_TP_OO, _MainTex));
+			#endif
+
+			
+			//RT_TRANS_CO
+			half RTD_TRAN_OPA_Sli;
+			half RTD_CO;
+			half3 GLO_OUT;
+			RT_TRANS_CO(input.uv, _MainTex_var, _MainTex_var.a, RTD_TRAN_OPA_Sli, RTD_CO, positionWS, input.normalWS, input.positionCS.xy, GLO_OUT);
+
+			#if N_F_TRANS_ON
+				#ifndef N_F_CO_ON
+					clip(RTD_TRAN_OPA_Sli - 0.5);
+				#endif
+			#endif
+			//
+
+
+			//========/
+			//========/
+			Light mainLight = GetMainLight();
+
+			#ifndef N_F_OFLMB_ON
+				half3 lightColor = mainLight.color.rgb;
+			#else
+				half3 lightColor = (half3)1.0;
+			#endif
+			//========/
+			//========/
+
+
+			uint meshRenderingLayers = GetMeshRenderingLayer();
+
+
+			//========/
+			//========/
+			#ifndef N_F_OFLMB_ON
+				#ifdef _ADDITIONAL_LIGHTS
+					#if N_F_EAL_ON
+
+						uint pixelLightCount = GetAdditionalLightsCount();
+
+						#if USE_FORWARD_PLUS
+
+							InputData inputData = (InputData)0;
+							inputData.positionWS = positionWS;
+							inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
+
+							for (uint lightIndex = 0; lightIndex < min(URP_FP_DIRECTIONAL_LIGHTS_COUNT, MAX_VISIBLE_LIGHTS); lightIndex++)
+							{
+								Light light = GetAdditionalLight(lightIndex, input.posWorld.xyz, (float4)1.0);
+
+						#ifdef _LIGHT_LAYERS
+								if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
+						#endif
+								{
+									lightColor += light.color * light.distanceAttenuation;
+								}
+							}
+						#endif
+
+						LIGHT_LOOP_BEGIN(pixelLightCount)
+							Light light = GetAdditionalLight(lightIndex, positionWS);
+
+							#ifdef _LIGHT_LAYERS
+								if (IsMatchingLightLayer(light.layerMask, meshRenderingLayers))
+							#endif
+							{
+								lightColor += light.color * light.distanceAttenuation;
+							}
+						LIGHT_LOOP_END
+
+					#endif
+				#endif
+			#endif
+			//========/
+			//========/
+
+
+            float fogFactor = input.positionWSAndFogFactor.w;
+
+
+			//
+			#ifdef UNITY_COLORSPACE_GAMMA
+				_OutlineColor = float4(LinearToGamma22(_OutlineColor.rgb), _OutlineColor.a);
+			#endif
+			//
+
+
+			//**
+			half3 RTD_MMTTO_OO;
+			if (!_MixMainTexToOutline)
+			{
+				RTD_MMTTO_OO = _OutlineColor.rgb;
+			}
+			else
+			{
+
+				RTD_MMTTO_OO = _OutlineColor.rgb * _MainTex_var.rgb;
+			}
+			//**
+
+
+			//**
+			half3 RTD_OL_LAOC_OO;
+			if (!_LightAffectOutlineColor)
+			{
+				RTD_OL_LAOC_OO = RTD_MMTTO_OO;
+			}
+			else
+			{
+
+				RTD_OL_LAOC_OO = lerp(half3(0.0, 0.0, 0.0), RTD_MMTTO_OO, lightColor.rgb);
+			}
+			//**
+
+
+			half3 finalRGBA = RTD_OL_LAOC_OO;
+
+
+			//RT_NFD
+			#ifdef N_F_NFD_ON
+				RT_NFD(input.positionCS.xy);
+			#endif
+			//==
+
+
+			color = MixFog(finalRGBA, fogFactor);
+
+			
+			#if defined(N_F_TRANS_ON) & !defined(N_F_CO_ON)
+				outColor = half4(color, RTD_TRAN_OPA_Sli);
+			#else
+				#if N_F_ATC_ON
+					outColor = half4(color, _MainTex_var.a);
+				#else
+					outColor = half4(color, 1.0);
+				#endif
+			#endif
+
+			#ifdef _WRITE_RENDERING_LAYERS
+				uint renderingLayers = GetMeshRenderingLayer();
+				outRenderingLayers = float4(EncodeMeshRenderingLayer(renderingLayers), 0, 0, 0);
+			#endif
+
+        }
+
+		ENDHLSL
+    }
+
 }
 
 FallBack "Hidden/InternalErrorShader"

@@ -342,9 +342,13 @@ namespace VolFx
                         bld.SetRenderAttachment(tex, 0, AccessFlags.ReadWrite);
 
                         bld.AllowPassCulling(false);
-                        bld.SetRenderFunc((NullData data, RasterGraphContext ctx) => { });
+                        
+                        bld.SetRenderFunc((NullData data, RasterGraphContext ctx) => { 
+                            // Shader.SetGlobalTexture(_owner._output._outputTex, tex);
+                        });
 
-                        bld.SetGlobalTextureAfterPass(tex, Shader.PropertyToID(_owner._output._outputTex));
+                        bld.SetGlobalTextureAfterPass(in tex, Shader.PropertyToID(_owner._output._outputTex));
+                        
                         global = tex;
                     }
                 }
@@ -722,7 +726,13 @@ namespace VolFx
                         case SourceOptions.Source.Camera:
                             return _getCameraOutput(ref renderingData);
                         case SourceOptions.Source.Custom:
-                            return RTHandles.Alloc(_owner._source._globalTex, name: _owner._source._globalTex);
+                        {
+                            var gt = Shader.GetGlobalTexture(_owner._source._globalTex);
+                            if (gt == null)
+                                return RTHandles.Alloc(_owner._source._globalTex, name: _owner._source._globalTex);
+                            else
+                                return RTHandles.Alloc(gt);
+                        }
                         case SourceOptions.Source.LayerMask:
                         {
                             var desc = renderingData.cameraData.cameraTargetDescriptor;
@@ -932,7 +942,13 @@ namespace VolFx
                         case SourceOptions.Source.Camera:
                             return _getCameraOutput(ref renderingData);
                         case SourceOptions.Source.Custom:
-                            return RTHandles.Alloc(_owner._source._globalTex, name: _owner._source._globalTex);
+                        {
+                            var gt = Shader.GetGlobalTexture(_owner._source._globalTex);
+                            if (gt == null)
+                                return RTHandles.Alloc(_owner._source._globalTex, name: _owner._source._globalTex);
+                            else
+                                return RTHandles.Alloc(gt);
+                        }
                         case SourceOptions.Source.LayerMask:
                         {
                             var desc = renderingData.cameraData.cameraTargetDescriptor;

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: b9e3bc374c154ed46883cc1ec13a4455
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 170451
+  packageName: MatCap Pro
+  packageVersion: 1.2
+  assetPath: Assets/SineVFX/MatCapPro/_Documentation/01.QuickStart.txt
+  uploadId: 740695

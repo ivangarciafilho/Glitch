@@ -1,7 +1,6 @@
 using UnityEngine;
 
-
-namespace StylizedPointLight
+namespace FPL
 {
     [ExecuteInEditMode]
     [RequireComponent (typeof (Camera))]
@@ -26,6 +25,5 @@ namespace StylizedPointLight
         //    //renderSource to screen
         //    Graphics.Blit (source, destination);
         //}
-
     }
 }

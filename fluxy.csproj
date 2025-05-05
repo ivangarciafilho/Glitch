@@ -82,8 +82,8 @@
     <Compile Include="Assets\FluXY\Scripts\ExecutionOrder.cs" />
     <Compile Include="Assets\FluXY\Samples\Scripts\RotateTarget.cs" />
     <Compile Include="Assets\FluXY\Samples\Scripts\MoveAndRotate.cs" />
-    <Compile Include="Assets\FluXY\Samples\Scripts\SetSplatRate.cs" />
     <Compile Include="Assets\FluXY\Scripts\FluxyContainer.cs" />
+    <Compile Include="Assets\FluXY\Samples\Scripts\SetSplatRate.cs" />
     <Compile Include="Assets\FluXY\Samples\Scripts\AdvectRigidbody.cs" />
     <Compile Include="Assets\FluXY\Samples\Scripts\RotateWithKeys.cs" />
     <Compile Include="Assets\FluXY\Scripts\FluxyStorage.cs" />

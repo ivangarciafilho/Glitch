@@ -102,7 +102,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   profile: {fileID: 11400000, guid: abcd07a8f59670b41887a60c61db9714, type: 2}
   enableNativeLights: 0
-  nativeLightsMultiplier: 1
+  nativeLightsMultiplier: 300
   enablePointLights: 0
   enableAPV: 0
   apvIntensityMultiplier: 1

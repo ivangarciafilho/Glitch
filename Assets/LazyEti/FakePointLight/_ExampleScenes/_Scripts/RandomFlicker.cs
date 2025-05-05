@@ -2,20 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace StylizedPointLight
+namespace FPL.Examples
 {
 
     public class RandomFlicker : MonoBehaviour
     {
-        private MeshRenderer[] meshes;
-        //private List< MeshRenderer> meshes = new List<MeshRenderer>();
-        private MaterialPropertyBlock propertyBlock;
-        int randomID = Shader.PropertyToID ("_RandomOffset");
         [SerializeField] bool refresh;
 
-        private void Awake()
+        private void Start()
         {
-            propertyBlock = new MaterialPropertyBlock ();
+            SetRandomFlickering ();
         }
 
         private void Update()
@@ -23,25 +19,20 @@ namespace StylizedPointLight
             if (refresh)
             {
                 refresh = false;
-                SetProperties ();
+                SetRandomFlickering ();
             }
         }
 
-        void SetProperties()
+        //find all FPL_Controllers component in childrens and apply random flickering values:
+        private void SetRandomFlickering()
         {
-            meshes = GetComponentsInChildren<MeshRenderer> ();
+            FPL_Controller[] controllers = GetComponentsInChildren<FPL_Controller> ();
 
-
-            foreach (MeshRenderer m in meshes)
+            foreach (FPL_Controller c in controllers)
             {
-                if (m == null) continue;
-
-                //optimized way:
-                propertyBlock.SetFloat (randomID, Random.value);
-                m.SetPropertyBlock (propertyBlock);
-
-                //simple way:
-                //mesh.material.SetFloat ("_RandomOffset", Random.value);
+                if (c == null) continue;
+                c.SetProperty (FPL_Properties._RandomOffset, Random.value*5);
+                c.SetProperty (FPL_Properties._FlickerSpeed, Random.value*2);
             }
         }
 

@@ -74,7 +74,13 @@ Shader "Hidden/Vol/Flow"
 	        {	        
 	            half4 col  = tex2D(_MainTex, i.uv);
 	            half4 flow = tex2D(_FlowTex, frac(rotate(i.uv - float2(.5, .5), _Tiling.w) * _scale + float2(.5, .5) + _offset));
+	        	
+                float dist = distance(i.uv, float2(0.5, 0.5));
+                float vig  = 1 - smoothstep(_Data.x, _Data.x - 0.5, dist);
 
+	        	_Weight.xy = lerp(float2(1, 0), _Weight, vig);
+	        	//_Weight.y *= vig;// *= vig;
+	        	
 	        	flow.rgb = lerp(flow.rgb, flow.rgb * _Tint.rgb, _Tint.a);
 	        	
 				return saturate(col * _Weight.x + flow * _Weight.y);

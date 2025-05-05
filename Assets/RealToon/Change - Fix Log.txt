@@ -1345,3 +1345,33 @@ This update supports Unity 5, 2017, 2018, 2019, 2020, 2021, Unity 6 and future u
 - RealToon HDRP Example missing Global Volume and overexposed. (HDRP)
 - URP Lightmap errors. (URP)
 
+
+
+
+==========================================
+(V5.0.12) (April 2025)
+==========================================
+This update supports Unity 5, 2017, 2018, 2019, 2020, 2021, Unity 6 and future unity versions.
+
+
+
+**(Main Update)**
+
+
+[New]
+- Multiple Directional Lights support (HDRP)
+- Anisotropic Mode (Anisotropic Highlights) for Gloss Texture (New Feature) (URP and HDRP)
+- RealToon Built-In now support Perspective Adjustment.
+- Anti - Aliasing (MSAA) Affect Cutout (New Option) (URP)
+
+[Changes]
+- Cutout feature option default value changed to 0.5.
+
+[Minor Improvements]
+- Object Selection (HDRP)
+- DeNorSob Outline (URP and HDRP)
+- Screen Space Rimlight(HDRP)
+
+[Fixed]
+- Can't select object including flat plane object.
+- Error when in debug baked lightmap. (URP)

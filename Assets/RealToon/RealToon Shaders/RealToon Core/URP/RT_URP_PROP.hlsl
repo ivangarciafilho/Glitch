@@ -116,6 +116,10 @@ CBUFFER_START(UnityPerMaterial)
 		uniform half _PSGLOTEX;
 		uniform half _GlossTextureRotate;
 		uniform half _GlossTextureFollowObjectRotation;
+		uniform half _NoisTexInten;
+		uniform half _StraWidt;
+		uniform half _NoiTexAffStraWidt;
+		uniform half _ShifAnis;
 		uniform half _GlossTextureFollowLight;
 	//==
 
@@ -348,6 +352,10 @@ UNITY_DOTS_INSTANCING_START(MaterialPropertyMetadata)
 	UNITY_DOTS_INSTANCED_PROP(float, _PSGLOTEX)
 	UNITY_DOTS_INSTANCED_PROP(float, _GlossTextureRotate)
 	UNITY_DOTS_INSTANCED_PROP(float, _GlossTextureFollowObjectRotation)
+	UNITY_DOTS_INSTANCED_PROP(float, _NoisTexInten)
+	UNITY_DOTS_INSTANCED_PROP(float, _StraWidt)
+	UNITY_DOTS_INSTANCED_PROP(float, _NoiTexAffStraWidt)
+	UNITY_DOTS_INSTANCED_PROP(float, _ShifAnis)
 	UNITY_DOTS_INSTANCED_PROP(float, _GlossTextureFollowLight)
 
 	UNITY_DOTS_INSTANCED_PROP(float4, _OverallShadowColor)
@@ -502,6 +510,10 @@ static float unity_DOTS_Sampled_GlossTextureSoftness;
 static float unity_DOTS_Sampled_PSGLOTEX;
 static float unity_DOTS_Sampled_GlossTextureRotate;
 static float unity_DOTS_Sampled_GlossTextureFollowObjectRotation;
+static float unity_DOTS_Sampled_NoisTexInten;
+static float unity_DOTS_Sampled_StraWidt;
+static float unity_DOTS_Sampled_NoiTexAffStraWidt;
+static float unity_DOTS_Sampled_ShifAnis;
 static float unity_DOTS_Sampled_GlossTextureFollowLight;
 
 static float4 unity_DOTS_Sampled_OverallShadowColor;
@@ -653,6 +665,10 @@ void SetupDOTSLitMaterialPropertyCaches()
 	unity_DOTS_Sampled_PSGLOTEX                                             = UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float, _PSGLOTEX);
 	unity_DOTS_Sampled_GlossTextureRotate                                   = UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float, _GlossTextureRotate);
 	unity_DOTS_Sampled_GlossTextureFollowObjectRotation                     = UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float, _GlossTextureFollowObjectRotation);
+    unity_DOTS_Sampled_NoisTexInten											= UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float, _NoisTexInten);
+    unity_DOTS_Sampled_StraWidt												= UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float, _StraWidt);
+    unity_DOTS_Sampled_NoiTexAffStraWidt									= UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float, _NoiTexAffStraWidt);
+    unity_DOTS_Sampled_ShifAnis												= UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float, _ShifAnis);
 	unity_DOTS_Sampled_GlossTextureFollowLight                              = UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float, _GlossTextureFollowLight);
 
 	unity_DOTS_Sampled_OverallShadowColor                                   = UNITY_ACCESS_DOTS_INSTANCED_PROP_WITH_DEFAULT(float4, _OverallShadowColor);
@@ -810,6 +826,10 @@ void SetupDOTSLitMaterialPropertyCaches()
 #define _PSGLOTEX										unity_DOTS_Sampled_PSGLOTEX
 #define _GlossTextureRotate								unity_DOTS_Sampled_GlossTextureRotate
 #define _GlossTextureFollowObjectRotation				unity_DOTS_Sampled_GlossTextureFollowObjectRotation
+#define _NoisTexInten                                   unity_DOTS_Sampled_NoisTexInten
+#define _StraWidt                                       unity_DOTS_Sampled_StraWidt
+#define _NoiTexAffStraWidt                              unity_DOTS_Sampled_NoiTexAffStraWidt
+#define _ShifAnis                                       unity_DOTS_Sampled_ShifAnis
 #define _GlossTextureFollowLight						unity_DOTS_Sampled_GlossTextureFollowLight
 
 #define _OverallShadowColor								unity_DOTS_Sampled_OverallShadowColor

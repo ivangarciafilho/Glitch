@@ -57,7 +57,7 @@ MonoBehaviour:
     m_Value: 10
   downsamplingMultiplier:
     m_OverrideState: 1
-    m_Value: 2
+    m_Value: 4
   downsamplingBilinear:
     m_OverrideState: 1
     m_Value: 0
@@ -758,7 +758,7 @@ MonoBehaviour:
   active: 1
   indirectIntensity:
     m_OverrideState: 1
-    m_Value: 4
+    m_Value: 1
   indirectDistanceAttenuation:
     m_OverrideState: 1
     m_Value: 1
@@ -818,16 +818,16 @@ MonoBehaviour:
     m_Value: 1
   rayMaxLength:
     m_OverrideState: 1
-    m_Value: 16
+    m_Value: 8
   rayMaxSamples:
     m_OverrideState: 1
-    m_Value: 64
+    m_Value: 32
   rayJitter:
     m_OverrideState: 1
     m_Value: 1
   thickness:
     m_OverrideState: 1
-    m_Value: 1.5
+    m_Value: 1
   rayBinarySearch:
     m_OverrideState: 1
     m_Value: 1
@@ -836,7 +836,7 @@ MonoBehaviour:
     m_Value: 1
   rayReuse:
     m_OverrideState: 1
-    m_Value: 0.1
+    m_Value: 1
   fallbackReflectionProbes:
     m_OverrideState: 0
     m_Value: 0
@@ -854,25 +854,25 @@ MonoBehaviour:
     m_Value: 2
   raytracerAccuracy:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 4
   smoothing:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 2
   temporalReprojection:
     m_OverrideState: 1
     m_Value: 1
   temporalResponseSpeed:
     m_OverrideState: 1
-    m_Value: 8
+    m_Value: 16
   temporalCameraTranslationResponse:
     m_OverrideState: 1
-    m_Value: 100
+    m_Value: 256
   temporalDepthRejection:
     m_OverrideState: 1
-    m_Value: 0.25
+    m_Value: 1
   temporalChromaThreshold:
     m_OverrideState: 1
-    m_Value: 0.2
+    m_Value: 0.25
   showInEditMode:
     m_OverrideState: 0
     m_Value: 1

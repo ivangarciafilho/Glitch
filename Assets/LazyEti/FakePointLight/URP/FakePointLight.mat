@@ -84,7 +84,7 @@ Material:
     - _DayAlpha1: 0
     - _DayFading: 0
     - _DepthWrite: 2
-    - _DitherIntensity: 1
+    - _DitherIntensity: 0.01
     - _DitheringPattern: 0
     - _DstBlend: 1
     - _EXPERIMENTALShadows: 0
@@ -101,16 +101,16 @@ Material:
     - _HaloDepthFade: 0.75
     - _HaloPosterize: 32
     - _HaloPower: 1
-    - _HaloSize: 3
+    - _HaloSize: 4
     - _HaloSoftness: 0.5
     - _Hardness: 0.526
-    - _LightPosterize: 1
+    - _LightPosterize: 32
     - _LightRadius: 1
-    - _LightSoftness: 0.5
+    - _LightSoftness: 0.75
     - _Noise: 1
-    - _NoiseMovement: 0.5
+    - _NoiseMovement: 0.25
     - _NoiseScale: 4
-    - _Noisiness: 1
+    - _Noisiness: 2
     - _NormalIntensity: 0.323
     - _NormalsBlend: 0
     - _NormalsBlending: 0.5
@@ -133,7 +133,7 @@ Material:
     - _SizeFlickering: 0.25
     - _Softness: 0.564
     - _Spacing: 2
-    - _SpecIntensity: 0.125
+    - _SpecIntensity: 0.025
     - _SpecularHighlight: 1
     - _SrcBlend: 5
     - _StartDistance: 400
@@ -156,7 +156,7 @@ Material:
     - _HTint: {r: 1, g: 1, b: 1, a: 1}
     - _HaloTint: {r: 1.8823528, g: 2.9960783, b: 2.0510416, a: 0.14901961}
     - _LTint: {r: 1, g: 1, b: 1, a: 1}
-    - _LightTint: {r: 1.2567441, g: 1.4980391, b: 1.4161869, a: 0.50980395}
+    - _LightTint: {r: 1.2733332, g: 1.4980391, b: 1.4231372, a: 0.2509804}
     - _Tint: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

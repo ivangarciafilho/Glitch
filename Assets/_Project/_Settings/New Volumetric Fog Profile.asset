@@ -20,14 +20,14 @@ MonoBehaviour:
   sortingLayerID: 0
   sortingOrder: 0
   constantDensity: 0
-  noiseTexture: {fileID: 2800000, guid: 31225acb8e85b794f9ef61722efef7a7, type: 3}
+  noiseTexture: {fileID: 2800000, guid: dd4747db4d303cd4daea23b22cd2b17f, type: 3}
   noiseTextureOptimizedSize: 256
   noiseStrength: 1.5
   noiseScale: 64
   noiseFinalMultiplier: 1.5
   useDetailNoise: 1
   detailTexture: {fileID: 11700000, guid: 2dcd0d9f4d79a454e9c297915657b2c9, type: 2}
-  detailScale: 0.05
+  detailScale: 0.1
   detailStrength: 0.75
   detailOffset: -0.85
   density: 1

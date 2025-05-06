@@ -12,8 +12,9 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
-  - _RECEIVE_SHADOWS_OFF
-  - __HEAVYSHADOWS_ON
+  - _BLENDMODE_ADDITIVE
+  - _SCREENSHADOWS_OFF
+  - _TEXTUREPACKING_RED
   - ___HALO____ON
   - ___NOISE____ON
   m_InvalidKeywords:
@@ -23,8 +24,10 @@ Material:
   - _KEYWORD1_ON
   - _NOISE_ON
   - _RECEIVESHADOWS_OFF
+  - _RECEIVE_SHADOWS_OFF
   - _SCREENSHADOWSEXPERIMENTAL_ON
   - _SCREENSPACESHADOWSEXPERIMENTAL_ON
+  - __HEAVYSHADOWS_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -88,13 +91,20 @@ Material:
     - DayAlpha: 0
     - DistanceFade: 0
     - _A: 10
+    - _AccurateColors: 0
     - _AlphaCutoff: 0.5
     - _AngleBlend: 0.143
     - _AngleHardness: 1
     - _AngleSoftness: 0.5
+    - _Blendmode: 0
     - _CloseFade: 5
     - _CloseTransition: 3
     - _DayAlpha1: 0
+    - _DayFading: 0
+    - _DepthWrite: 0
+    - _DitherIntensity: 0.5
+    - _DitheringPattern: 0
+    - _DstBlend: 1
     - _EXPERIMENTALShadows: 1
     - _FadeDistance: 65
     - _FadeOffset: 38
@@ -115,6 +125,7 @@ Material:
     - _Float4: 0.06
     - _Float5: -0.1
     - _Halo: 0.693
+    - _HaloDepthFade: 0.5
     - _HaloPosterize: 1
     - _HaloPower: 1
     - _HaloSize: 1.97
@@ -141,20 +152,27 @@ Material:
     - _QueueOffset: 0
     - _Radius: 0.886
     - _RadiusFlickering: 0.389
+    - _RandomOffset: 0
     - _ReceiveShadows: 0
+    - _ScreenShadows: 0
     - _ScreenShadowsEXPERIMENTAL: 1
     - _ScreenSpaceShadowsEXPERIMENTAL: 1
     - _ShadingBlend: 0.07
     - _ShadingSoftness: 0.5
+    - _ShadowThreshold: 0.5
     - _SizeFlickering: 0.1
     - _Softness: 0.529
     - _Spacing: 1.24
+    - _SpecIntensity: 0.5
+    - _SpecularHighlight: 0
+    - _SrcBlend: 1
     - _StartDistance: 400
     - _StartFadeDistance: 100
     - _StartFadeOffset: 50
     - _StartFadeSoftness: 10
     - _StepSpacing: 1.23
     - _Test: -23.31
+    - _TexturePacking: 0
     - _TransitionDistance: 26
     - _UseLightNormal: 0.5
     - _UseTextureGradient: 0
@@ -173,6 +191,7 @@ Material:
     - _z: 3
     m_Colors:
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+    - _FlickerHue: {r: 1, g: 1, b: 1, a: 1}
     - _HTint: {r: 0.47735056, g: 3.523293, b: 0, a: 1}
     - _HaloTint: {r: 3.4415908, g: 3.4415908, b: 3.4415908, a: 1}
     - _LTint: {r: 0, g: 0.37450984, b: 0.08418288, a: 0.38431373}
@@ -185,3 +204,4 @@ Material:
     - _max: {r: 0, g: 0.0001, b: 0, a: 0}
     - _min: {r: -1, g: 1, b: 0, a: 0}
   m_BuildTextureStacks: []
+  m_AllowLocking: 1

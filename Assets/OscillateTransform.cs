@@ -26,7 +26,7 @@ public class OscillateTransform : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
         var time = Time.time *  speed;
 

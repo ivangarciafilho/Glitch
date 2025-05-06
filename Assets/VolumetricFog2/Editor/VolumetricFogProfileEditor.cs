@@ -1,5 +1,5 @@
 ﻿//#define FOG_BORDER
-//#define FOG_SHADOW_CANCELLATION
+#define FOG_SHADOW_CANCELLATION
 
 using UnityEngine;
 using UnityEditor;

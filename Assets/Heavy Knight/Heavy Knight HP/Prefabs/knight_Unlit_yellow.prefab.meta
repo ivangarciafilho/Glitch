@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d738d58515bd3af4090f7c86b3145cf0
+timeCreated: 1473812523
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 70891
+  packageName: Heavy Knight PBR HP
+  packageVersion: 1.2
+  assetPath: Assets/Heavy Knight/Heavy Knight HP/Prefabs/knight_Unlit_yellow.prefab
+  uploadId: 345225

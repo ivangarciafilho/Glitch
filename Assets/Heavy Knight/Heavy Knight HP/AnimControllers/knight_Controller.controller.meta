@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4ff4c4054221938489a20acff0ef41d7
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 70891
+  packageName: Heavy Knight PBR HP
+  packageVersion: 1.2
+  assetPath: Assets/Heavy Knight/Heavy Knight HP/AnimControllers/knight_Controller.controller
+  uploadId: 345225

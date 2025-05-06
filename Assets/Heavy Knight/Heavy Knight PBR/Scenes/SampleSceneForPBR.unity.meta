@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f865ab304e1573944a954781f824ee28
+timeCreated: 1472813519
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 70891
+  packageName: Heavy Knight PBR HP
+  packageVersion: 1.2
+  assetPath: Assets/Heavy Knight/Heavy Knight PBR/Scenes/SampleSceneForPBR.unity
+  uploadId: 345225

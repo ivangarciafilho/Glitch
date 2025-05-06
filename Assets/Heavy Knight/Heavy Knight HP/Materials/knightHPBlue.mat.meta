@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4fa4d3119d0b0224085638a80b2606cc
+timeCreated: 1472891018
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 70891
+  packageName: Heavy Knight PBR HP
+  packageVersion: 1.2
+  assetPath: Assets/Heavy Knight/Heavy Knight HP/Materials/knightHPBlue.mat
+  uploadId: 345225

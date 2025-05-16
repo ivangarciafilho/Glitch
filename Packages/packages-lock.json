@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.needle.shadergraph-markdown": {
+      "version": "https://github.com/needle-tools/shadergraph-markdown.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "1ce7be8e292a6139354d3de85f11e4fb006b8c1f"
+    },
     "com.unity.ai.navigation": {
       "version": "2.0.7",
       "depth": 0,

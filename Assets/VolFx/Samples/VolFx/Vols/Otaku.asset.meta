@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: a8bf75aa544a86c42919b9e4ae2b2ae3
+guid: acf055e3839212344b124d7e78373c22
 NativeFormatImporter:
   externalObjects: {}
   mainObjectFileID: 11400000
@@ -10,6 +10,6 @@ AssetOrigin:
   serializedVersion: 1
   productId: 300643
   packageName: VolFx - VFX Toolkit
-  packageVersion: 2.5.2
+  packageVersion: 2.6.1
   assetPath: Assets/VolFx/Samples/VolFx/Vols/Otaku.asset
-  uploadId: 735166
+  uploadId: 757010

@@ -16,6 +16,7 @@ namespace VolFx
         private static readonly int s_Rw        = Shader.PropertyToID("_Rw");
         private static readonly int s_Gw        = Shader.PropertyToID("_Gw");
         private static readonly int s_Bw        = Shader.PropertyToID("_Bw");
+        private static readonly int s_Data      = Shader.PropertyToID("_Data");
 		
 		public override string ShaderName => string.Empty;
         
@@ -58,43 +59,61 @@ namespace VolFx
                 mat.SetVector(s_G, (_angle + step * 1f).ToNormal() * new Vector2(1f / aspect, 1f));
                 mat.SetVector(s_B, Vector4.zero);
 
-                mat.SetFloat(s_Weight, settings._Weight.value);
-                mat.SetFloat(s_Radial, settings._Radial.value);
-
                 var split = settings._Split.value;
                 var sat   = settings._Sat.value;
-                var ca = Color.HSVToRGB(Mathf.Abs(.0f + split) % 1, sat, 1);
-                var cb = Color.HSVToRGB(Mathf.Abs(.5f + split) % 1, sat, 1);
+                var ca = Color.HSVToRGB(Mathf.Abs(.0f + split) % 1f, sat, 1f);
+                var cb = Color.HSVToRGB(Mathf.Abs(.5f + split) % 1f, sat, 1f);
                 var cc = Color.clear;
+
                 mat.SetColor(s_Rw, ca);
                 mat.SetColor(s_Gw, cb);
                 mat.SetColor(s_Bw, cc);
 
-                mat.SetFloat(s_Alpha, settings._Alpha.value >= 0f ? Mathf.Lerp(.5f, 3f, settings._Alpha.value) : Mathf.Lerp(0f, .5f, 1f + settings._Alpha.value));
+                float alpha = settings._Alpha.value >= 0f
+                    ? Mathf.Lerp(0.5f, 3f, settings._Alpha.value)
+                    : Mathf.Lerp(0f, 0.5f, 1f + settings._Alpha.value);
+
+                mat.SetVector(s_Data, new Vector4(
+                    0f, // _Center — не используется
+                    settings._Weight.value,
+                    settings._Radial.value,
+                    alpha
+                ));
             }
 
             void _chromaThree()
             {
                 var aspect = Screen.width / (float)Screen.height;
                 var step = (Mathf.PI * 2f) / 3f;
-                
-                _angle = settings._Angle.value * (Mathf.PI * 2f);
+
+                _angle = settings._Angle.value * Mathf.PI * 2f;
                 _angle %= (Mathf.PI * 2f);
-            
+
                 mat.SetVector(s_R, (_angle + step * 0f).ToNormal() * new Vector2(1f / aspect, 1f));
                 mat.SetVector(s_G, (_angle + step * 1f).ToNormal() * new Vector2(1f / aspect, 1f));
                 mat.SetVector(s_B, (_angle + step * 2f).ToNormal() * new Vector2(1f / aspect, 1f));
 
-                mat.SetFloat(s_Weight, settings._Weight.value);
-                mat.SetFloat(s_Radial, settings._Radial.value);
-
                 var split = settings._Split.value;
                 var sat   = settings._Sat.value;
-                mat.SetColor(s_Rw, Color.HSVToRGB(Mathf.Abs(.00f + split) % 1, sat, 1));
-                mat.SetColor(s_Gw, Color.HSVToRGB(Mathf.Abs(.33f + split) % 1, sat, 1));
-                mat.SetColor(s_Bw, Color.HSVToRGB(Mathf.Abs(.66f + split) % 1, sat, 1));
 
-                mat.SetFloat(s_Alpha, settings._Alpha.value >= 0f ? Mathf.Lerp(1f / 3f, 3f, settings._Alpha.value) : Mathf.Lerp(0f, 1f / 3f, 1f + settings._Alpha.value));
+                var ca = Color.HSVToRGB(Mathf.Abs(0.00f + split) % 1f, sat, 1f);
+                var cb = Color.HSVToRGB(Mathf.Abs(0.33f + split) % 1f, sat, 1f);
+                var cc = Color.HSVToRGB(Mathf.Abs(0.66f + split) % 1f, sat, 1f);
+
+                mat.SetColor(s_Rw, ca);
+                mat.SetColor(s_Gw, cb);
+                mat.SetColor(s_Bw, cc);
+
+                float alpha = settings._Alpha.value >= 0f
+                    ? Mathf.Lerp(1f / 3f, 3f, settings._Alpha.value)
+                    : Mathf.Lerp(0f, 1f / 3f, 1f + settings._Alpha.value);
+
+                mat.SetVector(s_Data, new Vector4(
+                    0f,
+                    settings._Weight.value,
+                    settings._Radial.value,
+                    alpha
+                ));
             }
         }
     }

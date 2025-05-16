@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 4753475773493920501}
   - component: {fileID: 7845148356782157699}
   - component: {fileID: 2089782593197008465}
+  - component: {fileID: 8193360023948442541}
   m_Layer: 0
   m_Name: FakeLight_Prefab
   m_TagString: Untagged
@@ -59,6 +60,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -97,3 +101,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _mesh: {fileID: 7845148356782157699}
+--- !u!114 &8193360023948442541
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3529900466442965493}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75f33880ae1a34ff38cb7120c90e707c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  color: {r: 0.5, g: 1, b: 0.6490196, a: 1}
+  addMaterialEmission: 0
+  targetRenderer: {fileID: 0}
+  material: {fileID: 0}
+  emissionPropertyName: _EmissionColor
+  materialIndex: 0
+  intensity: 0.4
+  range: 30
+  boxCenter: {x: 0, y: 0, z: 0}
+  boxSize: {x: 45, y: 45, z: 45}
+  boundsInLocalSpace: 1
+  fadeDistance: 0

@@ -1,17 +1,6 @@
 ﻿//  VolFx © NullTale - https://x.com/NullTale
 Shader "Hidden/VolFx/Chromatic"
 {
-    Properties
-    {
-        _Intensity ("Intensity", Range(0.0,1.0)) = 0.001
-        _Center ("Center", Range(0.0,0.5)) = 0.0
-        _Weight("Weight", Range(0, 1)) = 1
-        _Radial("Radial", Range(0, 1)) = 1
-        _R ("R", Vector) = (1, 0, 0, 0)
-        _G ("G", Vector) = (-1, 0, 0, 0)
-        _B ("B", Vector) = (0, 1, 0, 0)
-    }
-
     SubShader
     {
         Cull Off
@@ -41,12 +30,14 @@ Shader "Hidden/VolFx/Chromatic"
                 float4 vertex : SV_POSITION;
             };
 
-            uniform sampler2D _MainTex;
+            uniform sampler2D _MainTex;            
             fixed _Intensity;
-            fixed _Center;
-            fixed _Weight;
-            fixed _Radial;
-            fixed _Alpha;
+            fixed4 _Data;
+            #define  _Center _Data.x
+            #define  _Weight _Data.y
+            #define  _Radial _Data.z
+            #define  _Alpha  _Data.w
+            
             float2 _R;
             float2 _G;
             float2 _B;
@@ -64,9 +55,9 @@ Shader "Hidden/VolFx/Chromatic"
 
             half4 sample(float mov, float2 uv)
             {
-                float2 uvR = uv + _R * mov;
-                float2 uvG = uv + _G * mov;
-                float2 uvB = uv + _B * mov;
+                float2 uvR = saturate(uv + _R * mov);
+                float2 uvG = saturate(uv + _G * mov);
+                float2 uvB = saturate(uv + _B * mov);
                 
                 half4 colR = tex2D(_MainTex, uvR) * _Rw;
                 half4 colG = tex2D(_MainTex, uvG) * _Gw;

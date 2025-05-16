@@ -72,6 +72,7 @@
     <Compile Include="Assets\VolFx\VolFx\Runtime\Passes\Base\Adjustments\AdjustmentsPass.cs" />
     <Compile Include="Assets\VolFx\VolFx\Runtime\Passes\Lib\Glitch\GlitchVol.cs" />
     <Compile Include="Assets\VolFx\VolFx\Runtime\Attributes\InplaceFieldAttribute.cs" />
+    <Compile Include="Assets\VolFx\VolFx\Runtime\Passes\Lib\Jpeg\JpegPass.cs" />
     <Compile Include="Assets\VolFx\VolFx\Runtime\Passes\Lib\Vhs\VhsPass.cs" />
     <Compile Include="Assets\VolFx\VolFx\Runtime\Utils\RangeFloat.cs" />
     <Compile Include="Assets\VolFx\VolFx\Runtime\Passes\Add\Dissolve\DissolvePass.cs" />
@@ -125,6 +126,7 @@
     <Compile Include="Assets\VolFx\VolFx\Runtime\Passes\Lib\Dither\DitherPass.cs" />
     <Compile Include="Assets\VolFx\VolFx\Runtime\Attributes\LayerAttribute.cs" />
     <Compile Include="Assets\VolFx\VolFx\Runtime\Passes\Add\Distort\DistortVol.cs" />
+    <Compile Include="Assets\VolFx\VolFx\Runtime\Passes\Lib\Jpeg\JpegVol.cs" />
     <Compile Include="Assets\VolFx\VolFx\Runtime\Passes\Add\Grain\GrainPass.cs" />
     <Compile Include="Assets\VolFx\VolFx\Runtime\Passes\Lib\Vhs\VhsVol.cs" />
     <Compile Include="Assets\VolFx\VolFx\Runtime\Utils\Optional.cs" />
@@ -143,6 +145,7 @@
     <None Include="Assets\VolFx\VolFx\Runtime\Passes\Lib\Outline\Outline.shader" />
     <None Include="Assets\VolFx\VolFx\Runtime\Passes\Lib\Vhs\Vhs.shader" />
     <None Include="Assets\VolFx\VolFx\Runtime\Passes\Lib\OldMovie\OldMovie.shader" />
+    <None Include="Assets\VolFx\VolFx\Runtime\Passes\Lib\Jpeg\Jpeg.shader" />
     <None Include="Assets\VolFx\VolFx\Runtime\Blit.shader" />
     <None Include="Assets\VolFx\VolFx\Runtime\Passes\Add\Invert\Invert.shader" />
     <None Include="Assets\VolFx\VolFx\Runtime\Passes\Add\Chromatic\Chromatic.shader" />

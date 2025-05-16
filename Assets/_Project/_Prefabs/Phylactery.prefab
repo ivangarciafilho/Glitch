@@ -11927,7 +11927,6 @@ GameObject:
   - component: {fileID: 7393284201202471285}
   - component: {fileID: 1418343466367052876}
   - component: {fileID: 407283892097759922}
-  - component: {fileID: 6579119743368626725}
   m_Layer: 0
   m_Name: Geo_Bulb
   m_TagString: Untagged
@@ -12021,30 +12020,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &6579119743368626725
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3962504507528264508}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 75f33880ae1a34ff38cb7120c90e707c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  color: {r: 0.5, g: 1, b: 0.6490196, a: 1}
-  addMaterialEmission: 0
-  targetRenderer: {fileID: 0}
-  material: {fileID: 0}
-  emissionPropertyName: _EmissionColor
-  materialIndex: 0
-  intensity: 0.5
-  range: 30
-  boxCenter: {x: 0, y: 0, z: 0}
-  boxSize: {x: 45, y: 45, z: 45}
-  boundsInLocalSpace: 1
-  fadeDistance: 0
 --- !u!1 &3995984873401247684
 GameObject:
   m_ObjectHideFlags: 0
@@ -16493,6 +16468,11 @@ PrefabInstance:
       propertyPath: mesh
       value: 
       objectReference: {fileID: 8247767699256178944}
+    - target: {fileID: 6915624130235384503, guid: dcbd4f2f78637424e8dd166864d46e0a,
+        type: 3}
+      propertyPath: maxDistance
+      value: 3
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

@@ -22,10 +22,13 @@ Shader "Hidden/VolFx/Dissolve"
             sampler2D    _MainTex;
             sampler2D    _DissolveTex;
             sampler2D    _ColorTex;
+            sampler2D    _OverlayTex;
+            float4       _OverlayMad;
             float4       _DissolveMad;
             float4       _Dissolve;
             
             #pragma multi_compile_local _SHADE _
+            #pragma multi_compile_local _OVER _
             
             struct vert_in
             {
@@ -73,6 +76,13 @@ Shader "Hidden/VolFx/Dissolve"
 #endif
                 
                 half4 color = tex2D(_ColorTex, float2(val, .5));
+                color.a *= sample.a;
+                
+#ifdef _OVER
+                half4 overlay = tex2D(_OverlayTex, mad(i.uv, _OverlayMad.xy, _OverlayMad.zw));
+                color *= overlay;
+#endif
+                
                 return lerp(sample, color, step(luma(disolve), val));
             }
             ENDHLSL

@@ -88,6 +88,67 @@ MonoBehaviour:
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
       - {r: 0, g: 0, b: 0, a: 0}
+--- !u!114 &-4154963456240801545
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58b92b6b40be8f645b8b9775076b7fb3, type: 3}
+  m_Name: JpegVol
+  m_EditorClassIdentifier: 
+  active: 1
+  _intensity:
+    m_OverrideState: 0
+    m_Value: 0
+  _blockSize:
+    m_OverrideState: 0
+    m_Value: 7
+  _quantization:
+    m_OverrideState: 0
+    m_Value: 15
+  _distortionScale:
+    m_OverrideState: 0
+    m_Value: 0
+  _applyToY:
+    m_OverrideState: 0
+    m_Value: 0
+  _applyToChroma:
+    m_OverrideState: 0
+    m_Value: 0
+  _applyToGlitch:
+    m_OverrideState: 0
+    m_Value: 0
+  _fps:
+    m_OverrideState: 0
+    m_Value: 0
+  _fpsBreak:
+    m_OverrideState: 0
+    m_Value: 0
+  _quantSpread:
+    m_OverrideState: 0
+    m_Value: 0
+  _scanlineDrift:
+    m_OverrideState: 0
+    m_Value: 0
+  _scanlineRes:
+    m_OverrideState: 0
+    m_Value: 720
+  _channelShiftX:
+    m_OverrideState: 0
+    m_Value: 0
+  _channelShiftY:
+    m_OverrideState: 0
+    m_Value: 0
+  _noise:
+    m_OverrideState: 0
+    m_Value: 0
+  _noiseBilinear:
+    m_OverrideState: 0
+    m_Value: 0
 --- !u!114 &-2920679323691957808
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -388,6 +449,7 @@ MonoBehaviour:
   - {fileID: -1853982542939832}
   - {fileID: -2240879097832851282}
   - {fileID: 6120860116413016169}
+  - {fileID: -4154963456240801545}
 --- !u!114 &1587029414679580816
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -1015,6 +1077,9 @@ MonoBehaviour:
   m_Disolve:
     m_OverrideState: 1
     m_Value: 1
+  m_Overlay:
+    m_OverrideState: 0
+    m_Value: {fileID: 0}
   m_Custom:
     m_OverrideState: 1
     m_Value: {fileID: 0}

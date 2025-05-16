@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 4307d96f93669664fae2425a8fe42551
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 300643
+  packageName: VolFx - VFX Toolkit
+  packageVersion: 2.6.1
+  assetPath: Assets/VolFx/Samples/VolFx/Shadows (texture processing).unity
+  uploadId: 757010

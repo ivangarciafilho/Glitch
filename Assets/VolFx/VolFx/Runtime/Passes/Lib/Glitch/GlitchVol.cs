@@ -55,6 +55,7 @@ namespace VolFx
         
         [Header("Mosaic")]
         public ClampedFloatParameter _density = new ClampedFloatParameter(0f, 0f, 1f);
+        [InspectorName("Period")]
         public ClampedFloatParameter _lock    = new ClampedFloatParameter(0f, 0f, 1f);
         public ClampedFloatParameter _sharpen = new ClampedFloatParameter(0f, 0f, 1f);
         public ClampedFloatParameter _crush   = new ClampedFloatParameter(0f, 0f, 1f);

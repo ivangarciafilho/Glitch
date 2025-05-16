@@ -29,6 +29,7 @@ namespace VolFx
         public NoInterpVector3Parameter      m_Velocity   = new NoInterpVector3Parameter(Vector2.zero, false);
         public BoolParameter                 m_Shade      = new BoolParameter(true, false);
         public DisolveTexParameter           m_Disolve    = new DisolveTexParameter(DissolvePass.DisolveTex.Motif, false);
+        public Texture2DParameter            m_Overlay    = new Texture2DParameter(null);
         public Texture2DParameter            m_Custom     = new Texture2DParameter(null);
         
         // =======================================================================

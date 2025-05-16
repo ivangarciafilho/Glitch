@@ -14,6 +14,8 @@ namespace VolFx
         private static readonly int       s_Dissolve   = Shader.PropertyToID("_Dissolve");
         private static readonly int       s_ColorTex   = Shader.PropertyToID("_ColorTex");
         private static readonly int       s_Mask = Shader.PropertyToID("_Mask");
+        private static readonly int       s_OverlayTex = Shader.PropertyToID("_OverlayTex");
+        private static readonly int       s_OverlayMad = Shader.PropertyToID("_OverlayMad");
 		
 		public override string ShaderName => string.Empty;
         
@@ -31,6 +33,7 @@ namespace VolFx
         private float                _scale;
         private float                _angle;
         private bool                 _shade;
+        private bool                 _over;
         private Vector3              _velocity;
         private Color                _mask;
         private Texture2D            _color;
@@ -58,6 +61,7 @@ namespace VolFx
         {
             _time = 0f;
             _shade = false;
+            _over  = false;
         }
 
         public override bool Validate(Material mat)
@@ -141,16 +145,56 @@ namespace VolFx
             
             if (tweenFade == false)
                 _mask = settings.m_Mask.value;
+            
+            var over = settings.m_Overlay.value;
+            
+            var hasOver = over != null;
+            if (hasOver != _over)
+            {
+                if (hasOver)
+                    mat.EnableKeyword("_OVER");
+                else
+                    mat.DisableKeyword("_OVER");
                 
+                _over = hasOver;
+            }
             
             mat.SetTexture(s_DissolveTex, _tex);
             mat.SetVector(s_DissolveMad, disolveMad);
             mat.SetVector(s_Dissolve, value);
             mat.SetTexture(s_ColorTex, _color);
-            // mat.SetColor(s_Mask, _mask);
+            
+            if (hasOver)
+            {
+                mat.SetTexture(s_OverlayTex, over);
+                mat.SetVector(s_OverlayMad, _getScaleOffset(over != null ? new Vector2(over.width, over.height) : Vector2.zero, new Vector2(Screen.width, Screen.height)));
+            }
             
             return true;
         }
+
+        private Vector4 _getScaleOffset(Vector2 textureSize, Vector2 screenSize)
+        {
+            var aspectTex    = textureSize.x / textureSize.y;
+            var aspectScreen = screenSize.x / screenSize.y;
+
+            var scale  = Vector2.one;
+            var offset = Vector2.zero;
+
+            if (aspectTex > aspectScreen)
+            {
+                scale.x = aspectScreen / aspectTex;
+                offset.x = (1.0f - scale.x) * 0.5f;
+            }
+            else if (aspectTex < aspectScreen)
+            {
+                scale.y = aspectTex / aspectScreen;
+                offset.y = (1.0f - scale.y) * 0.5f;
+            }
+
+            return new Vector4(scale.x, scale.y, offset.x, offset.y);
+        }
+
 
         protected override bool _editorValidate => _perlin == null || _motif == null || _splatter == null || _vessel == null || _french == null;
         protected override void _editorSetup(string folder, string asset)

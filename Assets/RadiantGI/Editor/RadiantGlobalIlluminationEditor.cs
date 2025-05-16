@@ -17,7 +17,7 @@ namespace RadiantGI.Universal {
         SerializedDataParameter nearFieldObscurance, nearFieldObscuranceSpread, nearFieldObscuranceOccluderDistance, nearFieldObscuranceMaxCameraDistance, nearFieldObscuranceTintColor;
         SerializedDataParameter virtualEmitters;
         SerializedDataParameter organicLight, organicLightThreshold, organicLightNormalsInfluence, organicLightSpread, organicLightTintColor, organicLightAnimationSpeed, organicLightDistanceScaling;
-        SerializedDataParameter brightnessThreshold, brightnessMax, specularContribution, sourceBrightness, giWeight, nearCameraAttenuation, saturation, limitToVolumeBounds, aoInfluence;
+        SerializedDataParameter brightnessThreshold, brightnessMax, specularContribution, sourceBrightness, giWeight, unityAmbientIntensity, nearCameraAttenuation, saturation, limitToVolumeBounds, aoInfluence;
         SerializedDataParameter stencilCheck, stencilValue, stencilCompareFunction;
         SerializedDataParameter rayCount, rayMaxLength, rayMaxSamples, rayJitter, thickness, rayBinarySearch, rayReuse, rayBounce;
         SerializedDataParameter fallbackReuseRays, fallbackReflectionProbes, probesIntensity, fallbackReflectiveShadowMap, reflectiveShadowMapIntensity;
@@ -56,6 +56,7 @@ namespace RadiantGI.Universal {
             specularContribution = Unpack(o.Find(x => x.specularContribution));
             sourceBrightness = Unpack(o.Find(x => x.sourceBrightness));
             giWeight = Unpack(o.Find(x => x.giWeight));
+            unityAmbientIntensity = Unpack(o.Find(x => x.unityAmbientIntensity));
             nearCameraAttenuation = Unpack(o.Find(x => x.nearCameraAttenuation));
             saturation = Unpack(o.Find(x => x.saturation));
             limitToVolumeBounds = Unpack(o.Find(x => x.limitToVolumeBounds));
@@ -133,6 +134,7 @@ namespace RadiantGI.Universal {
             PropertyField(normalMapInfluence);
             PropertyField(lumaInfluence);
             EditorGUI.indentLevel--;
+            PropertyField(unityAmbientIntensity);
             PropertyField(nearFieldObscurance);
             if (nearFieldObscurance.value.floatValue > 0f) {
                 EditorGUI.indentLevel++;

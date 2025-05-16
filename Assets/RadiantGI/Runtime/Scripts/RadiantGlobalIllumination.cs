@@ -162,6 +162,9 @@ namespace RadiantGI.Universal {
         [Tooltip("Increases final GI contribution vs source color pixel. Increase this value to reduce the intensity of the source pixel color based on the received GI amount, making the applied GI more apparent.")]
         public FloatParameter giWeight = new FloatParameter(0f);
 
+        [Tooltip("Controls the amount of Unity ambient light. Set this to 0 to disable Unity ambient light completely.")]
+        public ClampedFloatParameter unityAmbientIntensity = new ClampedFloatParameter(0.65f, 0, 1);
+
         [Tooltip("Attenuates GI brightness from nearby surfaces.")]
         public FloatParameter nearCameraAttenuation = new FloatParameter(0);
 

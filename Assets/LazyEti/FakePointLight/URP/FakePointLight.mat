@@ -45,7 +45,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _GradientTexture:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: af4273a5206164b4fa126b91bc0f5e78, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NoiseTexture:
@@ -154,7 +154,7 @@ Material:
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
     - _FlickerHue: {r: 1, g: 0.92517996, b: 0.5, a: 1}
     - _HTint: {r: 1, g: 1, b: 1, a: 1}
-    - _HaloTint: {r: 1.8823528, g: 2.9960783, b: 2.0510416, a: 0.14901961}
+    - _HaloTint: {r: 1.8823528, g: 2.9960783, b: 2.0510416, a: 0.050980393}
     - _LTint: {r: 1, g: 1, b: 1, a: 1}
     - _LightTint: {r: 1.2733332, g: 1.4980391, b: 1.4231372, a: 0.2509804}
     - _Tint: {r: 1, g: 1, b: 1, a: 1}

@@ -190,6 +190,11 @@
         return dot(rgb, lum);
     }
 
+    // from URP lighting library
+    #ifndef kDieletricSpec
+        #define kDieletricSpec half4(0.04, 0.04, 0.04, 1.0 - 0.04) // standard dielectric reflectivity coef at incident angle (= 4%)
+    #endif
+
     void GetAlbedoAndSpecularColors(float2 uv, out half3 albedo, out half3 specular) {
         half4 pixelGBuffer0 = SAMPLE_TEXTURE2D_X(_GBuffer0, sampler_PointClamp, uv);
         albedo = pixelGBuffer0.rgb;
@@ -200,7 +205,7 @@
         if ((materialFlags & kMaterialFlagSpecularSetup) != 0) {
             specular = pixelSpecular;
         } else {
-            specular = pixelSpecular.rrr;
+            specular = lerp(kDieletricSpec.rgb, albedo, pixelSpecular.r);
         }
     }
         

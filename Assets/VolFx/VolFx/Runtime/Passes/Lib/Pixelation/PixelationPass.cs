@@ -27,7 +27,7 @@ namespace VolFx
         [Range(0, 1)] [Tooltip("At what scale level does the grid become visible")]
         public float          _gridReveal = 0.25f;
         [Tooltip("Grid impact discretization to reduce transition artifacts")]
-        public bool           _gridDiscrete = true;
+        public bool           _gridDiscrete;
         [Tooltip("Keep pixel size constant regardless of the resolution")]
         public bool           _absolute = true;
         [Range(0, 1)] [Tooltip("Default roundness if override is not set, volume roundness can be used for volume interpolations")]

@@ -63,12 +63,15 @@
   <ItemGroup>
     <Compile Include="Assets\VolFx\Samples\VolFx\Scripts\VolFx_SetUrpAsset.cs" />
     <Compile Include="Assets\VolFx\Samples\VolFx\Scripts\Grayscale Sample\GrayscaleVol.cs" />
+    <Compile Include="Assets\VolFx\Samples\VolFx\Scripts\AmbientLight.cs" />
     <Compile Include="Assets\VolFx\Samples\VolFx\Scripts\Grayscale Sample\GrayscalePass.cs" />
     <Compile Include="Assets\VolFx\Samples\VolFx\Scripts\Draggable.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\VolFx\Samples\VolFx\Sprites\License.txt" />
     <None Include="Assets\VolFx\Samples\VolFx\VolFx.Samples.asmdef" />
+    <None Include="Assets\VolFx\Samples\VolFx\Models\wish-fairy\License.txt" />
+    <None Include="Assets\VolFx\Samples\VolFx\Models\abstract-sphere\License.txt" />
     <None Include="Assets\VolFx\Samples\VolFx\Sprites\Witch Hand\License.txt" />
     <None Include="Assets\VolFx\Samples\VolFx\Scripts\Grayscale Sample\Grayscale.shader" />
   </ItemGroup>

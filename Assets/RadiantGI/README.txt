@@ -71,6 +71,16 @@ https://assetstore.unity.com/publishers/15018
 Version history
 ---------------
 
+Version 20.3
+- Improved effect on specular surfaces
+- Added Unity Ambient Intensity slider to Artistic Choices section (URP only)
+
+Version 20.2.2
+- [Fix] Fixes and optimizations for URP Render Graph
+
+Version 20.2.1
+- [Fix] Fixed a shadow potential artifact in forward rendering path
+
 Version 20.2
 - Virtual emitters: easily change radius in SceneView through a Sphere handle
 - Virtual emitters: added fade distance option

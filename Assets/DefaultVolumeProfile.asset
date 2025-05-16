@@ -215,6 +215,34 @@ MonoBehaviour:
   rounded:
     m_OverrideState: 1
     m_Value: 0
+--- !u!114 &-7774713418774698201
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c87ff93a90145e495f4ea994d8f730d, type: 3}
+  m_Name: AVLVolumeComponent
+  m_EditorClassIdentifier: 
+  active: 1
+  airDensity:
+    m_OverrideState: 1
+    m_Value: 0
+  fogDensityGlobal:
+    m_OverrideState: 1
+    m_Value: 0
+  fogDensityPerLightModifier:
+    m_OverrideState: 1
+    m_Value: 0.5
+  fogScattering:
+    m_OverrideState: 1
+    m_Value: 0
+  fogColor:
+    m_OverrideState: 1
+    m_Value: {r: 0.01, g: 0.03, b: 0.05, a: 1}
 --- !u!114 &-7399444442474230486
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -631,6 +659,67 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 0
   m_Motion:
+    m_OverrideState: 1
+    m_Value: 0
+--- !u!114 &-4667132132438592358
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58b92b6b40be8f645b8b9775076b7fb3, type: 3}
+  m_Name: JpegVol
+  m_EditorClassIdentifier: 
+  active: 1
+  _intensity:
+    m_OverrideState: 1
+    m_Value: 0
+  _blockSize:
+    m_OverrideState: 1
+    m_Value: 7
+  _quantization:
+    m_OverrideState: 1
+    m_Value: 15
+  _distortionScale:
+    m_OverrideState: 1
+    m_Value: 0
+  _applyToY:
+    m_OverrideState: 1
+    m_Value: 0
+  _applyToChroma:
+    m_OverrideState: 1
+    m_Value: 0
+  _applyToGlitch:
+    m_OverrideState: 1
+    m_Value: 0
+  _fps:
+    m_OverrideState: 1
+    m_Value: 0
+  _fpsBreak:
+    m_OverrideState: 1
+    m_Value: 0
+  _quantSpread:
+    m_OverrideState: 1
+    m_Value: 0
+  _scanlineDrift:
+    m_OverrideState: 1
+    m_Value: 0
+  _scanlineRes:
+    m_OverrideState: 1
+    m_Value: 720
+  _channelShiftX:
+    m_OverrideState: 1
+    m_Value: 0
+  _channelShiftY:
+    m_OverrideState: 1
+    m_Value: 0
+  _noise:
+    m_OverrideState: 1
+    m_Value: 0
+  _noiseBilinear:
     m_OverrideState: 1
     m_Value: 0
 --- !u!114 &-4208243346309596103
@@ -2832,6 +2921,8 @@ MonoBehaviour:
   - {fileID: -3585653625585644380}
   - {fileID: 8926812701375338482}
   - {fileID: 6826632629623828119}
+  - {fileID: -4667132132438592358}
+  - {fileID: -7774713418774698201}
 --- !u!114 &480843489544279080
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -4367,6 +4458,9 @@ MonoBehaviour:
   m_Disolve:
     m_OverrideState: 1
     m_Value: 1
+  m_Overlay:
+    m_OverrideState: 1
+    m_Value: {fileID: 0}
   m_Custom:
     m_OverrideState: 1
     m_Value: {fileID: 0}

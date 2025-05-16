@@ -115,16 +115,11 @@
         float3 wpos = GetWorldPosition(uv, rawDepth);
         if (IsOutsideBounds(wpos)) return input;
 
-   		half3 indirect = GetIndirect(uv, depth).rgb;
-
-        #if _SCREEN_SPACE_OCCLUSION
-            half ao = GetScreenSpaceAmbientOcclusion(uv).indirectAmbientOcclusion;
-            indirect *= ao * AO_INFLUENCE + ONE_MINUS_AO_INFLUENCE;
-        #endif
-  
+   	half3 indirect = GetIndirect(uv, depth).rgb;
+        
         half3 norm = GetWorldNormal(uv);
 
-        //  add virtual emitters
+        // add virtual emitters
         #if _VIRTUAL_EMITTERS
             indirect += GetVirtualEmitters(wpos, norm);
         #endif
@@ -133,39 +128,45 @@
         half lumaIndirect = GetLuma(indirect);
         indirect *= saturate(LUMA_MAX / (lumaIndirect + 0.001));
 
+        float3 cameraPosition = GetCameraPositionWS();
+        half3 toCamera = normalize(cameraPosition - wpos);
+        half ndot = abs(dot(norm, toCamera));
+
         #if _FORWARD
-            half4 pixel = SAMPLE_TEXTURE2D_X(_InputRTGI, sampler_LinearClamp, uv);
+            half4 pixel = max(0, SAMPLE_TEXTURE2D_X(_InputRTGI, sampler_LinearClamp, uv));
             half luma = GetLuma(pixel.rgb);
-            if (luma > 0.001) {
-                half3 hue = normalize(pixel.rgb + 0.01);
-                indirect = indirect * hue;
-                indirect = indirect * min(1, luma * LUMA_INFLUENCE);
-            }
+            half3 hue = normalize(pixel.rgb + 0.01);
+            indirect = indirect * hue;
+            indirect = indirect * min(1, luma * LUMA_INFLUENCE);
         #elif _FORWARD_AND_DEFERRED
             half3 albedo, specular;
             GetAlbedoAndSpecularColors(uv, albedo, specular);
             if (all(albedo == 0)) {
-                half4 pixel = SAMPLE_TEXTURE2D_X_LOD(_InputRTGI, sampler_LinearClamp, uv, 0);
+                half4 pixel = max(0, SAMPLE_TEXTURE2D_X_LOD(_InputRTGI, sampler_LinearClamp, uv, 0));
                 half luma = GetLuma(pixel.rgb);
-                if (luma > 0.001) {
-                    half3 hue = normalize(pixel.rgb + 0.01);
-                    indirect = indirect * hue;
-                    indirect = indirect * min(1, luma * LUMA_INFLUENCE);
-                }
+                half3 hue = normalize(pixel.rgb + 0.01);
+                indirect = indirect * hue;
+                indirect = indirect * min(1, luma * LUMA_INFLUENCE);
             } else {
-                indirect = indirect * albedo + indirect * specular * SPECULAR_CONTRIBUTION;
+                indirect = indirect * albedo;
+                half fresnel = pow(1.0 - ndot, 5);
+                indirect += specular * (fresnel * SPECULAR_CONTRIBUTION);
             }
         #else
             half3 albedo, specular;
             GetAlbedoAndSpecularColors(uv, albedo, specular);
-            indirect = indirect * albedo + indirect * specular * SPECULAR_CONTRIBUTION;
+            indirect = indirect * albedo;
+            half fresnel = pow(1.0 - ndot, 5);
+            indirect += specular * (fresnel * SPECULAR_CONTRIBUTION);
+        #endif
+
+        #if _SCREEN_SPACE_OCCLUSION
+            half ao = GetScreenSpaceAmbientOcclusion(uv).indirectAmbientOcclusion;
+            indirect *= ao * AO_INFLUENCE + ONE_MINUS_AO_INFLUENCE;
         #endif
 
         // reduce fog effect by enhancing normal mapping
-        float3 cameraPosition = GetCameraPositionWS();
-        half3 toCamera = normalize(cameraPosition - wpos);
-        half ndot = max(0, 1 + dot(norm, toCamera) * NORMALS_INFLUENCE - NORMALS_INFLUENCE);
-        indirect *= ndot;
+        indirect *= lerp(1.0, ndot, NORMALS_INFLUENCE);
 
         // optional GI weight
         half giLuma = GetLuma(indirect.rgb);
@@ -178,7 +179,7 @@
         indirect *= min(1.0, depth * NEAR_CAMERA_ATTENUATION);
 
         // add GI to input image
-        input.rgb = input.rgb * SOURCE_BRIGHTNESS + indirect.rgb;
+        input.rgb = input.rgb * SOURCE_BRIGHTNESS + indirect;
 
         #if _USES_NEAR_FIELD_OBSCURANCE
             half nfo = SAMPLE_TEXTURE2D_X(_NFO_RT, sampler_LinearClamp, uv).r;

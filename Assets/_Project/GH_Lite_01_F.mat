@@ -3,7 +3,7 @@
 --- !u!21 &2100000
 Material:
   serializedVersion: 8
-  m_ObjectHideFlags: 0
+  m_ObjectHideFlags: 32
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -19,8 +19,6 @@ Material:
   - N_F_O_ON
   - N_F_RDC_ON
   - N_F_RELGI_ON
-  - N_F_SE_ON
-  - N_F_SS_ON
   - N_F_TRANSAFFSHA_ON
   m_InvalidKeywords:
   - N_F_TRANSAFFSHA
@@ -254,10 +252,10 @@ Material:
     - _N_F_RL: 0
     - _N_F_SCO: 0
     - _N_F_SCT: 0
-    - _N_F_SE: 1
+    - _N_F_SE: 0
     - _N_F_SL: 0
     - _N_F_SON: 0
-    - _N_F_SS: 1
+    - _N_F_SS: 0
     - _N_F_ST: 0
     - _N_F_STIAL: 0
     - _N_F_STIS: 0
@@ -276,7 +274,7 @@ Material:
     - _OrigineX: 0
     - _OrigineY: 0
     - _OutlineExtrudeMethod: 0
-    - _OutlineWidth: 4
+    - _OutlineWidth: 0
     - _OutlineWidthAffectedByViewDistance: 1
     - _OutlineZPostionInCamera: 0
     - _OverallShadowColorPower: 1

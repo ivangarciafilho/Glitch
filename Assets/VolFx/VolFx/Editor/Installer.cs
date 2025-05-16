@@ -158,14 +158,13 @@ namespace VolFx
 
                     if (_hasFeature<VolFx>(GetPipline() as UniversalRenderPipelineAsset))
                         return;
-                        
                     var isOk = EditorUtility.DisplayDialogComplex("• VolFx by NullTale ☄",
-                                                           $"The current Urp Asset ({GetPipline().name}) does not contain the VolFx feature" +
-                                                           "this is needed for the effect to take effect.\n\n" +
-                                                           "• Do you want to add VolFx to Urp assets in use?",
-                                                           "Yes",
-                                                           "Do not show again, I will personally customise the project",
-                                                           "Not now");
+                                                                  $"The current URP Asset ({GetPipline().name}) does not have the VolFx feature enabled, which is required for the effects to work properly.\n\n" +
+                                                                  "• Would you like to automatically add VolFx to the URP assets currently in use?",
+                                                                  "Yes",
+                                                                  "Don't show again — I’ll configure it manually",
+                                                                  "Not now");
+
 
                     switch (isOk)
                     {
@@ -206,10 +205,22 @@ namespace VolFx
                     SoCollectionUtils.AddItem(new SerializedObject(volFx).FindProperty(nameof(VolFx._passes)), pass);
                 }
             }
+            
             if (features.Length != 0)
             {
-                Debug.Log($"<color=white>• Render features was added, don't forget to change the order of effects to suit your preferences ☄</color> \n" +
-                          $"• You can select the asset by clicking a Log message, effects can be controlled via scene Volume components \n");
+                Debug.Log(
+                    "<color=white>• VolFx render features have been added. Adjust their order to match your desired effect stack. ☄</color>\n" +
+                    "• Click this message to select the URP Asset. Effects are controlled via Volume components in your scene.\n"
+                );
+
+                EditorUtility.DisplayDialog(
+                    "VolFx successfully installed ☄",
+                    "The VolFx render features have been added to your URP Asset.\n\n" +
+                    "→ Please review and adjust the effect order in the renderer to match your visual priorities.\n" +
+                    "→ You can select the URP Asset by clicking the log message in the Console.\n\n" +
+                    "Effects are managed via Volume components in the scene.",
+                    "OK"
+                );
             }
         }
         

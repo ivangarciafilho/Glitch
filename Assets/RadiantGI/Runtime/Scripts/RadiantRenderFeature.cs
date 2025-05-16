@@ -230,10 +230,7 @@ namespace RadiantGI.Universal {
             }
 
             ScriptableRenderPassInput GetRequiredInputs () {
-                ScriptableRenderPassInput input = ScriptableRenderPassInput.Color;
-                if (settings.renderingPath == RenderingPath.Forward) {
-                    input |= ScriptableRenderPassInput.Normal | ScriptableRenderPassInput.Depth;
-                }
+                ScriptableRenderPassInput input = ScriptableRenderPassInput.Normal | ScriptableRenderPassInput.Depth;
                 if (usesReprojection) {
                     input |= ScriptableRenderPassInput.Motion;
                 }
@@ -1284,6 +1281,46 @@ namespace RadiantGI.Universal {
             }
         }
 
+        class RadiantRestoreRenderSettingsPass : ScriptableRenderPass {
+            const string m_strProfilerTag = "Radiant GI Restore Settings";
+
+            static void RestoreSettings() {
+                // Restore ambient light settings
+                if (!ambientLightData.settingsStored) return;
+                ambientLightData.settingsStored = false;
+                RenderSettings.ambientSkyColor = ambientLightData.ambientSkyColor;
+                RenderSettings.ambientEquatorColor = ambientLightData.ambientEquatorColor;
+                RenderSettings.ambientGroundColor = ambientLightData.ambientGroundColor;
+                RenderSettings.ambientLight = ambientLightData.ambientLight;
+                RenderSettings.ambientIntensity = ambientLightData.ambientIntensity;
+            }
+
+#if UNITY_2023_3_OR_NEWER
+            [Obsolete]
+#endif
+            public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData) {
+                RestoreSettings();
+            }
+
+#if UNITY_2023_3_OR_NEWER
+            class PassData {
+            }
+
+            public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData) {
+                using (var builder = renderGraph.AddUnsafePass<PassData>(m_strProfilerTag, out var passData)) {
+                    builder.AllowGlobalStateModification(true);
+                    builder.SetRenderFunc((PassData passData, UnsafeGraphContext context) => {
+                        RestoreSettings();
+                    });
+                }
+            }
+#endif
+
+            public void Cleanup() {
+                RestoreSettings();
+            }
+        }
+
         [Tooltip("Select the rendering mode according to the URP asset")]
         public RenderingPath renderingPath = RenderingPath.Deferred;
 
@@ -1299,6 +1336,18 @@ namespace RadiantGI.Universal {
         RadiantPass radiantPass;
         RadiantComparePass comparePass;
         RadiantOrganicLightPass organicLightPass;
+        RadiantRestoreRenderSettingsPass restoreRenderSettingsPass;
+
+        struct AmbientLightData {
+            public bool settingsStored;
+            public Color ambientSkyColor;
+            public Color ambientEquatorColor;
+            public Color ambientGroundColor;
+            public Color ambientLight;
+            public float ambientIntensity;
+        }
+
+        static AmbientLightData ambientLightData;
 
         void OnDisable () {
             if (radiantPass != null) {
@@ -1310,21 +1359,57 @@ namespace RadiantGI.Universal {
             if (organicLightPass != null) {
                 organicLightPass.Cleanup();
             }
+            if (restoreRenderSettingsPass != null) {
+                restoreRenderSettingsPass.Cleanup();
+            }
+        }
+
+        public override void OnCameraPreCull (ScriptableRenderer renderer, in CameraData cameraData) {
+
+            RadiantGlobalIllumination radiant = VolumeManager.instance.stack.GetComponent<RadiantGlobalIllumination>();
+            if (radiant == null) return;
+            if (radiant.indirectIntensity.value <= 0) return;
+
+            float ambientIntensity = radiant.unityAmbientIntensity.value;
+            if (ambientIntensity >= 1f) return;
+
+            if (!ambientLightData.settingsStored) {
+                ambientLightData.settingsStored = true;
+                ambientLightData.ambientSkyColor = RenderSettings.ambientSkyColor;
+                ambientLightData.ambientEquatorColor = RenderSettings.ambientEquatorColor;
+                ambientLightData.ambientGroundColor = RenderSettings.ambientGroundColor;
+                ambientLightData.ambientLight = RenderSettings.ambientLight;
+                ambientLightData.ambientIntensity = RenderSettings.ambientIntensity;
+            }
+
+            RenderSettings.ambientSkyColor = ambientLightData.ambientSkyColor * ambientIntensity;
+            RenderSettings.ambientEquatorColor = ambientLightData.ambientEquatorColor * ambientIntensity;
+            RenderSettings.ambientGroundColor = ambientLightData.ambientGroundColor * ambientIntensity;
+            RenderSettings.ambientLight = ambientLightData.ambientLight * ambientIntensity;
+            RenderSettings.ambientIntensity = ambientLightData.ambientIntensity * ambientIntensity;
         }
 
         public override void Create () {
             radiantPass = new RadiantPass();
             comparePass = new RadiantComparePass();
             organicLightPass = new RadiantOrganicLightPass();
+            restoreRenderSettingsPass = new RadiantRestoreRenderSettingsPass();
+            restoreRenderSettingsPass.renderPassEvent = RenderPassEvent.AfterRendering;
+
             emittersForceRefresh = true;
+            ambientLightData.settingsStored = false;
         }
 
         public static bool needRTRefresh;
         public static bool isRenderingInDeferred;
 
         public override void AddRenderPasses (ScriptableRenderer renderer, ref RenderingData renderingData) {
+
+            // Always add the restore settings pass
+            renderer.EnqueuePass(restoreRenderSettingsPass);
+
 #if UNITY_EDITOR
-            isRenderingInDeferred = renderingPath != RenderingPath.Forward;
+            isRenderingInDeferred = renderingPath == RenderingPath.Deferred;
 #endif
             if (!renderingData.cameraData.postProcessEnabled && !ignorePostProcessingOption) return;
 
@@ -1361,6 +1446,7 @@ namespace RadiantGI.Universal {
                     }
                 }
             }
+
         }
 
         public static void RegisterReflectionProbe (ReflectionProbe probe) {

@@ -124,7 +124,7 @@ namespace RadiantGI.Universal {
                 DestroyRT(rtNormals);
                 DestroyRT(rtWorldPos);
                 if (rtColors == null) {
-                    RenderTextureDescriptor rtDesc = new RenderTextureDescriptor(desiredSize, desiredSize, RenderTextureFormat.ARGBHalf, 0);
+                    RenderTextureDescriptor rtDesc = new RenderTextureDescriptor(desiredSize, desiredSize, RenderTextureFormat.ARGBHalf);
                     rtDesc.msaaSamples = 1;
                     rtDesc.useMipMap = false;
                     // create rsm color target

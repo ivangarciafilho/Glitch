@@ -51,13 +51,13 @@ MonoBehaviour:
     m_Value: 0
   downsampling:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0
   downsamplingMode:
     m_OverrideState: 1
     m_Value: 10
   downsamplingMultiplier:
     m_OverrideState: 1
-    m_Value: 4
+    m_Value: 5
   downsamplingBilinear:
     m_OverrideState: 1
     m_Value: 0
@@ -150,10 +150,10 @@ MonoBehaviour:
     dimension: 1
   bloomIntensity:
     m_OverrideState: 1
-    m_Value: 0.25
+    m_Value: 1.25
   bloomThreshold:
     m_OverrideState: 1
-    m_Value: 0.25
+    m_Value: 0.75
   bloomConservativeThreshold:
     m_OverrideState: 1
     m_Value: 1
@@ -758,7 +758,7 @@ MonoBehaviour:
   active: 1
   indirectIntensity:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 2
   indirectDistanceAttenuation:
     m_OverrideState: 1
     m_Value: 1
@@ -772,8 +772,8 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 1
   lumaInfluence:
-    m_OverrideState: 0
-    m_Value: 0
+    m_OverrideState: 1
+    m_Value: 0.75
   nearFieldObscurance:
     m_OverrideState: 1
     m_Value: 1
@@ -793,26 +793,26 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 1
   organicLight:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 1
   organicLightThreshold:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 0.25
   organicLightSpread:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 0.95
   organicLightNormalsInfluence:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 1
   organicLightTintColor:
     m_OverrideState: 0
     m_Value: {r: 1, g: 1, b: 1, a: 1}
   organicLightAnimationSpeed:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: {x: 0, y: 0, z: 0.1}
   organicLightDistanceScaling:
-    m_OverrideState: 1
-    m_Value: 1
+    m_OverrideState: 0
+    m_Value: 0
   rayCount:
     m_OverrideState: 1
     m_Value: 1
@@ -894,6 +894,9 @@ MonoBehaviour:
   giWeight:
     m_OverrideState: 0
     m_Value: 16
+  unityAmbientIntensity:
+    m_OverrideState: 1
+    m_Value: 0.9
   nearCameraAttenuation:
     m_OverrideState: 1
     m_Value: 2

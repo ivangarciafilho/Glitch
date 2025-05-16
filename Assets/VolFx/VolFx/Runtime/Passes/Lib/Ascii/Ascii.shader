@@ -111,6 +111,16 @@ Shader "Hidden/VolFx/Ascii"
                 return tex2D(tex, uv);
             }
             
+            half luma(half3 rgb)
+            {
+                return dot(rgb, half3(.299, .585, .114));
+            }
+                    
+            half bright(half3 rgb)
+            {
+                return max(max(rgb.r, rgb.g), rgb.b);
+            }
+            
             half4 grad_sample(in float2 uv, const in float val, const in float ramp, const sampler2D tex)
             {
                 // xy - pix * aspect, z - sample scale, w - sample count
@@ -123,16 +133,6 @@ Shader "Hidden/VolFx/Ascii"
                 return tex2D(tex, uv);
             }
             
-            half luma(half3 rgb)
-            {
-                return dot(rgb, half3(.299, .585, .114));
-            }
-                    
-            half bright(half3 rgb)
-            {
-                return max(max(rgb.r, rgb.g), rgb.b);
-            }
-            
             half4 frag(frag_in i) : COLOR
             {
                 float2 set = float2(i.uv.x * _GradData.x, i.uv.y * _GradData.y);
@@ -142,9 +142,7 @@ Shader "Hidden/VolFx/Ascii"
                 half4  initial  = tex2D(_MainTex, i.uvReal);
                 half4  col      = saturate(tex2D(_MainTex, puv));
                 float noise     = tex2D(_NoiseTex, mad(puv, _NoiseMad.xy, _NoiseMad.zw ));
-                //float4 asciiCol = grad_sample(suv, pow(luma(col), .7), noise, _GradTex);
                 half4 asciiCol = grad_sample(suv, pow(tex2D(_MappingTex, float2(luma(col), 0)).r, .3), noise, _GradTex);
-                
                 
                 //return half4(noise, noise, noise, 1);
 #ifdef USE_PALETTE
